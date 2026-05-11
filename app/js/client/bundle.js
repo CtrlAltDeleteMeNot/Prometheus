@@ -588,7 +588,7 @@
           svg.classList.add("asset-image");
           const exchangeImg = document.createElement("img");
           exchangeImg.className = "exchange-image";
-          exchangeImg.src = `/img/exchanges/${tp.exchangeName}.svg`;
+          exchangeImg.src = `img/exchanges/${tp.exchangeName}.svg`;
           exchangeImg.alt = tp.exchangeName;
           imagesHolder.appendChild(svg);
           imagesHolder.appendChild(exchangeImg);

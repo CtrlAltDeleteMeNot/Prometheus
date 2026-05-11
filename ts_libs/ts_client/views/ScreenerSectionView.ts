@@ -89,7 +89,7 @@ export class ScreenerSectionView implements ISection {
 
         const exchangeImg = document.createElement('img');
         exchangeImg.className = 'exchange-image';
-        exchangeImg.src = `/img/exchanges/${tp.exchangeName}.svg`;
+        exchangeImg.src = `img/exchanges/${tp.exchangeName}.svg`;
         exchangeImg.alt = tp.exchangeName;
 
         imagesHolder.appendChild(svg);

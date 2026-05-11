@@ -9,7 +9,7 @@
         "type": "image/svg+xml"
       }
     ],
-    "start_url": "https://ctrlaltdeletemenot.github.io/Prometheus/index.html",
+    "start_url": "https://ctrlaltdeletemenot.github.io/Prometheus/docs/index.html",
     "display": "standalone",
     "background_color": "#000000",
     "theme_color": "#13171f",
