@@ -1,0 +1,237 @@
+import { MainView } from '../views/MainView';
+import { MainModel } from '../models/MainModel';
+import { TradingPairsCodec } from '../../ts_worker/application/exports/TradingPairsCodec';
+import { SortDirection } from '../../ts_worker/application/exports/SortDirection';
+import { TradingPairModel } from '../../ts_worker/application/exports/TradingPairModel';
+import { ScreenerSettings } from '../../ts_worker/application/exports/ScreenerSettings';
+import { ISection } from '../views/ISection';
+import { NamedAttributeMetadata } from '../../ts_worker/application/exports/NamedAttribute';
+
+type Pending = {
+    resolve: (value: any) => void;
+    reject: (reason?: any) => void;
+};
+type WorkerEventHandler<T = any> = (payload: T) => void;
+
+
+export class ThinController {
+    static async Create(workerPath: string) {
+        let mainModel = new MainModel();
+        let mainView = new MainView(mainModel);
+        let worker = new Worker(workerPath);
+        var toReturn = new ThinController(mainModel, mainView, worker);
+        await toReturn.initialize();
+        return toReturn;
+    }
+    #mainView: MainView;
+    #mainModel: MainModel;
+    #worker: Worker;
+    #promises: Map<number, Pending>;
+    #id: number;
+    #eventHandlers: Map<string, Set<WorkerEventHandler>>;
+
+    constructor(model: MainModel, view: MainView, worker: Worker) {
+        this.#mainView = view;
+        this.#mainModel = model;
+        this.#worker = worker;
+        this.#worker.onmessage = (e) => this.onWorkerMessage(e.data);
+        this.#mainView.startSection.bindStartAction(async () => await this.fetch());
+        this.#mainView.startSection.bindSettingsAction(() => this.showSettingsModal());
+        this.#mainView.startSection.disableActions(true);
+        this.#mainView.navigation.bindSyncButton(async () => await this.synchronize());
+        this.#mainView.navigation.bindSortButton(() => this.showSortModal());
+        this.#mainView.navigation.bindFilterButton(() => this.showFilterModal());
+        this.#mainView.navigation.bindShowSectionAction((aPageName) => this.showSection(aPageName));
+        this.#mainView.sortModalView.bindSortingRulesChanged((direction, sortKey) => this.doSort(direction, sortKey));
+        this.#mainView.filterModalView.bindFilteringRulesChanged((rules) => this.doFilter(rules));
+        this.#mainView.settingsModalView.bindSettingsChanged((aSettings) => this.applySettings(aSettings));
+        this.#promises = new Map<number, Pending>();
+        this.#eventHandlers = new Map<string, Set<WorkerEventHandler>>();
+        this.#id = 0;
+    }
+
+
+    showSection(aPageName: string): ISection {
+        var section = this.#mainView.findSectionById(aPageName);
+        this.#mainView.showSection(section);
+        return section;
+    }
+
+    showFilterModal(): void {
+        this.#mainView.filterModalView.update(this.#mainModel);
+        this.#mainView.filterModalView.show();
+    }
+
+    showSortModal(): void {
+        this.#mainView.sortModalView.update(this.#mainModel);
+        this.#mainView.sortModalView.show();
+    }
+
+    showSettingsModal(): void {
+        this.#mainView.settingsModalView.update(this.#mainModel);
+        this.#mainView.settingsModalView.show();
+    }
+
+    doFilter(activeFilters: NamedAttributeMetadata[]): void {
+        const data = this.#mainModel.getMultiTimeFrameSnapshot();
+        const direction = this.#mainModel.getSortDirection();
+        const key = this.#mainModel.getSortNamedAttributeMetadata().key;
+        const sorted = ThinController.doFilteringAndSortingCore(data, direction, key, activeFilters);
+
+        this.#mainModel.setActiveFilterableAttributes(activeFilters);
+        this.#mainView.screenerSection.setData(sorted);
+        this.#mainView.navigation.update(this.#mainModel);
+    }
+
+    doSort(sortDirection: SortDirection, key: string): void {
+        const data = this.#mainModel.getMultiTimeFrameSnapshot();
+        const metadata = this.#mainModel.getSortableAttributes().find(s => s.key === key);
+        if (metadata === undefined) {
+            return;
+        }
+
+        const sorted = ThinController.doFilteringAndSortingCore(data, sortDirection, key, this.#mainModel.getActiveFilterableAttributes());
+        this.#mainModel.setSortDirection(sortDirection);
+        this.#mainModel.setSortNamedAttributeMetadata(metadata);
+        this.#mainView.screenerSection.setData(sorted);
+        this.#mainView.navigation.update(this.#mainModel);
+    }
+
+    static doFilteringAndSortingCore(data: readonly TradingPairModel[], direction: SortDirection, key: string, filters: NamedAttributeMetadata[] | undefined): readonly TradingPairModel[] {
+        const filtered = !filters || filters.length === 0
+            ? data
+            : data.filter(tp => {
+
+                const tradingPairTrueAttributes = tp
+                    .getAttributes()
+                    .filter(attr => attr.value === true)
+                    .map(attr => attr.metadata.key);
+
+                return filters.every(filter =>
+                    tradingPairTrueAttributes.includes(filter.key)
+                );
+            });
+
+
+        const dir = direction === SortDirection.Ascending ? 1 : -1;
+        const sorted = filtered.slice().sort((a, b) => {
+            let aValue = a.getAttr(key);
+            let bValue = b.getAttr(key);
+            if (aValue == null && bValue == null) return 0;
+            if (aValue == null) return -1 * dir;
+            if (bValue == null) return 1 * dir;
+            return aValue.compare(bValue) * dir;
+        });
+        return sorted;
+    }
+
+    async initialize(): Promise<void> {
+        const rawResponse = await this.callWorker('init');
+        const response = ScreenerSettings.fromJson(rawResponse);
+        const localStorageString = localStorage.getItem('ScreenerSettings') || "{}";
+        try {
+            var settings = ScreenerSettings.fromJson(JSON.parse(localStorageString));
+            this.#mainModel.setScreenerSettings(settings);
+        } catch (err) {
+            console.log(err);
+            this.#mainModel.setScreenerSettings(response);
+        }
+        this.#mainView.startSection.disableActions(false);
+    }
+
+    applySettings(aSettings: ScreenerSettings) {
+        this.#mainModel.setScreenerSettings(aSettings);
+        localStorage.setItem('ScreenerSettings', JSON.stringify(aSettings.toJson()));
+    }
+
+    async fetch(): Promise<void> {
+        this.#mainView.progressModalView.show('Fetching market data ...');
+        const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
+        this.on("fetch:progress", handler);
+        const rawResponse = await this.callWorker('fetch', this.#mainModel.getScreenerSettings()?.toJson()) as string;
+        this.off("fetch:progress", handler);
+        const mappedResponse = TradingPairsCodec.fromJsonString(rawResponse);
+        const sortableAttributes = TradingPairsCodec.extractUniqueSortableAttributes(mappedResponse);
+        const filterableAttributes = TradingPairsCodec.extractUniqueFilterableAttributes(mappedResponse);
+        const sortDirection = SortDirection.Descending;
+        const sortFieldMetadata = TradingPairModel.dailyPercentChangeMetadata();
+        const sorted = ThinController.doFilteringAndSortingCore(mappedResponse, sortDirection, sortFieldMetadata.key,this.#mainModel.getActiveFilterableAttributes());
+        this.#mainModel.setSortableAttributes(sortableAttributes);
+        this.#mainModel.setFilterableAttributes(filterableAttributes);
+        this.#mainModel.setMultiTimeFrameSnapshot(sorted);
+        this.#mainModel.setSortDirection(sortDirection);
+        this.#mainModel.setSortNamedAttributeMetadata(sortFieldMetadata);
+        this.#mainView.screenerSection.setData(sorted);
+        this.#mainView.sortModalView.update(this.#mainModel);
+        this.#mainView.filterModalView.update(this.#mainModel);
+        this.#mainView.progressModalView.hide();
+        this.#mainView.screenerSection.show();
+        this.#mainView.navigation.update(this.#mainModel);
+        this.#mainView.navigation.show();
+    }
+
+    async synchronize() {
+        this.#mainView.progressModalView.show('Synchronizing market data ...');
+        const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
+        this.on("synchronize:progress", handler);
+        const rawResponse = await this.callWorker('synchronize', this.#mainModel.getScreenerSettings()?.toJson()) as string;
+        this.off("synchronize:progress", handler);
+        const mappedResponse = TradingPairsCodec.fromJsonString(rawResponse);
+        const sorted = ThinController.doFilteringAndSortingCore(mappedResponse, this.#mainModel.getSortDirection(), this.#mainModel.getSortNamedAttributeMetadata().key, this.#mainModel.getActiveFilterableAttributes());
+        this.#mainModel.setMultiTimeFrameSnapshot(mappedResponse);
+        this.#mainView.screenerSection.setData(sorted);
+        this.#mainView.progressModalView.hide();
+    }
+
+    private callWorker(method: string, args?: any): Promise<any> {
+        const id = ++this.#id;
+        const message = { id, type: 'call', method, args };
+        this.postWorkerMessage(message);
+        return new Promise((resolve, reject) => {
+            this.#promises.set(id, { resolve, reject });
+        });
+    }
+
+    private postWorkerMessage(message: any) {
+        //console.log(`${ThinController.name}::${this.postWorkerMessage.name}, ${JSON.stringify(message)}`);
+        this.#worker.postMessage(message);
+    }
+
+    private onWorkerMessage(msg: any) {
+        //console.log(`${ThinController.name}::${this.onWorkerMessage.name}, ${JSON.stringify(msg)}`);
+        if (msg.type === 'resolve' || msg.type === 'reject') {
+            const pending = this.#promises.get(msg.id);
+            if (!pending) return;
+
+            this.#promises.delete(msg.id);
+
+            msg.type === 'resolve'
+                ? pending.resolve(msg.payload)
+                : pending.reject(new Error(msg.error));
+
+            return;
+        }
+
+        // Progress / events
+        if (msg.type === 'event') {
+            const handlers = this.#eventHandlers.get(msg.name);
+            if (!handlers) return;
+            handlers.forEach(h => h(msg.payload));
+        }
+    }
+
+    on(eventName: string, handler: WorkerEventHandler): void {
+        if (!this.#eventHandlers.has(eventName)) {
+            this.#eventHandlers.set(eventName, new Set());
+        }
+        this.#eventHandlers.get(eventName)!.add(handler);
+    }
+
+    off(eventName: string, handler: WorkerEventHandler): void {
+        this.#eventHandlers.get(eventName)?.delete(handler);
+    }
+
+}
+
+
+

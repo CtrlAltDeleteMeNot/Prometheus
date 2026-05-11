@@ -1,0 +1,184 @@
+button.primary {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-family: var(--font-primary);
+  font-size: var(--font-size-base);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  outline: none;
+}
+
+
+button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(79, 140, 255, 0.4);
+}
+
+
+button.primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+button.primary:focus:not(:focus-visible) {
+  outline: none;
+}
+
+button.primary .btn-text {
+  position: relative;
+  color: var(--text);
+  pointer-events: none;
+}
+
+button.secondary {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: var(--text);
+  background-color: transparent;
+  border: none;
+}
+
+button.icon-only-transparent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 3rem;
+  height: 3rem;
+  position: relative;
+}
+
+button.icon-only-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--border);
+  border-radius: 999rem;
+  transition: all 0.2s ease;
+  color: var(--text);
+}
+
+button.icon-only-transparent svg.icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  fill: var(--text);
+  color: var(--text);
+  display: block;
+}
+
+button.icon-only-pill svg.icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  fill: var(--text);
+  color: var(--text);
+  display: block;
+}
+
+.pill-button {
+  display: inline-flex;
+  align-items: center;
+  /* Vertically center content */
+  padding: 0.2rem 1rem;
+  border-radius: 999rem;
+  /* High radius creates pill shape */
+  border: 1px solid var(--border);
+  background-color: var(--transparent);
+  cursor: pointer;
+  text-align: left;
+  height: 3rem;
+  transition: all 0.2s ease;
+  color: var(--text);
+  fill: var(--text);
+}
+
+.pill-button.active{
+  background-color: var(--text);
+  color:var(--bg);
+}
+
+
+
+.button-image {
+  width: 1.8rem;
+  height: 1.8rem;
+  margin-right: 0.55rem;
+}
+
+.button-image.reverse {
+  transform: rotate(180deg);
+}
+
+.button-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.button-text .main-text {
+  font-size: 0.9rem;
+}
+
+.button-text .sub-text {
+  font-size: 0.55rem;
+  color: var(--muted);
+}
+
+.pill-group {
+  display: flex;
+  gap: 0rem;
+}
+
+.pill-group :last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.pill-group :first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.pill-group :not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+.image-buttons-only-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.icon-only-transparent span{
+    color: var(--bg);
+    font-size: 0.55rem;
+    position: absolute;
+    border-color: var(--text);
+    background: var(--text);
+    border-radius: 999rem;
+    width: 1rem;
+    height: 1rem;
+    align-content: center;
+    padding: 0.1rem;
+    bottom: 0;
+    right: 0;
+    transform: translate(-50%, -50%);
+}
