@@ -43,7 +43,7 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto; 
   gap:1rem;
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border);
 }
 
@@ -92,4 +92,8 @@
   /*border-bottom: 1px solid var(--border);*/
   padding-top: 0.3rem;
   padding-bottom: 0.1rem;
+}
+
+.asset-attributes{
+  padding-top: 0.2rem;
 }
