@@ -13,7 +13,7 @@
 #screener-body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 1rem;
+  gap: 1.5rem;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
