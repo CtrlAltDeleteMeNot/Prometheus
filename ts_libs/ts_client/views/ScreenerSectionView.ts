@@ -60,8 +60,7 @@ export class ScreenerSectionView implements ISection {
             const card = document.createElement('div');
             card.className = 'screener-card';
             card.appendChild(this.generateCardInner(tp));
-            this.#screenerBody.insertBefore(card, this.#loadMoreBtn); // insert before button
-            requestAnimationFrame(() => card.classList.add('show'));
+            this.#screenerBody.insertBefore(card, this.#loadMoreBtn); 
         });
 
         // Hide Load More if all cards are loaded

@@ -569,7 +569,6 @@
             card.className = "screener-card";
             card.appendChild(this.generateCardInner(tp));
             __privateGet(this, _screenerBody).insertBefore(card, __privateGet(this, _loadMoreBtn));
-            requestAnimationFrame(() => card.classList.add("show"));
           });
           if (end >= __privateGet(this, _allData).length) {
             __privateGet(this, _loadMoreBtn).style.display = "none";

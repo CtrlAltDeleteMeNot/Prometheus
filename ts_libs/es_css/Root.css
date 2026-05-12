@@ -1,7 +1,8 @@
 :root {
   --bg: #0b0f1a;
+  --bg-secondary: #101625;
   --glass: rgba(18, 24, 40, 0.75);
-  --border: rgba(255, 255, 255, 0.08);
+  --border: #293149;
   --text: #e6edf3;
   --muted: #9aa4b2;
   --accent: #3b82f6;

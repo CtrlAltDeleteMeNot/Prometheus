@@ -100,7 +100,7 @@
 
 #progress-modal .progress-container-line {
     height: 0.2rem;
-    background-color: var(--accent); /* Changed from hardcoded green */
+    background-color: var(--accent); 
     transition: width 0.3s ease;
     width: 100%;
     max-width: 100%;
