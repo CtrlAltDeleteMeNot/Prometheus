@@ -487,6 +487,8 @@ button.icon-only-pill svg.icon {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
 }
 .asset-and-exchange-images-holder {
   display: block;
