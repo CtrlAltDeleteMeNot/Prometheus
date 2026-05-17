@@ -1,0 +1,37 @@
+import gulp from 'gulp'
+import { Configuration } from "./_configuration";
+import fs from 'fs';
+import replace from "gulp-replace";
+import esbuild from 'esbuild';
+
+
+
+export const htmlGenerate = (configuration: Configuration): gulp.TaskFunction => {
+    return function htmlGenerateImpl() {
+        const ts = Date.now();
+        return gulp
+            .src(configuration.html.input)
+            .pipe(replace("?v=1.0.0.version", `?v=${ts}`))
+            .pipe(gulp.dest(configuration.html.outputDir))
+    }
+}
+
+export const htmlClean = (configuration: Configuration): gulp.TaskFunction => {
+    return function htmlCleanImpl(cb: gulp.TaskFunctionCallback) {
+        fs.rmSync(configuration.html.output, { force: true, recursive:true });
+        cb();
+    }
+}
+
+export const htmlWatch = (configuration: Configuration, ...tasks: gulp.TaskFunction[]): gulp.TaskFunction => {
+    const runTasks = gulp.series(htmlGenerate(configuration), ...tasks);
+    return function htmlWatchImpl() {
+        return gulp.watch(configuration.html.watch, runTasks);
+    }
+}
+
+
+
+
+
+

@@ -14,7 +14,7 @@
   "theme_color": "#111726",
   "orientation": "portrait",
   "lang": "en-US",
-  "start_url": "https://ctrlaltdeletemenot.github.io/Prometheus/",
-  "scope": "/Prometheus/",
-  "id": "/Prometheus/"
+  "start_url": "http://localhost:9000",
+  "scope": "/",
+  "id": "/"
 }

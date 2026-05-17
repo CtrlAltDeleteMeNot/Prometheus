@@ -14,7 +14,6 @@
 .hero-card {
     padding: 3rem;
     border-radius: var(--border-radius);
-    backdrop-filter: blur(14px);
     border: 1px solid var(--border);
     text-align: center;
     max-width: 600px;

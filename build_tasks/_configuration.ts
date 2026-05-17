@@ -1,5 +1,81 @@
+type ConfigurationOptions = {
+    app: string;
+    localDevPort: number;
+    manifest_start_url: string,
+    manifest_scope: string,
+    manifest_id: string,
+};
+
 export class Configuration {
-    appRootDir: string = './app/';
+    readonly app: string;
+    readonly localDevPort: number;
+    readonly manifest_start_url: string;
+    readonly manifest_scope: string;
+    readonly manifest_id: string;
+    readonly html: {
+        input: string;
+        output: string;
+        outputDir: string;
+        watch: string;
+    };
+    readonly esClientJs: {
+        input: string;
+        output: string;
+        outputDir: string;
+        watch: string;
+    };
+    readonly esWorkerJs: {
+        input: string;
+        output: string;
+        outputDir: string;
+        watch: string;
+    };
+    readonly esClientCss: {
+        input: string;
+        output: string;
+        outputDir: string;
+        watch: string;
+    };
+    readonly manifestPath: string;
+    readonly imagesDestPath: string;
+    readonly imagesSourcePath: string;
+
+    public constructor(opts: ConfigurationOptions) {
+        this.app = opts.app;
+        this.localDevPort = opts.localDevPort;
+        this.manifest_start_url = opts.manifest_start_url;
+        this.manifest_scope = opts.manifest_scope;
+        this.manifest_id = opts.manifest_id;
+        this.html = {
+            input: 'html/index.html',
+            output: `${this.app}index.html`,
+            outputDir: `${this.app}`,
+            watch: 'html/**/*.html'
+        };
+        this.esClientJs = {
+            input: 'ts_libs/ts_client/index.ts',
+            output: `${this.app}js/client/bundle.js`,
+            outputDir: `${this.app}js/client/`,
+            watch: 'ts_libs/ts_client/**/*.ts'
+        };
+        this.esWorkerJs = {
+            input: 'ts_libs/ts_worker/index.ts',
+            output: `${this.app}js/worker/worker.js`,
+            outputDir: `${this.app}js/worker/`,
+            watch: 'ts_libs/ts_worker/**/*.ts'
+        };
+        this.esClientCss = {
+            input: 'ts_libs/es_css/index.css',
+            output: `${this.app}css/client/bundle.css`,
+            outputDir: `${this.app}css/client/`,
+            watch: 'ts_libs/es_css/**/*.css'
+        };
+        this.manifestPath = `${this.app}manifest.json`;
+        this.imagesDestPath = `${this.app}img/`;
+        this.imagesSourcePath = './images/**/*'
+    }
+
+
     cryptoIconsSvgs = {
         input: 'node_modules/cryptocurrency-icons/svg/color/',
         outputRegistryTsFile: 'ts_libs/ts_client/views/generated/CryptoIconsRegistry.ts',
@@ -10,24 +86,30 @@ export class Configuration {
         lookup: ['menu-hamburger-1', 'refresh-circle-1-clockwise', 'xmark', 'funnel-1', 'sort-high-to-low', 'arrow-right', 'minus-circle'],
         outputRegistryTsFile: 'ts_libs/ts_client/views/generated/ActionIconsRegistry.ts',
     };
-    esClientJs = {
-        input: 'ts_libs/ts_client/index.ts',
-        output: 'app/js/client/bundle.js',
-        outputDir: 'app/js/client/',
-        watch: 'ts_libs/ts_client/**/*.ts'
-    };
-    esClientCss = {
-        input: 'ts_libs/es_css/index.css',
-        output: 'app/css/client/bundle.css',
-        outputDir: 'app/css/client/',
-        watch: 'ts_libs/es_css/**/*.css'
-    };
-    esWorkerJs = {
-        input: 'ts_libs/ts_worker/index.ts',
-        output: 'app/js/worker/worker.js',
-        outputDir: 'app/js/worker/',
-        watch: 'ts_libs/ts_worker/**/*.ts'
-    };
+
+    get manifest() {
+        return {
+            "name": "Prometheus",
+            "short_name": "Prometheus",
+            "description": "Prometheus is the ultimate companion for crypto traders focused on USDC pairs.",
+            "icons": [
+                {
+                    "src": "img/logo.svg",
+                    "sizes": "any",
+                    "type": "image/svg+xml"
+                }
+            ],
+            "display": "standalone",
+            "background_color": "#0E1220",
+            "theme_color": "#111726",
+            "orientation": "portrait",
+            "lang": "en-US",
+            "start_url": this.manifest_start_url,
+            "scope": this.manifest_scope,
+            "id": this.manifest_id,
+        }
+    }
 };
 
-export const config = new Configuration();
+export const developmentConfiguration = new Configuration({ app: './app/', localDevPort: 9000, manifest_start_url: "http://localhost:9000", manifest_scope: "/", manifest_id: "/" });
+export const publishConfiguration = new Configuration({ app: './docs/', localDevPort: 9000, manifest_start_url: "https://ctrlaltdeletemenot.github.io/Prometheus/", manifest_scope: "/Prometheus/", manifest_id: "/Prometheus/" });

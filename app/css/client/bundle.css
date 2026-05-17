@@ -59,7 +59,7 @@ h6 {
 :root {
   --bg: #0b0f1a;
   --bg-secondary: #101625;
-  --glass: rgba(18, 24, 40, 0.75);
+  --glass: #111727;
   --border: #293149;
   --text: #e6edf3;
   --muted: #9aa4b2;
@@ -140,7 +140,6 @@ body.app {
   justify-content: space-between;
   align-items: center;
   padding: 0 0.8rem;
-  backdrop-filter: blur(14px);
   background: var(--glass);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -154,7 +153,6 @@ body.app {
   height: calc(100vh - var(--navbar-height));
   grid-area: sidebar;
   background: var(--glass);
-  backdrop-filter: blur(16px);
   border-right: 1px solid var(--border);
   padding: 1rem;
 }
@@ -164,11 +162,10 @@ body.app {
   justify-content: space-between;
   align-items: center;
   padding: 0 0.8rem;
-  backdrop-filter: blur(14px);
   background: var(--glass);
   border-top: 1px solid var(--border);
   height: var(--footer-height);
-  position: fixed;
+  position: sticky;
   bottom: 0;
   left: 0;
   z-index: 1000;
@@ -218,14 +215,15 @@ body.app {
   .app-sidebar {
     position: fixed;
     top: 0;
-    left: -100%;
+    left: 0;
     height: 100vh;
-    transition: left 0.3s ease;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
     z-index: 2000;
     width: 100%;
   }
   .app-sidebar.open {
-    left: 0;
+    transform: translateX(0);
   }
   .sidebar-nav-mobile-only {
     display: flex;
@@ -487,7 +485,7 @@ button.icon-only-pill svg.icon {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 1rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border);
 }
 .asset-and-exchange-images-holder {
@@ -547,7 +545,6 @@ button.icon-only-pill svg.icon {
 .hero-card {
   padding: 3rem;
   border-radius: var(--border-radius);
-  backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   text-align: center;
   max-width: 600px;
@@ -582,7 +579,7 @@ button.icon-only-pill svg.icon {
   justify-content: center;
   align-items: center;
   z-index: 2000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(2px);
 }
 .modal-content {
   background: var(--bg);

@@ -29,6 +29,7 @@ export type ProgressCallback =
     (progress: number, message: string) => void;
 
 export class WorkerCoreImplementation {
+   
     static async Create() {
         let useCaseContainer = await UseCaseContainer.Create();
         var toReturn = new WorkerCoreImplementation(useCaseContainer);
@@ -50,7 +51,12 @@ export class WorkerCoreImplementation {
     #filterableFieldsExtractors: BaseFilterableAttributeExtractor[];
     #dailyUptrendFilter: SmaUptrendFilter;
     #fourHoursUptrendFilter: SmaUptrendFilter;
+    #oneHourUptrendFilter: SmaUptrendFilter;
+    #fifteenMinutesUptrendFilter: SmaUptrendFilter;
     #fifteenMinutesRsiTwoOversoldFilter: RsiOversoldFilter;
+    #oneHourRsiTwoOversoldFilter: RsiOversoldFilter;
+    #fourHoursRsiTwoOversoldFilter: RsiOversoldFilter;
+    #dailyRsiTwoOversoldFilter: RsiOversoldFilter;
 
     constructor(container: UseCaseContainer) {
         this.#container = container;
@@ -67,8 +73,13 @@ export class WorkerCoreImplementation {
 
         this.#dailyUptrendFilter = new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY);
         this.#fourHoursUptrendFilter = new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS); 
+        this.#oneHourUptrendFilter = new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR); 
+        this.#fifteenMinutesUptrendFilter = new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES); 
         this.#fifteenMinutesRsiTwoOversoldFilter = new RsiOversoldFilter(Period.fromUnknown(2),TimeFrame.FIFTEEN_MINUTES,5);
-        this.#filterableFieldsExtractors = [this.#dailyUptrendFilter, this.#fourHoursUptrendFilter, this.#fifteenMinutesRsiTwoOversoldFilter];
+        this.#oneHourRsiTwoOversoldFilter = new RsiOversoldFilter(Period.fromUnknown(2),TimeFrame.ONE_HOUR,5);
+        this.#fourHoursRsiTwoOversoldFilter = new RsiOversoldFilter(Period.fromUnknown(2),TimeFrame.FOUR_HOURS,5);
+        this.#dailyRsiTwoOversoldFilter = new RsiOversoldFilter(Period.fromUnknown(2),TimeFrame.ONE_DAY,5);
+        this.#filterableFieldsExtractors = [this.#dailyUptrendFilter, this.#fourHoursUptrendFilter, this.#oneHourUptrendFilter, this.#fifteenMinutesUptrendFilter, this.#fifteenMinutesRsiTwoOversoldFilter, this.#oneHourRsiTwoOversoldFilter, this.#fourHoursRsiTwoOversoldFilter, this.#dailyRsiTwoOversoldFilter];
     }
 
     /**

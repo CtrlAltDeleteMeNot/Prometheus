@@ -18,6 +18,8 @@ export const cssGenerate = (configuration: Configuration): gulp.TaskFunction => 
 };
 
 
+
+
 export const cssClean = (configuration: Configuration): gulp.TaskFunction => {
   return function cssCleanImpl(cb: gulp.TaskFunctionCallback) {
     fs.rmSync(configuration.esClientCss.outputDir, { force: true, recursive: true });
@@ -27,7 +29,7 @@ export const cssClean = (configuration: Configuration): gulp.TaskFunction => {
 
 export const cssWatch = (configuration: Configuration, ...tasks: gulp.TaskFunction[]): gulp.TaskFunction => {
   const runTasks = gulp.series(cssGenerate(configuration), ...tasks);
-  return function cssWatchImpl() {
+  return function cssLocalWatchImpl() {
     return gulp.watch(configuration.esClientCss.watch, runTasks);
   }
 };

@@ -3909,7 +3909,7 @@
         constructor(period, timeFrame) {
           super();
           this.params = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
-          this.metadata = new NamedAttributeMetadata(`close.above.${this.params.getId()}`, `Close above ${this.params.getDescription()}`, "boolean");
+          this.metadata = new NamedAttributeMetadata(`close.above.${this.params.getId()}`, `${this.params.getDescription()} < Close`, "boolean");
         }
         getNamedAttributeMetadata() {
           return this.metadata;
@@ -3964,7 +3964,7 @@
   });
 
   // ts_libs/ts_worker/worker/WorkerCoreImplementation.ts
-  var _container, _mapper, _timeProvider, _mtf, _candlesPerTimeFrame2, _sortableFieldsExtractors, _dailyPriceChangeExtractor, _currentPriceExtractor, _dailyPendingRvaExtractor, _dailyRvaExtractor, _thirtyDaysPercentChangeExtractor, _filterableFieldsExtractors, _dailyUptrendFilter, _fourHoursUptrendFilter, _fifteenMinutesRsiTwoOversoldFilter, _WorkerCoreImplementation, WorkerCoreImplementation;
+  var _container, _mapper, _timeProvider, _mtf, _candlesPerTimeFrame2, _sortableFieldsExtractors, _dailyPriceChangeExtractor, _currentPriceExtractor, _dailyPendingRvaExtractor, _dailyRvaExtractor, _thirtyDaysPercentChangeExtractor, _filterableFieldsExtractors, _dailyUptrendFilter, _fourHoursUptrendFilter, _oneHourUptrendFilter, _fifteenMinutesUptrendFilter, _fifteenMinutesRsiTwoOversoldFilter, _oneHourRsiTwoOversoldFilter, _fourHoursRsiTwoOversoldFilter, _dailyRsiTwoOversoldFilter, _WorkerCoreImplementation, WorkerCoreImplementation;
   var init_WorkerCoreImplementation = __esm({
     "ts_libs/ts_worker/worker/WorkerCoreImplementation.ts"() {
       "use strict";
@@ -4003,7 +4003,12 @@
           __privateAdd(this, _filterableFieldsExtractors);
           __privateAdd(this, _dailyUptrendFilter);
           __privateAdd(this, _fourHoursUptrendFilter);
+          __privateAdd(this, _oneHourUptrendFilter);
+          __privateAdd(this, _fifteenMinutesUptrendFilter);
           __privateAdd(this, _fifteenMinutesRsiTwoOversoldFilter);
+          __privateAdd(this, _oneHourRsiTwoOversoldFilter);
+          __privateAdd(this, _fourHoursRsiTwoOversoldFilter);
+          __privateAdd(this, _dailyRsiTwoOversoldFilter);
           __privateSet(this, _container, container);
           __privateSet(this, _timeProvider, new TimeProvider());
           __privateSet(this, _mtf, null);
@@ -4017,8 +4022,13 @@
           __privateSet(this, _sortableFieldsExtractors, [__privateGet(this, _currentPriceExtractor), __privateGet(this, _dailyPriceChangeExtractor), __privateGet(this, _dailyPendingRvaExtractor), __privateGet(this, _dailyRvaExtractor), __privateGet(this, _thirtyDaysPercentChangeExtractor)]);
           __privateSet(this, _dailyUptrendFilter, new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY));
           __privateSet(this, _fourHoursUptrendFilter, new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS));
+          __privateSet(this, _oneHourUptrendFilter, new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR));
+          __privateSet(this, _fifteenMinutesUptrendFilter, new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES));
           __privateSet(this, _fifteenMinutesRsiTwoOversoldFilter, new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 5));
-          __privateSet(this, _filterableFieldsExtractors, [__privateGet(this, _dailyUptrendFilter), __privateGet(this, _fourHoursUptrendFilter), __privateGet(this, _fifteenMinutesRsiTwoOversoldFilter)]);
+          __privateSet(this, _oneHourRsiTwoOversoldFilter, new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_HOUR, 5));
+          __privateSet(this, _fourHoursRsiTwoOversoldFilter, new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FOUR_HOURS, 5));
+          __privateSet(this, _dailyRsiTwoOversoldFilter, new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_DAY, 5));
+          __privateSet(this, _filterableFieldsExtractors, [__privateGet(this, _dailyUptrendFilter), __privateGet(this, _fourHoursUptrendFilter), __privateGet(this, _oneHourUptrendFilter), __privateGet(this, _fifteenMinutesUptrendFilter), __privateGet(this, _fifteenMinutesRsiTwoOversoldFilter), __privateGet(this, _oneHourRsiTwoOversoldFilter), __privateGet(this, _fourHoursRsiTwoOversoldFilter), __privateGet(this, _dailyRsiTwoOversoldFilter)]);
         }
         static Create() {
           return __async(this, null, function* () {
@@ -4121,7 +4131,12 @@
       _filterableFieldsExtractors = new WeakMap();
       _dailyUptrendFilter = new WeakMap();
       _fourHoursUptrendFilter = new WeakMap();
+      _oneHourUptrendFilter = new WeakMap();
+      _fifteenMinutesUptrendFilter = new WeakMap();
       _fifteenMinutesRsiTwoOversoldFilter = new WeakMap();
+      _oneHourRsiTwoOversoldFilter = new WeakMap();
+      _fourHoursRsiTwoOversoldFilter = new WeakMap();
+      _dailyRsiTwoOversoldFilter = new WeakMap();
       WorkerCoreImplementation = _WorkerCoreImplementation;
     }
   });

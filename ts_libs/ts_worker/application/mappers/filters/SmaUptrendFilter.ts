@@ -12,7 +12,7 @@ export class SmaUptrendFilter extends BaseFilterableAttributeExtractor {
     public constructor(period: Period, timeFrame: TimeFrame) {
         super();
         this.params = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
-        this.metadata = new NamedAttributeMetadata(`close.above.${this.params.getId()}`, `Close above ${this.params.getDescription()}`, 'boolean');
+        this.metadata = new NamedAttributeMetadata(`close.above.${this.params.getId()}`, `${this.params.getDescription()} < Close`, 'boolean');
     }
     
     public getNamedAttributeMetadata(): NamedAttributeMetadata {

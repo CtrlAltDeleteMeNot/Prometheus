@@ -10,10 +10,11 @@ export const startServer = (configuration: Configuration): gulp.TaskFunction => 
     return function startServerImpl(cb: gulp.TaskFunctionCallback) {
         bs.init({
             server: {
-                baseDir: configuration.appRootDir
+                baseDir: configuration.app
             },
             open: true,
-            notify: true
+            notify: true,
+            port: configuration.localDevPort
         });
         cb();
     }
