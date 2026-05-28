@@ -100,8 +100,9 @@ export class Configuration {
                 }
             ],
             "display": "standalone",
-            "background_color": "#0E1220",
-            "theme_color": "#111726",
+            "display_override": ["window-controls-overlay"],
+            "background_color": "#111727",
+            "theme_color": "#111727",
             "orientation": "portrait",
             "lang": "en-US",
             "start_url": this.manifest_start_url,
