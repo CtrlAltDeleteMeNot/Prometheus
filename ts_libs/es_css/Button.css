@@ -148,17 +148,17 @@ button.icon-only-pill svg.icon {
   gap: 0rem;
 }
 
-.pill-group :last-child {
+.pill-group >:last-child {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-.pill-group :first-child {
+.pill-group >:first-child {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-.pill-group :not(:first-child):not(:last-child) {
+.pill-group >:not(:first-child):not(:last-child) {
   border-radius: 0;
 }
 

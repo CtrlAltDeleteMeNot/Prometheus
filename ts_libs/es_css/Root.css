@@ -71,7 +71,7 @@ p {
 
 
 body.app {
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
@@ -80,6 +80,7 @@ body.app {
     "header header"
     "sidebar main"
     "footer footer";
+
 }
 
 .app-header {
@@ -89,9 +90,7 @@ body.app {
   align-items: center;
   padding: 0 0.8rem;
   background: var(--glass);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
+  box-shadow: 0 1px 0 var(--border);
   z-index: 1000;
   height: var(--navbar-height);
 }
@@ -100,9 +99,7 @@ body.app {
 
 
 .app-sidebar {
-  position: sticky;
-  top: var(--navbar-height);
-  height: calc(100vh - var(--navbar-height));
+  
   grid-area: sidebar;
   background: var(--glass);
   border-right: 1px solid var(--border);
@@ -117,13 +114,10 @@ body.app {
   align-items: center;
   padding: 0 0.8rem;
   background: var(--glass);
-  border-top: 1px solid var(--border);
+  box-shadow: 0 -1px 0 var(--border);
   height: var(--footer-height);
-  position: sticky;
-  bottom: 0;
-  left: 0;
   z-index: 1000;
-  width: 100%;
+  
 }
 
 .sidebar-nav {
@@ -170,12 +164,14 @@ body.app {
       "header"
       "main"
       "footer";
+    grid-template-rows:
+      var(--navbar-height)
+      1fr
+      var(--footer-height);
   }
 
   .app-header {
-    position: fixed;
-    top: 0;
-    width: 100%;
+    position: relative;
     z-index: 1000;
   }
 
@@ -183,7 +179,7 @@ body.app {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
+    height: 100dvh;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 2000;
@@ -200,17 +196,11 @@ body.app {
     justify-content: space-between;
     margin-bottom: 1rem;
   }
-
-
 }
 
 .d-none {
   display: none !important;
 }
-
-
-
-
 
 .brand-gradient {
   background: linear-gradient(0deg, #4dabf7, #3b82f6);
@@ -221,10 +211,9 @@ body.app {
   font-weight: var(--font-weight-bold);
 }
 
-
 .app-frame {
   margin-inline: 1rem;
-  min-height: 100vh;
+  min-height: 100dvh;
   box-sizing: border-box;
   font-family: var(--font-primary);
   font-size: var(--font-size-base);
