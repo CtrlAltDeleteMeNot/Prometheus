@@ -94,7 +94,7 @@ export class Configuration {
             "description": "Prometheus is the ultimate companion for crypto traders focused on USDC pairs.",
             "icons": [
                 {
-                    "src": "/img/logo.svg",
+                    "src": `${this.manifest_scope}img/logo.svg`,
                     "sizes": "any",
                     "type": "image/svg+xml"
                 }
