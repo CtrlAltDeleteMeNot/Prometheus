@@ -6,13 +6,13 @@ import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { NamedAttributeMetadata, BooleanNamedAttribute } from "../../exports/NamedAttribute";
 import { BaseFilterableAttributeExtractor } from "../BaseFilterableAttributeExtractor";
 
-export class SmaUptrendFilter extends BaseFilterableAttributeExtractor {
+export class SmaDowntrendFilter extends BaseFilterableAttributeExtractor {
     params: SmaIndicatorParameters;
     metadata: NamedAttributeMetadata;
     public constructor(period: Period, timeFrame: TimeFrame) {
         super();
         this.params = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
-        this.metadata = new NamedAttributeMetadata(`close.above.${this.params.getId()}`, `Uptrend: ${this.params.getDescription()} < Close`, 'boolean');
+        this.metadata = new NamedAttributeMetadata(`close.below.${this.params.getId()}`, `Downtrend: ${this.params.getDescription()} > Close`, 'boolean');
     }
     
     public getNamedAttributeMetadata(): NamedAttributeMetadata {
@@ -25,12 +25,12 @@ export class SmaUptrendFilter extends BaseFilterableAttributeExtractor {
         if (!indicator.isReady()) {
             return BooleanNamedAttribute.fromMetadata(this.metadata);
         }
-        const isUptrend = close > indicator.getValue().getValue();
-        return BooleanNamedAttribute.fromMetadata(this.metadata, isUptrend);
+        const isDowntrend = close < indicator.getValue().getValue();
+        return BooleanNamedAttribute.fromMetadata(this.metadata, isDowntrend);
     }
 
     public getId(): string {
-        return `${SmaUptrendFilter.name}.${this.getNamedAttributeMetadata().key}`;
+        return `${SmaDowntrendFilter.name}.${this.getNamedAttributeMetadata().key}`;
     }
 
 }

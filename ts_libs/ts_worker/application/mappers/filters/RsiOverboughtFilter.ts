@@ -6,15 +6,15 @@ import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { NamedAttributeMetadata, BooleanNamedAttribute } from "../../exports/NamedAttribute";
 import { BaseFilterableAttributeExtractor } from "../BaseFilterableAttributeExtractor";
 
-export class RsiOversoldFilter extends BaseFilterableAttributeExtractor {
+export class RsiOverboughtFilter extends BaseFilterableAttributeExtractor {
     params: RsiIndicatorParameters;
     metadata: NamedAttributeMetadata;
-    oversoldTreshold: number;
-    public constructor(period: Period, timeFrame: TimeFrame, oversoldTreshold: number) {
+    overboughtTreshold: number;
+    public constructor(period: Period, timeFrame: TimeFrame, overboughtTreshold: number) {
         super();
-        this.oversoldTreshold = oversoldTreshold;
+        this.overboughtTreshold = overboughtTreshold;
         this.params = this.useRsiIndicator(timeFrame, period, Source.CLOSE);
-        this.metadata = new NamedAttributeMetadata(`rsi.oversold.filter.${this.params.getId()} < ${oversoldTreshold}`, `Oversold: ${this.params.getDescription()} <= ${oversoldTreshold}`, 'boolean');
+        this.metadata = new NamedAttributeMetadata(`rsi.overbought.filter.${this.params.getId()} > ${overboughtTreshold}`, `Overbought: ${this.params.getDescription()} >= ${overboughtTreshold}`, 'boolean');
     }
 
     public getNamedAttributeMetadata(): NamedAttributeMetadata {
@@ -26,11 +26,11 @@ export class RsiOversoldFilter extends BaseFilterableAttributeExtractor {
         if (!indicator.isReady()) {
             return BooleanNamedAttribute.fromMetadata(this.metadata);
         }
-        const isOversold = this.oversoldTreshold > indicator.getValue().getValue();
-        return BooleanNamedAttribute.fromMetadata(this.metadata, isOversold);
+        const isOverBought = this.overboughtTreshold < indicator.getValue().getValue();
+        return BooleanNamedAttribute.fromMetadata(this.metadata, isOverBought);
     }
 
     public getId(): string {
-        return `${RsiOversoldFilter.name}.${this.getNamedAttributeMetadata().key}`;
+        return `${RsiOverboughtFilter.name}.${this.getNamedAttributeMetadata().key}`;
     }
 }

@@ -105,7 +105,7 @@ button.icon-only-pill svg.icon {
   background-color: var(--transparent);
   cursor: pointer;
   text-align: left;
-  height: 3rem;
+  min-height: 3rem;
   transition: all 0.2s ease;
   color: var(--text);
   fill: var(--text);

@@ -92,6 +92,11 @@ h6 {
 * {
   box-sizing: border-box;
 }
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
 body {
   margin: 0;
   font-family: var(--font-primary);
@@ -128,7 +133,8 @@ p {
   margin: 1rem 0;
 }
 body.app {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
@@ -195,11 +201,12 @@ body.app {
 }
 .app-main {
   grid-area: main;
-  overflow: auto;
-  padding: 1.5rem;
+  overflow: hidden;
+  min-height: 0;
   font-family: var(--font-primary);
   font-size: var(--font-size-base);
-  padding-bottom: var(--footer-height);
+  display: flex;
+  flex-direction: column;
 }
 @media (max-width: 900px) {
   body.app {
@@ -349,7 +356,7 @@ button.icon-only-pill svg.icon {
   background-color: var(--transparent);
   cursor: pointer;
   text-align: left;
-  height: 3rem;
+  min-height: 3rem;
   transition: all 0.2s ease;
   color: var(--text);
   fill: var(--text);
@@ -451,12 +458,8 @@ button.icon-only-pill svg.icon {
 #screener {
   flex: 1;
   min-height: 0;
-}
-#screener-header {
   display: flex;
-  gap: 1rem;
-  overflow-y: visible;
-  min-height: 0;
+  flex-direction: column;
 }
 #screener-body {
   display: grid;
@@ -466,6 +469,7 @@ button.icon-only-pill svg.icon {
   flex: 1;
   min-height: 0;
   grid-auto-rows: min-content;
+  padding: 1.5rem;
 }
 @media (max-width: 600px) {
   #screener-body {
@@ -533,14 +537,11 @@ button.icon-only-pill svg.icon {
 
 /* ts_libs/es_css/SectionStart.css */
 #start {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
   padding: 0 1rem;
-  box-sizing: border-box;
-  min-width: 300px;
 }
 .hero-card {
   padding: 3rem;
@@ -554,15 +555,11 @@ button.icon-only-pill svg.icon {
   gap: 1rem;
   background: var(--glass);
   margin-left: calc(-1* var(--sidebar-width));
-  margin-bottom: calc(-1*var(--navbar-height));
 }
 @media (max-width: 900px) {
-  #start {
-    width: 100%;
-  }
   .hero-card {
     margin-left: 0;
-    width: 95%;
+    width: 85%;
     padding: 2rem;
   }
 }
@@ -742,6 +739,12 @@ button.icon-only-pill svg.icon {
 }
 
 /* ts_libs/es_css/SectionAbout.css */
+#about {
+  padding: 1.5rem;
+}
+#about p:first-of-type {
+  margin-top: 0;
+}
 #about a {
   color: var(--text);
 }

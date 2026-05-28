@@ -25,6 +25,13 @@
   box-sizing: border-box;
 }
 
+/*no scroll*/
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   font-family: var(--font-primary);
@@ -64,7 +71,8 @@ p {
 
 
 body.app {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
@@ -146,11 +154,12 @@ body.app {
 
 .app-main {
   grid-area: main;
-  overflow: auto;
-  padding: 1.5rem;
+  overflow: hidden;
+  min-height: 0;
   font-family: var(--font-primary);
   font-size: var(--font-size-base);
-  padding-bottom: var(--footer-height);
+  display: flex;
+  flex-direction: column;
 }
 
 

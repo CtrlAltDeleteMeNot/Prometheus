@@ -21,6 +21,8 @@ import { SmaUptrendFilter } from "../application/mappers/filters/SmaUptrendFilte
 import { TimeFrame } from "../domain/values/TimeFrame";
 import { Period } from "../domain/ta/core/Period";
 import { RsiOversoldFilter } from "../application/mappers/filters/RsiOversoldFilter";
+import { SmaDowntrendFilter } from "../application/mappers/filters/SmaDowntrendFilter";
+import { RsiOverboughtFilter } from "../application/mappers/filters/RsiOverboughtFilter";
 
 
 
@@ -49,14 +51,7 @@ export class WorkerCoreImplementation {
     #thirtyDaysPercentChangeExtractor: ThirtyDayPercentChangeExtractor;
 
     #filterableFieldsExtractors: BaseFilterableAttributeExtractor[];
-    #dailyUptrendFilter: SmaUptrendFilter;
-    #fourHoursUptrendFilter: SmaUptrendFilter;
-    #oneHourUptrendFilter: SmaUptrendFilter;
-    #fifteenMinutesUptrendFilter: SmaUptrendFilter;
-    #fifteenMinutesRsiTwoOversoldFilter: RsiOversoldFilter;
-    #oneHourRsiTwoOversoldFilter: RsiOversoldFilter;
-    #fourHoursRsiTwoOversoldFilter: RsiOversoldFilter;
-    #dailyRsiTwoOversoldFilter: RsiOversoldFilter;
+   
 
     constructor(container: UseCaseContainer) {
         this.#container = container;
@@ -71,15 +66,32 @@ export class WorkerCoreImplementation {
         this.#thirtyDaysPercentChangeExtractor = new ThirtyDayPercentChangeExtractor();
         this.#sortableFieldsExtractors = [this.#currentPriceExtractor, this.#dailyPriceChangeExtractor, this.#dailyPendingRvaExtractor, this.#dailyRvaExtractor, this.#thirtyDaysPercentChangeExtractor];
 
-        this.#dailyUptrendFilter = new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY);
-        this.#fourHoursUptrendFilter = new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS); 
-        this.#oneHourUptrendFilter = new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR); 
-        this.#fifteenMinutesUptrendFilter = new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES); 
-        this.#fifteenMinutesRsiTwoOversoldFilter = new RsiOversoldFilter(Period.fromUnknown(2),TimeFrame.FIFTEEN_MINUTES,5);
-        this.#oneHourRsiTwoOversoldFilter = new RsiOversoldFilter(Period.fromUnknown(2),TimeFrame.ONE_HOUR,5);
-        this.#fourHoursRsiTwoOversoldFilter = new RsiOversoldFilter(Period.fromUnknown(2),TimeFrame.FOUR_HOURS,5);
-        this.#dailyRsiTwoOversoldFilter = new RsiOversoldFilter(Period.fromUnknown(2),TimeFrame.ONE_DAY,5);
-        this.#filterableFieldsExtractors = [this.#dailyUptrendFilter, this.#fourHoursUptrendFilter, this.#oneHourUptrendFilter, this.#fifteenMinutesUptrendFilter, this.#fifteenMinutesRsiTwoOversoldFilter, this.#oneHourRsiTwoOversoldFilter, this.#fourHoursRsiTwoOversoldFilter, this.#dailyRsiTwoOversoldFilter];
+        this.#filterableFieldsExtractors = [];
+        let tfs = TimeFrame.values();
+        tfs.forEach(aTf=>{
+            this.#filterableFieldsExtractors.push(new SmaUptrendFilter(Period.fromUnknown(200), aTf));
+        });
+        tfs.forEach(aTf=>{
+            this.#filterableFieldsExtractors.push(new SmaUptrendFilter(Period.fromUnknown(50), aTf));
+        });
+        tfs.forEach(aTf=>{
+            this.#filterableFieldsExtractors.push(new SmaUptrendFilter(Period.fromUnknown(20), aTf));
+        });
+        tfs.forEach(aTf=>{
+            this.#filterableFieldsExtractors.push(new SmaDowntrendFilter(Period.fromUnknown(200), aTf));
+        });
+        tfs.forEach(aTf=>{
+            this.#filterableFieldsExtractors.push(new SmaDowntrendFilter(Period.fromUnknown(50), aTf));
+        });
+        tfs.forEach(aTf=>{
+            this.#filterableFieldsExtractors.push(new SmaDowntrendFilter(Period.fromUnknown(20), aTf));
+        });
+        tfs.forEach(aTf=>{
+            this.#filterableFieldsExtractors.push(new RsiOversoldFilter(Period.fromUnknown(2), aTf, 5));
+        });
+        tfs.forEach(aTf=>{
+            this.#filterableFieldsExtractors.push(new RsiOverboughtFilter(Period.fromUnknown(2), aTf, 95));
+        });
     }
 
     /**
