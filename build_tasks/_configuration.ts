@@ -100,7 +100,6 @@ export class Configuration {
                 }
             ],
             "display": "standalone",
-            "display_override": ["window-controls-overlay"],
             "background_color": "#111727",
             "theme_color": "#111727",
             "orientation": "portrait",
