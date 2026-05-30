@@ -30,6 +30,7 @@
   padding: 1rem;
   border-bottom: 1px solid var(--border);
   min-height: var(--navbar-height);
+  padding-top: var(--safe-top);
 }
 
 
@@ -47,6 +48,7 @@
   align-items: center;
   padding: 1rem;
   border-top: 1px solid var(--border);
+  min-height: var(--footer-height);
 }
 
 .modal-close {
