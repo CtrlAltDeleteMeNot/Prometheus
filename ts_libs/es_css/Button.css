@@ -1,10 +1,10 @@
 button.primary {
   padding: 1rem 2rem;
-  border-radius: 12px;
+  border-radius: var(--border-radius);
   border: none;
   background: var(--accent);
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   font-family: var(--font-primary);
@@ -113,7 +113,7 @@ button.icon-only-pill svg.icon {
 
 .pill-button.active{
   background-color: var(--text);
-  color:var(--bg);
+  color:var(--surface-0);
 }
 
 
@@ -168,7 +168,7 @@ button.icon-only-pill svg.icon {
 }
 
 .icon-only-transparent span{
-    color: var(--bg);
+    color: var(--surface-0);
     font-size: 0.55rem;
     position: absolute;
     border-color: var(--text);

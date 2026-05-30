@@ -30,7 +30,6 @@
 
   .app-header .brand .brand-sub {
     display: block;
-    font-weight: var(--font-weight-normal);
   }
 
   #menu-open {

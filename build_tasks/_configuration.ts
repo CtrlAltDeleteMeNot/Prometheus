@@ -111,5 +111,5 @@ export class Configuration {
     }
 };
 
-export const developmentConfiguration = new Configuration({ app: './app/', localDevPort: 9000, manifest_start_url: "http://localhost:9000", manifest_scope: "/", manifest_id: "/" });
+export const developmentConfiguration = new Configuration({ app: './app/', localDevPort: 9000, manifest_start_url: "https://legion.local:9000", manifest_scope: "/", manifest_id: "/" });
 export const publishConfiguration = new Configuration({ app: './docs/', localDevPort: 9000, manifest_start_url: "https://ctrlaltdeletemenot.github.io/Prometheus/", manifest_scope: "/Prometheus/", manifest_id: "/Prometheus/" });

@@ -14,7 +14,7 @@
   "theme_color": "#111727",
   "orientation": "portrait",
   "lang": "en-US",
-  "start_url": "http://localhost:9000",
+  "start_url": "https://legion.local:9000",
   "scope": "/",
   "id": "/"
 }
