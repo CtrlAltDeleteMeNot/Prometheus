@@ -17,7 +17,7 @@
   --accent: #3b82f6;
   --sidebar-width: 240px;
   --navbar-height: 4rem;
-  --footer-height: 6rem;
+  --footer-height: 4rem;
   --font-primary: system-ui, sans-serif;
   --font-heading: ui-sans-serif, system-ui, sans-serif;
   --font-size-base: 1rem;
@@ -61,6 +61,10 @@ body {
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
 }
 
 /* Apply heading font to headings */
@@ -111,7 +115,6 @@ body.app {
   box-shadow: 0 1px 0 var(--border);
   z-index: 1000;
   height: var(--navbar-height);
-  padding-top: var(--safe-top);
 }
 
 
@@ -135,7 +138,6 @@ body.app {
   background: var(--surface-0);
   box-shadow: 0 -1px 0 var(--border);
   height: var(--footer-height);
-  padding-bottom: var(--safe-bottom);
   z-index: 1000;
 }
 
