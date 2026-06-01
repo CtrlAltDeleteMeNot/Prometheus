@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@types/browser-sync": "^2.29.1",
+    "@types/glob": "^8.1.0",
     "@types/gulp": "^4.0.18",
     "@types/gulp-rename": "^2.0.7",
     "@types/gulp-svgmin": "^1.2.5",
@@ -19,6 +20,7 @@
     "cryptocurrency-icons": "0.18.1",
     "esbuild": "^0.27.2",
     "fancy-log": "^2.0.0",
+    "glob": "^13.0.6",
     "gulp": "^5.0.1",
     "gulp-clean": "^0.4.0",
     "gulp-copy": "^5.0.0",

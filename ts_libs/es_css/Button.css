@@ -86,7 +86,7 @@ button.icon-only-transparent svg.icon {
   display: block;
 }
 
-button.icon-only-pill svg.icon {
+button.icon-only-pill .icon {
   width: 1.8rem;
   height: 1.8rem;
   fill: var(--text);

@@ -14,7 +14,7 @@ export const ACTION_ICON_REGISTRY : Record<string, string> = {
 const dp = new DOMParser();
 const cache = new Map<string, SVGElement>();
 
-export function getActionIconId(input: string, fallback = 'minus-circle'): SVGElement {
+export function getActionIconSVGElement(input: string, fallback = 'minus-circle'): SVGElement {
   const id = input.toLowerCase();
   const cached = cache.get(id);
 

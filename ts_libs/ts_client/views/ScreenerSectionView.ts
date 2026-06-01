@@ -1,8 +1,8 @@
 import { TradingPairModel } from '../../ts_worker/application/exports/TradingPairModel';
 import { ViewHelper } from './ViewHelper';
-import { getCryptoIconId } from './generated/CryptoIconsRegistry'
-import { getActionIconId } from './generated/ActionIconsRegistry'
+import { getActionIconSVGElement } from './generated/ActionIconsRegistry'
 import { ISection } from './ISection'
+import { getSymbolSvgUrlById } from './generated/SymbolIconsRegistry';
 
 
 export class ScreenerSectionView implements ISection {
@@ -15,7 +15,6 @@ export class ScreenerSectionView implements ISection {
     id: string;
     // Optional "Load More" button
     #loadMoreBtn: HTMLButtonElement;
-    #domParser:DOMParser;
 
     constructor() {
         this.title = "Screener";
@@ -32,7 +31,6 @@ export class ScreenerSectionView implements ISection {
         this.#loadMoreBtn.style = 'flex: 1 1 100%;text-align: center;';
         this.#loadMoreBtn.onclick = () => this.loadNextPage();
         this.#screenerBody.appendChild(this.#loadMoreBtn);
-        this.#domParser = new DOMParser();
     }
 
     hasExternalActions(): boolean {
@@ -82,16 +80,20 @@ export class ScreenerSectionView implements ISection {
         const imagesHolder = document.createElement('div');
         imagesHolder.className = 'asset-and-exchange-images-holder';
 
-        const svgParsed = this.#domParser.parseFromString(getCryptoIconId(tp.baseAsset),"image/svg+xml");
-        const svg = svgParsed.documentElement;
-        svg.classList.add('asset-image');
+
+        const assetIconUrl = getSymbolSvgUrlById(tp.baseAsset, 'generic'); // URL
+        const assetImg = document.createElement('img');
+        assetImg.className = 'asset-image';
+        assetImg.src = assetIconUrl;
+        assetImg.alt = tp.baseAsset;
+        assetImg.loading = 'lazy';
 
         const exchangeImg = document.createElement('img');
         exchangeImg.className = 'exchange-image';
         exchangeImg.src = `img/exchanges/${tp.exchangeName}.svg`;
         exchangeImg.alt = tp.exchangeName;
 
-        imagesHolder.appendChild(svg);
+        imagesHolder.appendChild(assetImg);
         imagesHolder.appendChild(exchangeImg);
 
         const textContainer = document.createElement('div');
@@ -116,7 +118,7 @@ export class ScreenerSectionView implements ISection {
         });
 
         //const arrowRightSvg = this.#domParser.parseFromString(getActionIconId('arrow-right'),"image/svg+xml");
-        const btnSvg = getActionIconId('arrow-right');
+        const btnSvg = getActionIconSVGElement('arrow-right');
         btnSvg.classList.add('icon');
         btnSvg.setAttribute('role', 'img');
 
