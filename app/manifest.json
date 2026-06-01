@@ -1,6 +1,6 @@
 {
-  "name": "Prometheus",
-  "short_name": "Prometheus",
+  "name": "Prometheus.DEV",
+  "short_name": "Prometheus.DEV",
   "description": "Prometheus is the ultimate companion for crypto traders focused on USDC pairs.",
   "icons": [
     {
@@ -14,7 +14,7 @@
   "theme_color": "#0b0f1a",
   "orientation": "portrait",
   "lang": "en-US",
-  "start_url": "https://legion.local:9000",
+  "start_url": "http://localhost:9000",
   "scope": "/",
   "id": "/"
 }

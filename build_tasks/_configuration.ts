@@ -4,6 +4,7 @@ type ConfigurationOptions = {
     manifest_start_url: string,
     manifest_scope: string,
     manifest_id: string,
+    isDevelopmentVersion: boolean;
 };
 
 export class Configuration {
@@ -12,6 +13,8 @@ export class Configuration {
     readonly manifest_start_url: string;
     readonly manifest_scope: string;
     readonly manifest_id: string;
+    readonly isDevelopmentVersion: boolean;
+
     readonly html: {
         input: string;
         output: string;
@@ -46,6 +49,7 @@ export class Configuration {
         this.manifest_start_url = opts.manifest_start_url;
         this.manifest_scope = opts.manifest_scope;
         this.manifest_id = opts.manifest_id;
+        this.isDevelopmentVersion = opts.isDevelopmentVersion;
         this.html = {
             input: 'html/index.html',
             output: `${this.app}index.html`,
@@ -89,8 +93,8 @@ export class Configuration {
 
     get manifest() {
         return {
-            "name": "Prometheus",
-            "short_name": "Prometheus",
+            "name": this.isDevelopmentVersion? "Prometheus.DEV":"Prometheus",
+            "short_name": this.isDevelopmentVersion? "Prometheus.DEV":"Prometheus",
             "description": "Prometheus is the ultimate companion for crypto traders focused on USDC pairs.",
             "icons": [
                 {
@@ -111,5 +115,5 @@ export class Configuration {
     }
 };
 
-export const developmentConfiguration = new Configuration({ app: './app/', localDevPort: 9000, manifest_start_url: "https://legion.local:9000", manifest_scope: "/", manifest_id: "/" });
-export const publishConfiguration = new Configuration({ app: './docs/', localDevPort: 9000, manifest_start_url: "https://ctrlaltdeletemenot.github.io/Prometheus/", manifest_scope: "/Prometheus/", manifest_id: "/Prometheus/" });
+export const developmentConfiguration = new Configuration({ app: './app/', isDevelopmentVersion: true, localDevPort: 9000, manifest_start_url: "http://localhost:9000", manifest_scope: "/", manifest_id: "/" });
+export const publishConfiguration = new Configuration({ app: './docs/', isDevelopmentVersion: false, localDevPort: 9000, manifest_start_url: "https://ctrlaltdeletemenot.github.io/Prometheus/", manifest_scope: "/Prometheus/", manifest_id: "/Prometheus/" });

@@ -12,10 +12,8 @@ export const startServer = (configuration: Configuration): gulp.TaskFunction => 
             server: {
                 baseDir: configuration.app
             },
-            open: "external",
+            open: "local",
             notify: true,
-            host: "legion.local",
-            https: true,
             port: configuration.localDevPort
         });
         cb();

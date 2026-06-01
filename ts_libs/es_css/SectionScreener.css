@@ -32,7 +32,7 @@
   /*backdrop-filter: blur(14px);*/
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
-  background: var(--surface-1);
+  background: var(--surface-3);
   padding: 1rem;
 }
 

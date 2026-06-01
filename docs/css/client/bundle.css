@@ -98,17 +98,12 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+  background: var(--surface-0);
 }
 body {
   margin: 0;
   font-family: var(--font-primary);
   font-size: var(--font-size-base);
-  background:
-    radial-gradient(
-      circle at 20% 30%,
-      #141a2e,
-      #0b0f1a 60%);
-  background: var(--surface-0);
   color: var(--text);
   line-height: 1.5;
   text-rendering: optimizeLegibility;
@@ -147,12 +142,16 @@ p {
   margin: 1rem 0;
 }
 body.app {
+  height: 100vh;
   height: 100dvh;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
   grid-template-areas: "header header" "sidebar main" "footer footer";
+}
+.app > script {
+  display: none !important;
 }
 .app-header {
   grid-area: header;
@@ -161,14 +160,12 @@ body.app {
   align-items: center;
   padding: 0 var(--space-4);
   background: var(--surface-0);
-  box-shadow: 0 1px 0 var(--border);
   z-index: 1000;
   height: var(--navbar-height);
 }
 .app-sidebar {
   grid-area: sidebar;
   background: var(--surface-0);
-  border-right: 1px solid var(--border);
   padding: var(--space-6);
   padding-left: var(--space-4);
 }
@@ -201,7 +198,7 @@ body.app {
 }
 .sidebar-nav a.active,
 .sidebar-nav a:hover {
-  background: var(--surface-1);
+  background: var(--surface-3);
   color: var(--text);
 }
 .sidebar-nav a.active {
@@ -218,7 +215,7 @@ body.app {
   body.app {
     grid-template-columns: 1fr;
     grid-template-areas: "header" "main" "footer";
-    grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
+    grid-template-rows: auto 1fr auto;
   }
   .app-header {
     position: relative;
@@ -234,6 +231,7 @@ body.app {
     z-index: 2000;
     width: 100dvw;
     will-change: transform;
+    grid-area: main;
   }
   .app-sidebar.open {
     transform: translateX(0);
@@ -480,7 +478,7 @@ button.icon-only-pill svg.icon {
   gap: 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
-  background: var(--surface-1);
+  background: var(--surface-3);
   padding: 1rem;
 }
 .asset-pair-description {
