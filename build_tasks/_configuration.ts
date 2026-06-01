@@ -94,7 +94,7 @@ export class Configuration {
             inputDir : 'node_modules/cryptocurrency-icons/svg/color/',
             outputDir:`${opts.app}img/symbols/`,
             outputRegistryTsFile: 'ts_libs/ts_client/views/generated/SymbolIconsRegistry.ts',
-            relativeUrlPrefix: "/img/symbols/"
+            relativeUrlPrefix: "img/symbols/"
         };
         this.actionIconsSvgs = {
             inputDir: 'node_modules/lineicons/assets/svgs/regular/',
