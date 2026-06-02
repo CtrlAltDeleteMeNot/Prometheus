@@ -43,115 +43,6 @@
     });
   };
 
-  // ts_libs/ts_client/controllers/ClsMonitor.ts
-  var CLSMonitor;
-  var init_ClsMonitor = __esm({
-    "ts_libs/ts_client/controllers/ClsMonitor.ts"() {
-      "use strict";
-      CLSMonitor = class _CLSMonitor {
-        constructor(callback) {
-          this.observer = null;
-          this.clsValue = 0;
-          this.state = "unknown";
-          // 🔥 profiling data
-          this.elementMap = /* @__PURE__ */ new Map();
-          this.shiftLog = [];
-          this.callback = callback;
-        }
-        static Create() {
-          const instance = new _CLSMonitor((a) => console.log(a));
-          instance.start();
-          return instance;
-        }
-        // =====================================================
-        // CORE MONITOR
-        // =====================================================
-        start() {
-          if (!("PerformanceObserver" in window)) return;
-          this.observer = new PerformanceObserver((list) => {
-            for (const entry of list.getEntries()) {
-              if (entry.hadRecentInput) continue;
-              const sources = (entry.sources || []).map((s) => ({
-                node: s.node,
-                previousRect: s.previousRect,
-                currentRect: s.currentRect
-              }));
-              this.clsValue += entry.value;
-              const event = {
-                value: entry.value,
-                total: this.clsValue,
-                state: this.state,
-                sources
-              };
-              this.processEvent(event);
-            }
-          });
-          this.observer.observe({ type: "layout-shift", buffered: true });
-        }
-        // =====================================================
-        // PROFILING CORE
-        // =====================================================
-        processEvent(event) {
-          var _a;
-          this.shiftLog.push(event);
-          for (const src of event.sources) {
-            if (!src.node) continue;
-            const el = src.node;
-            const existing = this.elementMap.get(el);
-            const delta = Math.abs(src.currentRect.top - src.previousRect.top) + Math.abs(src.currentRect.left - src.previousRect.left);
-            if (existing) {
-              existing.count += 1;
-              existing.totalShift += delta;
-            } else {
-              this.elementMap.set(el, {
-                element: el,
-                count: 1,
-                totalShift: delta
-              });
-            }
-            this.highlight(el);
-          }
-          (_a = this.callback) == null ? void 0 : _a.call(this, event);
-        }
-        // =====================================================
-        // DEBUG / VISUALIZATION
-        // =====================================================
-        highlight(el) {
-          el.style.outline = "2px solid rgba(255,0,0,0.6)";
-          el.style.transition = "outline 0.2s";
-        }
-        // =====================================================
-        // PUBLIC API
-        // =====================================================
-        setState(state) {
-          this.state = state;
-        }
-        getCLS() {
-          return this.clsValue;
-        }
-        reset() {
-          this.clsValue = 0;
-          this.elementMap.clear();
-          this.shiftLog = [];
-        }
-        stop() {
-          var _a;
-          (_a = this.observer) == null ? void 0 : _a.disconnect();
-          this.observer = null;
-        }
-        // =====================================================
-        // PROFILING OUTPUTS
-        // =====================================================
-        getWorstOffenders(limit = 10) {
-          return Array.from(this.elementMap.values()).sort((a, b) => b.totalShift - a.totalShift).slice(0, limit);
-        }
-        getShiftLog() {
-          return this.shiftLog;
-        }
-      };
-    }
-  });
-
   // ts_libs/ts_client/views/ViewHelper.ts
   var ViewHelper;
   var init_ViewHelper = __esm({
@@ -2339,11 +2230,9 @@
   // ts_libs/ts_client/index.ts
   var require_index = __commonJS({
     "ts_libs/ts_client/index.ts"(exports) {
-      init_ClsMonitor();
       init_ThinController();
       init_ThinServiceWorkerController();
       document.addEventListener("DOMContentLoaded", () => __async(null, null, function* () {
-        CLSMonitor.Create();
         yield ThinServiceWorkerController.Create("sw.js").catch(console.error);
         yield ThinController.Create("js/worker/worker.js").catch(console.error);
       }));
