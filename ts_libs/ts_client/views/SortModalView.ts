@@ -11,6 +11,7 @@ export class SortModalView {
     #fields: HTMLElement;
     #transientDirection: SortDirection | null = null;
     #transientSortKey: string | null = null;
+    #sortByButtons: HTMLButtonElement[] | null = null;
     #onSortingRulesChanged: ((direction: SortDirection, sortKey: string) => void);
     constructor() {
         this.#root = ViewHelper.getHtmlElementOrThrow('sort-fields-modal');
@@ -79,7 +80,7 @@ export class SortModalView {
             return;
         }
         this.#transientSortKey = model.getSortNamedAttributeMetadata().key;
-        var buttons = attributes.flatMap(attr => {
+        this.#sortByButtons = attributes.flatMap(attr => {
             var button = document.createElement('button');
             button.classList.add('filter-button');
             if (attr.key === this.#transientSortKey) {
@@ -90,9 +91,12 @@ export class SortModalView {
             this.#fields.append(button);
             return button;
         });
-        buttons.forEach(button => {
+        if (this.#sortByButtons === null) {
+            return;
+        }
+        this.#sortByButtons.forEach(button => {
             button.onclick = () => {
-                buttons.forEach(toRemoveActive => toRemoveActive.classList.remove('active'));
+                this.#sortByButtons?.forEach(toRemoveActive => toRemoveActive.classList.remove('active'));
                 button.classList.add('active');
             }
         });
@@ -112,9 +116,15 @@ export class SortModalView {
     }
 
     private getSortKeyFromView(): string {
-        const selectedButton = this.#fields.querySelector('.pill-button.active') as HTMLButtonElement;
+        //const selectedButton = this.#fields.querySelector('.pill-button.active') as HTMLButtonElement;
+        const selectedButton = this.#sortByButtons?.find(aButton=>aButton.classList.contains('active'));
+        if (!selectedButton) {
+            throw new Error('No active selected button found');
+        }
         const toReturn = selectedButton?.attributes?.getNamedItem('data-key')?.value;
-        if (!toReturn) throw new Error('No active pill button found');
+        if (!toReturn) {
+            throw new Error('No active pill button found');
+        }
         return toReturn;
     }
 }

@@ -1477,7 +1477,7 @@
   });
 
   // ts_libs/ts_client/views/SortModalView.ts
-  var _root6, _dismiss3, _ascending, _descending, _apply3, _fields2, _transientDirection, _transientSortKey, _onSortingRulesChanged, SortModalView;
+  var _root6, _dismiss3, _ascending, _descending, _apply3, _fields2, _transientDirection, _transientSortKey, _sortByButtons, _onSortingRulesChanged, SortModalView;
   var init_SortModalView = __esm({
     "ts_libs/ts_client/views/SortModalView.ts"() {
       "use strict";
@@ -1493,6 +1493,7 @@
           __privateAdd(this, _fields2);
           __privateAdd(this, _transientDirection, null);
           __privateAdd(this, _transientSortKey, null);
+          __privateAdd(this, _sortByButtons, null);
           __privateAdd(this, _onSortingRulesChanged);
           __privateSet(this, _root6, ViewHelper.getHtmlElementOrThrow("sort-fields-modal"));
           __privateSet(this, _dismiss3, ViewHelper.getButtonOrThrow("sort-fields-modal-close"));
@@ -1547,7 +1548,7 @@
             return;
           }
           __privateSet(this, _transientSortKey, model.getSortNamedAttributeMetadata().key);
-          var buttons = attributes.flatMap((attr) => {
+          __privateSet(this, _sortByButtons, attributes.flatMap((attr) => {
             var button = document.createElement("button");
             button.classList.add("filter-button");
             if (attr.key === __privateGet(this, _transientSortKey)) {
@@ -1557,10 +1558,14 @@
             button.textContent = attr.label;
             __privateGet(this, _fields2).append(button);
             return button;
-          });
-          buttons.forEach((button) => {
+          }));
+          if (__privateGet(this, _sortByButtons) === null) {
+            return;
+          }
+          __privateGet(this, _sortByButtons).forEach((button) => {
             button.onclick = () => {
-              buttons.forEach((toRemoveActive) => toRemoveActive.classList.remove("active"));
+              var _a;
+              (_a = __privateGet(this, _sortByButtons)) == null ? void 0 : _a.forEach((toRemoveActive) => toRemoveActive.classList.remove("active"));
               button.classList.add("active");
             };
           });
@@ -1575,10 +1580,15 @@
           return __privateGet(this, _ascending).classList.contains("active") ? 0 /* Ascending */ : 1 /* Descending */;
         }
         getSortKeyFromView() {
-          var _a, _b;
-          const selectedButton = __privateGet(this, _fields2).querySelector(".pill-button.active");
-          const toReturn = (_b = (_a = selectedButton == null ? void 0 : selectedButton.attributes) == null ? void 0 : _a.getNamedItem("data-key")) == null ? void 0 : _b.value;
-          if (!toReturn) throw new Error("No active pill button found");
+          var _a, _b, _c;
+          const selectedButton = (_a = __privateGet(this, _sortByButtons)) == null ? void 0 : _a.find((aButton) => aButton.classList.contains("active"));
+          if (!selectedButton) {
+            throw new Error("No active selected button found");
+          }
+          const toReturn = (_c = (_b = selectedButton == null ? void 0 : selectedButton.attributes) == null ? void 0 : _b.getNamedItem("data-key")) == null ? void 0 : _c.value;
+          if (!toReturn) {
+            throw new Error("No active pill button found");
+          }
           return toReturn;
         }
       };
@@ -1590,6 +1600,7 @@
       _fields2 = new WeakMap();
       _transientDirection = new WeakMap();
       _transientSortKey = new WeakMap();
+      _sortByButtons = new WeakMap();
       _onSortingRulesChanged = new WeakMap();
     }
   });
