@@ -34,8 +34,8 @@ export class CLSMonitor {
         this.callback = callback;
     }
 
-    static Create(callback?: (event: LayoutShiftEvent) => void) {
-        const instance = new CLSMonitor(callback);
+    static Create() {
+        const instance = new CLSMonitor((a)=>console.log(a));
         instance.start();
         return instance;
     }
@@ -123,9 +123,9 @@ export class CLSMonitor {
         el.style.outline = '2px solid rgba(255,0,0,0.6)';
         el.style.transition = 'outline 0.2s';
 
-        setTimeout(() => {
-            el.style.outline = '';
-        }, 500);
+        //setTimeout(() => {
+        //    el.style.outline = '';
+        //}, 500);
     }
 
     // =====================================================

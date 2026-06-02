@@ -18,8 +18,8 @@ export class ProgressModalView {
     public show(title: string): void {
         this.#title.textContent = title;
         this.#body.innerHTML = '';
-        this.#percentText.textContent = '0%';
-        this.#percentLine.style.width = `0%`;
+        this.#percentText.textContent = '0.00 %';
+        this.#percentLine.style.transform = `scaleX(0)`;
         ViewHelper.toggleVisibility(this.#root, true);
     }
 
@@ -29,15 +29,14 @@ export class ProgressModalView {
     }
 
     public updateProgress(percent: number, message: string): void {
-        this.#percentText.textContent = `${Math.round(percent)}%`;
-        this.#percentLine.style.width = `${percent}%`;
-        const paragraph = document.createElement('p');
-        paragraph.textContent = message;
-        this.#body.appendChild(paragraph);
-        
-        this.#body.scrollTo({
-            top: this.#body.scrollHeight,
-            behavior: 'smooth'
+        requestAnimationFrame(() => {
+            const scale = percent / 100; 
+            this.#percentText.textContent = `${percent.toFixed(2)} %`;
+            this.#percentLine.style.transform = `scaleX(${scale})`;
+            const paragraph = document.createElement('p');
+            paragraph.textContent = message;
+            this.#body.appendChild(paragraph);
+            this.#body.scrollTop = this.#body.scrollHeight;
         });
 
     }

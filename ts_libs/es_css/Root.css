@@ -150,7 +150,7 @@ body.app {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 0.8rem;
+  padding: 0 var(--space-4);
   background: var(--surface-0);
   box-shadow: 0 -1px 0 var(--border);
   height: var(--footer-height);
@@ -242,6 +242,11 @@ body.app {
 
 .d-none {
   display: none !important;
+  
+}
+
+.d-hidden {
+  visibility: hidden !important;
 }
 
 .brand-gradient {

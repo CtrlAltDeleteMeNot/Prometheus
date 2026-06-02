@@ -108,14 +108,14 @@ export class NavigationView {
     }
 
     public show(): void {
-        this.#sidebar.classList.remove('d-none');
-        this.#header.classList.remove('d-none');
-        this.#footer.classList.remove('d-none');
+        this.#sidebar.classList.remove('d-hidden');
+        this.#header.classList.remove('d-hidden');
+        this.#footer.classList.remove('d-hidden');
     }
 
     public hide(): void {
-        this.#sidebar.classList.add('d-none');
-        this.#header.classList.add('d-none');
-        this.#footer.classList.add('d-none');
+        this.#sidebar.classList.add('d-hidden');
+        this.#header.classList.add('d-hidden');
+        this.#footer.classList.add('d-hidden');
     }
 }

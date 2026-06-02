@@ -80,7 +80,7 @@ export class SortModalView {
             return;
         }
         this.#transientSortKey = model.getSortNamedAttributeMetadata().key;
-        this.#sortByButtons = attributes.flatMap(attr => {
+        this.#sortByButtons = attributes.map(attr => {
             var button = document.createElement('button');
             button.classList.add('filter-button');
             if (attr.key === this.#transientSortKey) {
@@ -117,13 +117,13 @@ export class SortModalView {
 
     private getSortKeyFromView(): string {
         //const selectedButton = this.#fields.querySelector('.pill-button.active') as HTMLButtonElement;
-        const selectedButton = this.#sortByButtons?.find(aButton=>aButton.classList.contains('active'));
+        const selectedButton = this.#sortByButtons?.find(aButton => aButton.classList.contains('active'));
         if (!selectedButton) {
             throw new Error('No active selected button found');
         }
         const toReturn = selectedButton?.attributes?.getNamedItem('data-key')?.value;
         if (!toReturn) {
-            throw new Error('No active pill button found');
+            throw new Error('No active button found');
         }
         return toReturn;
     }

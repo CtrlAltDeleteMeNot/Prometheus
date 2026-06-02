@@ -58,8 +58,8 @@
           this.shiftLog = [];
           this.callback = callback;
         }
-        static Create(callback) {
-          const instance = new _CLSMonitor(callback);
+        static Create() {
+          const instance = new _CLSMonitor((a) => console.log(a));
           instance.start();
           return instance;
         }
@@ -119,9 +119,6 @@
         highlight(el) {
           el.style.outline = "2px solid rgba(255,0,0,0.6)";
           el.style.transition = "outline 0.2s";
-          setTimeout(() => {
-            el.style.outline = "";
-          }, 500);
         }
         // =====================================================
         // PUBLIC API
@@ -439,14 +436,14 @@
           }
         }
         show() {
-          __privateGet(this, _sidebar).classList.remove("d-none");
-          __privateGet(this, _header).classList.remove("d-none");
-          __privateGet(this, _footer).classList.remove("d-none");
+          __privateGet(this, _sidebar).classList.remove("d-hidden");
+          __privateGet(this, _header).classList.remove("d-hidden");
+          __privateGet(this, _footer).classList.remove("d-hidden");
         }
         hide() {
-          __privateGet(this, _sidebar).classList.add("d-none");
-          __privateGet(this, _header).classList.add("d-none");
-          __privateGet(this, _footer).classList.add("d-none");
+          __privateGet(this, _sidebar).classList.add("d-hidden");
+          __privateGet(this, _header).classList.add("d-hidden");
+          __privateGet(this, _footer).classList.add("d-hidden");
         }
       };
       _sidebar = new WeakMap();
@@ -488,8 +485,8 @@
         show(title) {
           __privateGet(this, _title).textContent = title;
           __privateGet(this, _body).innerHTML = "";
-          __privateGet(this, _percentText).textContent = "0%";
-          __privateGet(this, _percentLine).style.width = `0%`;
+          __privateGet(this, _percentText).textContent = "0.00 %";
+          __privateGet(this, _percentLine).style.transform = `scaleX(0)`;
           ViewHelper.toggleVisibility(__privateGet(this, _root3), true);
         }
         hide() {
@@ -497,14 +494,14 @@
           __privateGet(this, _body).innerHTML = "";
         }
         updateProgress(percent, message) {
-          __privateGet(this, _percentText).textContent = `${Math.round(percent)}%`;
-          __privateGet(this, _percentLine).style.width = `${percent}%`;
-          const paragraph = document.createElement("p");
-          paragraph.textContent = message;
-          __privateGet(this, _body).appendChild(paragraph);
-          __privateGet(this, _body).scrollTo({
-            top: __privateGet(this, _body).scrollHeight,
-            behavior: "smooth"
+          requestAnimationFrame(() => {
+            const scale = percent / 100;
+            __privateGet(this, _percentText).textContent = `${percent.toFixed(2)} %`;
+            __privateGet(this, _percentLine).style.transform = `scaleX(${scale})`;
+            const paragraph = document.createElement("p");
+            paragraph.textContent = message;
+            __privateGet(this, _body).appendChild(paragraph);
+            __privateGet(this, _body).scrollTop = __privateGet(this, _body).scrollHeight;
           });
         }
         updateProgressFromWorker(data) {
@@ -1166,13 +1163,12 @@
           return wrapper;
         }
         setData(data) {
-          var _a;
           __privateSet(this, _allData, data);
           __privateSet(this, _currentPage, 1);
           this.renderCards();
-          (_a = document.scrollingElement) == null ? void 0 : _a.scrollTo({
-            top: 0,
-            behavior: "smooth"
+          requestAnimationFrame(() => {
+            var _a;
+            (_a = document.scrollingElement) == null ? void 0 : _a.scrollTo(0, 0);
           });
         }
         show() {
@@ -1548,7 +1544,7 @@
             return;
           }
           __privateSet(this, _transientSortKey, model.getSortNamedAttributeMetadata().key);
-          __privateSet(this, _sortByButtons, attributes.flatMap((attr) => {
+          __privateSet(this, _sortByButtons, attributes.map((attr) => {
             var button = document.createElement("button");
             button.classList.add("filter-button");
             if (attr.key === __privateGet(this, _transientSortKey)) {
@@ -1587,7 +1583,7 @@
           }
           const toReturn = (_c = (_b = selectedButton == null ? void 0 : selectedButton.attributes) == null ? void 0 : _b.getNamedItem("data-key")) == null ? void 0 : _c.value;
           if (!toReturn) {
-            throw new Error("No active pill button found");
+            throw new Error("No active button found");
           }
           return toReturn;
         }

@@ -160,9 +160,8 @@ export class ScreenerSectionView implements ISection {
         this.#allData = data;
         this.#currentPage = 1;
         this.renderCards();
-        document.scrollingElement?.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+        requestAnimationFrame(() => {
+            document.scrollingElement?.scrollTo(0, 0);
         });
     }
 

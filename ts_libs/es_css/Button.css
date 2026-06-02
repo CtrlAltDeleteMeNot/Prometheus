@@ -84,6 +84,7 @@ button.icon-only-transparent svg.icon {
   fill: var(--text);
   color: var(--text);
   display: block;
+  aspect-ratio: 1 / 1;
 }
 
 button.icon-only-pill .icon {
@@ -92,6 +93,7 @@ button.icon-only-pill .icon {
   fill: var(--text);
   color: var(--text);
   display: block;
+  aspect-ratio: 1 / 1;
 }
 
 .pill-button {
