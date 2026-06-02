@@ -48,6 +48,7 @@ body {
   height: 100%;
   overflow: hidden;
   background: var(--surface-0);
+  overscroll-behavior-y: contain !important;
 }
 
 

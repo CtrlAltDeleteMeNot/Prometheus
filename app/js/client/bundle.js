@@ -185,7 +185,7 @@
           }
           __privateSet(this, _buttons, __privateGet(this, _attributes).flatMap((attr) => {
             var button = document.createElement("button");
-            button.classList.add("pill-button");
+            button.classList.add("filter-button");
             const isActive = __privateGet(this, _active) !== void 0 && __privateGet(this, _active).some((s) => s.key === attr.key);
             if (isActive) {
               button.classList.add("active");
@@ -1437,7 +1437,7 @@
           __privateSet(this, _transientSortKey, model.getSortNamedAttributeMetadata().key);
           var buttons = attributes.flatMap((attr) => {
             var button = document.createElement("button");
-            button.classList.add("pill-button");
+            button.classList.add("filter-button");
             if (attr.key === __privateGet(this, _transientSortKey)) {
               button.classList.add("active");
             }

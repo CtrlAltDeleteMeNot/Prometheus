@@ -116,6 +116,30 @@ button.icon-only-pill .icon {
   color:var(--surface-0);
 }
 
+.filter-button {
+  display: block;
+  align-items: center;
+  /* Vertically center content */
+  padding: 0.2rem 1rem;
+  border-radius: 999rem;
+  /* High radius creates pill shape */
+  border: 1px solid var(--border);
+  background-color: var(--transparent);
+  cursor: pointer;
+  text-align: left;
+  min-height: 3rem;
+  transition: all 0.2s ease;
+  color: var(--text);
+  fill: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; 
+}
+
+.filter-button.active{
+  background-color: var(--text);
+  color:var(--surface-0);
+}
 
 
 .button-image {

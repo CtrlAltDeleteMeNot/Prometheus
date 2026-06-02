@@ -82,7 +82,7 @@ export class FilterModalView {
 
         this.#buttons = this.#attributes.flatMap(attr => {
             var button = document.createElement('button');
-            button.classList.add('pill-button');
+            button.classList.add('filter-button');
             const isActive = this.#active !== undefined && this.#active.some(s => s.key === attr.key);
             if (isActive) {
                 button.classList.add('active');

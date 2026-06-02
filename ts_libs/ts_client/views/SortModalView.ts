@@ -81,7 +81,7 @@ export class SortModalView {
         this.#transientSortKey = model.getSortNamedAttributeMetadata().key;
         var buttons = attributes.flatMap(attr => {
             var button = document.createElement('button');
-            button.classList.add('pill-button');
+            button.classList.add('filter-button');
             if (attr.key === this.#transientSortKey) {
                 button.classList.add('active');
             }
