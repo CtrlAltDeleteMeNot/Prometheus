@@ -2,7 +2,8 @@ import gulp from 'gulp'
 import { Configuration } from "./_configuration";
 import fs from 'fs';
 import replace from "gulp-replace";
-import esbuild from 'esbuild';
+import path from 'path';
+
 
 
 
@@ -17,18 +18,37 @@ export const htmlGenerate = (configuration: Configuration): gulp.TaskFunction =>
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit'
-        }).format(new Date());
-        return gulp
+        }).format(ts);
+
+        const htmlTask = gulp
             .src(configuration.html.input)
             .pipe(replace("?v=1.0.0.version", `?v=${ts}`))
             .pipe(replace("Last build @ ##ts## UTC", `Last updated @ ${utcTimestamp} UTC`))
             .pipe(gulp.dest(configuration.html.outputDir))
+
+        const workerJs = `const VERSION = "${ts}";
+const BUILD_TIME = "${utcTimestamp}";
+self.addEventListener('install', event => {
+                    self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(self.clients.claim());
+});`;
+
+        fs.writeFileSync(
+            configuration.html.outputJsWorker,
+            workerJs
+        );
+
+        return htmlTask;
     }
 }
 
 export const htmlClean = (configuration: Configuration): gulp.TaskFunction => {
     return function htmlCleanImpl(cb: gulp.TaskFunctionCallback) {
-        fs.rmSync(configuration.html.output, { force: true, recursive: true });
+        fs.rmSync(configuration.html.outputHtmlFile, { force: true, recursive: true });
+        fs.rmSync(configuration.html.outputJsWorker, { force: true, recursive: true });
         cb();
     }
 }

@@ -17,7 +17,8 @@ export class Configuration {
 
     readonly html: {
         input: string;
-        output: string;
+        outputHtmlFile: string;
+        outputJsWorker: string;
         outputDir: string;
         watch: string;
     };
@@ -65,7 +66,8 @@ export class Configuration {
         this.isDevelopmentVersion = opts.isDevelopmentVersion;
         this.html = {
             input: 'html/index.html',
-            output: `${this.app}index.html`,
+            outputHtmlFile: `${this.app}index.html`,
+            outputJsWorker: `${this.app}sw.js`,
             outputDir: `${this.app}`,
             watch: 'html/**/*.html'
         };

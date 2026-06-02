@@ -2144,12 +2144,83 @@
     }
   });
 
+  // ts_libs/ts_client/controllers/ThinServiceWorkerController.ts
+  var ThinServiceWorkerController;
+  var init_ThinServiceWorkerController = __esm({
+    "ts_libs/ts_client/controllers/ThinServiceWorkerController.ts"() {
+      "use strict";
+      ThinServiceWorkerController = class _ThinServiceWorkerController {
+        constructor() {
+          this.registration = null;
+        }
+        static Create(swPath = "sw.js") {
+          return __async(this, null, function* () {
+            const controller = new _ThinServiceWorkerController();
+            yield controller.init(swPath);
+            return controller;
+          });
+        }
+        init(swPath) {
+          return __async(this, null, function* () {
+            if (!("serviceWorker" in navigator)) {
+              return;
+            }
+            this.registration = yield navigator.serviceWorker.register(swPath);
+            this.registration.update();
+            this.registerUpdateListeners();
+          });
+        }
+        registerUpdateListeners() {
+          if (!this.registration) return;
+          this.registration.addEventListener("updatefound", () => {
+            var _a;
+            const newWorker = (_a = this.registration) == null ? void 0 : _a.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener("statechange", () => {
+              if (newWorker.state === "installed") {
+                if (navigator.serviceWorker.controller) {
+                  this.onUpdateAvailable();
+                }
+              }
+            });
+          });
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            this.onActivated();
+          });
+        }
+        onUpdateAvailable() {
+          var _a, _b;
+          console.log("[SW] Update available");
+          const shouldReload = window.confirm(
+            "A new version is available. Reload now?"
+          );
+          if (shouldReload) {
+            (_b = (_a = this.registration) == null ? void 0 : _a.waiting) == null ? void 0 : _b.postMessage({ type: "SKIP_WAITING" });
+          }
+        }
+        onActivated() {
+          console.log("[SW] Activated new version");
+          window.alert("App updated. Reloading...");
+          window.location.reload();
+        }
+        forceUpdateCheck() {
+          return __async(this, null, function* () {
+            var _a;
+            yield (_a = this.registration) == null ? void 0 : _a.update();
+          });
+        }
+      };
+    }
+  });
+
   // ts_libs/ts_client/index.ts
   var require_index = __commonJS({
     "ts_libs/ts_client/index.ts"(exports) {
       init_ThinController();
+      init_ThinServiceWorkerController();
       document.addEventListener("DOMContentLoaded", () => __async(null, null, function* () {
-        let controller = yield ThinController.Create("js/worker/worker.js").catch(console.error);
+        yield ThinServiceWorkerController.Create("sw.js").catch(console.error);
+        yield ThinController.Create("js/worker/worker.js").catch(console.error);
       }));
     }
   });
