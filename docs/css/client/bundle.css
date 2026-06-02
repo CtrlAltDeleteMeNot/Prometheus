@@ -233,7 +233,7 @@ body.app {
     z-index: 2000;
     width: 100dvw;
     will-change: transform;
-    grid-area: main;
+    grid-area: auto;
   }
   .app-sidebar.open {
     transform: translateX(0);
@@ -575,6 +575,8 @@ button.icon-only-pill .icon {
   background: var(--surface-1);
   margin-left: calc(-1* var(--sidebar-width));
   padding: var(--space-8);
+  min-height: clamp(376px, 50vh, 500px);
+  justify-content: center;
 }
 @media (max-width: 900px) {
   .hero-card {

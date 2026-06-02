@@ -1,23 +1,36 @@
 export class ThinServiceWorkerController {
 
     private registration: ServiceWorkerRegistration | null = null;
+    private hasReloaded = false;
+
+    public onUpdateCallback?: () => void;
+    public onActivatedCallback?: () => void;
 
     static async Create(swPath: string = 'sw.js') {
         const controller = new ThinServiceWorkerController();
         await controller.init(swPath);
+        controller.onUpdateCallback = () => {
+
+            const ok = confirm('New version available. Reload now?');
+            if (ok) {
+                controller.forceUpdateCheck();
+            }
+        };
+
+
+        controller.onActivatedCallback = () => {
+            console.log('App updated');
+            // optional: avoid alert; prefer silent reload
+        };
         return controller;
     }
 
     private constructor() { }
 
     private async init(swPath: string) {
-        if (!('serviceWorker' in navigator)) {
-            return;
-        }
+        if (!('serviceWorker' in navigator)) return;
 
         this.registration = await navigator.serviceWorker.register(swPath);
-
-        // Immediately check for updates
         this.registration.update();
 
         this.registerUpdateListeners();
@@ -26,23 +39,17 @@ export class ThinServiceWorkerController {
     private registerUpdateListeners() {
         if (!this.registration) return;
 
-        // Detect new SW installation
         this.registration.addEventListener('updatefound', () => {
             const newWorker = this.registration?.installing;
             if (!newWorker) return;
 
             newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed') {
-
-                    // A new version is ready
-                    if (navigator.serviceWorker.controller) {
-                        this.onUpdateAvailable();
-                    }
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    this.onUpdateAvailable();
                 }
             });
         });
 
-        // Activated new SW
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             this.onActivated();
         });
@@ -50,18 +57,16 @@ export class ThinServiceWorkerController {
 
     private onUpdateAvailable() {
         console.log('[SW] Update available');
-        const shouldReload = window.confirm(
-            'A new version is available. Reload now?'
-        );
-
-        if (shouldReload) {
-            this.registration?.waiting?.postMessage({ type: 'SKIP_WAITING' });
-        }
+        this.onUpdateCallback?.();
     }
 
     private onActivated() {
         console.log('[SW] Activated new version');
-        window.alert('App updated. Reloading...');
+
+        if (this.hasReloaded) return;
+        this.hasReloaded = true;
+
+        this.onActivatedCallback?.();
         window.location.reload();
     }
 

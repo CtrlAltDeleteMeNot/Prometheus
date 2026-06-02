@@ -223,7 +223,7 @@ body.app {
     width: 100dvw;
     will-change: transform;
 
-    grid-area: main;
+    grid-area: auto;
 
   }
 
