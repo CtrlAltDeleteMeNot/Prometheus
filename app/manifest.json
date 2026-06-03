@@ -4,9 +4,14 @@
   "description": "Prometheus is the ultimate companion for crypto traders focused on USDC pairs.",
   "icons": [
     {
-      "src": "/img/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "http://localhost:9000/img/logo-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "http://localhost:9000/img/logo-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
   "display": "standalone",
@@ -14,7 +19,7 @@
   "theme_color": "#0b0f1a",
   "orientation": "portrait",
   "lang": "en-US",
-  "start_url": "http://localhost:9000",
+  "start_url": "http://localhost:9000/",
   "scope": "/",
   "id": "/"
 }

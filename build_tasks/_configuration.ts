@@ -93,8 +93,8 @@ export class Configuration {
         this.imagesDestPath = `${this.app}img/`;
         this.imagesSourcePath = './images/**/*';
         this.symbolIconsSvgs = {
-            inputDir : 'node_modules/cryptocurrency-icons/svg/color/',
-            outputDir:`${opts.app}img/symbols/`,
+            inputDir: 'node_modules/cryptocurrency-icons/svg/color/',
+            outputDir: `${opts.app}img/symbols/`,
             outputRegistryTsFile: 'ts_libs/ts_client/views/generated/SymbolIconsRegistry.ts',
             relativeUrlPrefix: "img/symbols/"
         };
@@ -102,23 +102,28 @@ export class Configuration {
             inputDir: 'node_modules/lineicons/assets/svgs/regular/',
             lookup: ['menu-hamburger-1', 'refresh-circle-1-clockwise', 'xmark', 'funnel-1', 'sort-high-to-low', 'arrow-right', 'minus-circle'],
             outputRegistryTsFile: 'ts_libs/ts_client/views/generated/ActionIconsRegistry.ts',
-            outputDir:`${opts.app}img/actions/`,
+            outputDir: `${opts.app}img/actions/`,
             relativeUrlPrefix: "/img/actions/"
         };
     }
 
-    
+
 
     get manifest() {
         return {
-            "name": this.isDevelopmentVersion? "Prometheus.DEV":"Prometheus",
-            "short_name": this.isDevelopmentVersion? "Prometheus.DEV":"Prometheus",
+            "name": this.isDevelopmentVersion ? "Prometheus.DEV" : "Prometheus",
+            "short_name": this.isDevelopmentVersion ? "Prometheus.DEV" : "Prometheus",
             "description": "Prometheus is the ultimate companion for crypto traders focused on USDC pairs.",
             "icons": [
                 {
-                    "src": `${this.manifest_scope}img/logo.svg`,
-                    "sizes": "any",
-                    "type": "image/svg+xml"
+                    "src": `${this.manifest_start_url}img/logo-192x192.png`,
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": `${this.manifest_start_url}img/logo-512x512.png`,
+                    "sizes": "512x512",
+                    "type": "image/png"
                 }
             ],
             "display": "standalone",
@@ -133,5 +138,5 @@ export class Configuration {
     }
 };
 
-export const developmentConfiguration = new Configuration({ app: './app/', isDevelopmentVersion: true, localDevPort: 9000, manifest_start_url: "http://localhost:9000", manifest_scope: "/", manifest_id: "/" });
+export const developmentConfiguration = new Configuration({ app: './app/', isDevelopmentVersion: true, localDevPort: 9000, manifest_start_url: "http://localhost:9000/", manifest_scope: "/", manifest_id: "/" });
 export const publishConfiguration = new Configuration({ app: './docs/', isDevelopmentVersion: false, localDevPort: 9000, manifest_start_url: "https://ctrlaltdeletemenot.github.io/Prometheus/", manifest_scope: "/Prometheus/", manifest_id: "/Prometheus/" });
