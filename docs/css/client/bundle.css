@@ -154,7 +154,7 @@ body.app {
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
   grid-template-areas: "header header" "sidebar main" "footer footer";
 }
 @supports (height: 100dvh) {
@@ -166,7 +166,6 @@ body.app {
   display: none !important;
 }
 .app-header {
-  margin-top: -2px;
   grid-area: header;
   display: flex;
   justify-content: space-between;
