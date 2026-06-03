@@ -100,10 +100,12 @@ export class FilterModalView {
     }
 
     public show(): void {
+        ViewHelper.setModalState(true);
         ViewHelper.toggleVisibility(this.#root, true);
     }
 
     public hide(): void {
         ViewHelper.toggleVisibility(this.#root, false);
+        ViewHelper.setModalState(false);
     }
 }

@@ -1,4 +1,12 @@
 export class ViewHelper {
+    static setModalState(open:boolean): void{
+        if(true === open){
+            document.body.classList.add('modal-opened');
+        }else{
+            document.body.classList.remove('modal-opened');
+        }
+    }
+
     static getHtmlElementOrThrow(id: string): HTMLElement {
         const element = document.getElementById(id);
         if (!element) throw new Error(`Element with id ${id} not found.`);

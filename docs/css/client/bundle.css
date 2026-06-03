@@ -57,10 +57,10 @@ h6 {
 
 /* ts_libs/es_css/Root.css */
 :root {
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-top: max(env(safe-area-inset-top, 0px), 1rem);
+  --safe-right: max(env(safe-area-inset-right, 0px), 1rem);
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+  --safe-left: max(env(safe-area-inset-left, 0px), 1rem);
   --surface-0: #0b0f1a;
   --surface-1: #0e1422;
   --surface-2: #101625;
@@ -72,8 +72,8 @@ h6 {
   --muted: #9aa4b2;
   --accent: #3b82f6;
   --sidebar-width: 240px;
-  --navbar-height: 4rem;
-  --footer-height: 4rem;
+  --navbar-height: calc(3rem + var(--safe-top) + var(--safe-top));
+  --footer-height: calc(3rem + var(--safe-bottom) + var(--safe-bottom));
   --font-primary: system-ui, sans-serif;
   --font-heading:
     ui-sans-serif,
@@ -99,7 +99,12 @@ body {
   height: 100%;
   overflow: hidden;
   background: var(--surface-0);
-  overscroll-behavior-y: contain !important;
+}
+@supports (height: 100dvh) {
+  html,
+  body {
+    height: 100dvh;
+  }
 }
 body {
   margin: 0;
@@ -109,10 +114,6 @@ body {
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  padding-top: var(--safe-top);
-  padding-bottom: var(--safe-bottom);
-  padding-left: var(--safe-left);
-  padding-right: var(--safe-right);
 }
 h1,
 h2,
@@ -144,12 +145,16 @@ p {
 }
 body.app {
   height: 100vh;
-  height: 100dvh;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
   grid-template-areas: "header header" "sidebar main" "footer footer";
+}
+@supports (height: 100dvh) {
+  body.app {
+    height: 100dvh;
+  }
 }
 .app > script {
   display: none !important;
@@ -164,6 +169,10 @@ body.app {
   box-shadow: 0 1px 0 var(--border);
   z-index: 1000;
   height: var(--navbar-height);
+  padding-top: var(--safe-top);
+  padding-right: var(--safe-right);
+  padding-left: var(--safe-left);
+  padding-bottom: var(--safe-top);
 }
 .app-sidebar {
   grid-area: sidebar;
@@ -176,11 +185,14 @@ body.app {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--space-4);
   background: var(--surface-0);
   box-shadow: 0 -1px 0 var(--border);
   height: var(--footer-height);
   z-index: 1000;
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-top: var(--safe-bottom);
 }
 .sidebar-nav {
   display: flex;
@@ -208,10 +220,19 @@ body.app {
 }
 .app-main {
   grid-area: main;
-  overflow: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  padding-bottom: var(--safe-bottom);
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+.modal-opened > .app-main {
+  overflow: hidden !important;
+  touch-action: none;
 }
 @media (max-width: 900px) {
   body.app {
@@ -227,11 +248,11 @@ body.app {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100dvh;
+    height: 100vh;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 2000;
-    width: 100dvw;
+    width: 100vw;
     will-change: transform;
     grid-area: auto;
   }
@@ -488,12 +509,10 @@ button.icon-only-pill .icon {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: var(--space-6);
-  overflow-y: auto;
-  overscroll-behavior: contain;
   flex: 1;
   min-height: 0;
   grid-auto-rows: min-content;
-  padding: var(--space-6);
+  align-content: start;
 }
 @media (max-width: 600px) {
   #screener-body {
@@ -600,10 +619,7 @@ button.icon-only-pill .icon {
 /* ts_libs/es_css/Modals.css */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: var(--surface-0);
   display: flex;
   justify-content: center;
@@ -624,26 +640,36 @@ button.icon-only-pill .icon {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--space-4);
   box-shadow: 0 1px 0 var(--border);
   height: var(--navbar-height);
+  padding-top: var(--safe-top);
+  padding-right: var(--safe-right);
+  padding-left: var(--safe-left);
+  padding-bottom: var(--safe-bottom);
 }
 .modal-body {
-  padding: 1rem;
-  overflow-y: auto;
   flex: 1;
-  overscroll-behavior: contain;
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-top: var(--safe-bottom);
+  overflow: hidden;
+  overflow-y: hidden;
+}
+.modal-opened .modal-body {
+  overflow-y: auto !important;
+  overflow: auto !important;
 }
 .modal-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
   box-shadow: 0 -1px 0 var(--border);
   height: var(--footer-height);
-}
-.modal-close {
-  padding: 0.25rem;
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-top: var(--safe-bottom);
 }
 @media (max-width: 900px) {
   .modal-overlay {
@@ -653,7 +679,6 @@ button.icon-only-pill .icon {
   .modal-content {
     width: 100%;
     height: 100%;
-    max-height: 100dvh;
     border-radius: 0;
     border: none;
     box-shadow: none;
@@ -708,12 +733,12 @@ button.icon-only-pill .icon {
   gap: 0.5rem;
 }
 #settings-modal label {
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   color: var(--text);
   font-size: 1rem;
 }
 #settings-modal p {
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
   color: var(--text);
   font-size: 1rem;
   margin-bottom: 0;
@@ -772,7 +797,6 @@ button.icon-only-pill .icon {
 
 /* ts_libs/es_css/SectionAbout.css */
 #about {
-  padding: var(--space-6);
 }
 #about p:first-of-type {
   margin-top: 0;

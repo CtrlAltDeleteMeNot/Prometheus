@@ -9,12 +9,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: var(--space-6);
-  overflow-y: auto;
-  overscroll-behavior: contain;
   flex: 1;
   min-height: 0;
   grid-auto-rows: min-content;
-  padding: var(--space-6);
+  align-content: start;
 }
 
 @media (max-width: 600px) {

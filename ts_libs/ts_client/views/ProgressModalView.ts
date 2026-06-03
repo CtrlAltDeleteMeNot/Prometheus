@@ -18,20 +18,22 @@ export class ProgressModalView {
     public show(title: string): void {
         this.#title.textContent = title;
         this.#body.innerHTML = '';
-        this.#percentText.textContent = '0.00 %';
+        this.#percentText.textContent = '0 %';
         this.#percentLine.style.transform = `scaleX(0)`;
+        ViewHelper.setModalState(true);
         ViewHelper.toggleVisibility(this.#root, true);
     }
 
     public hide(): void {
         ViewHelper.toggleVisibility(this.#root, false);
+        ViewHelper.setModalState(false);
         this.#body.innerHTML = '';
     }
 
     public updateProgress(percent: number, message: string): void {
         requestAnimationFrame(() => {
             const scale = percent / 100; 
-            this.#percentText.textContent = `${percent.toFixed(2)} %`;
+            this.#percentText.textContent = `${percent.toFixed(0)} %`;
             this.#percentLine.style.transform = `scaleX(${scale})`;
             const paragraph = document.createElement('p');
             paragraph.textContent = message;

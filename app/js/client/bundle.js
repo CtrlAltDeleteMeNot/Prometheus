@@ -49,6 +49,13 @@
     "ts_libs/ts_client/views/ViewHelper.ts"() {
       "use strict";
       ViewHelper = class {
+        static setModalState(open) {
+          if (true === open) {
+            document.body.classList.add("modal-opened");
+          } else {
+            document.body.classList.remove("modal-opened");
+          }
+        }
         static getHtmlElementOrThrow(id) {
           const element = document.getElementById(id);
           if (!element) throw new Error(`Element with id ${id} not found.`);
@@ -202,10 +209,12 @@
           });
         }
         show() {
+          ViewHelper.setModalState(true);
           ViewHelper.toggleVisibility(__privateGet(this, _root2), true);
         }
         hide() {
           ViewHelper.toggleVisibility(__privateGet(this, _root2), false);
+          ViewHelper.setModalState(false);
         }
       };
       _root2 = new WeakMap();
@@ -376,18 +385,20 @@
         show(title) {
           __privateGet(this, _title).textContent = title;
           __privateGet(this, _body).innerHTML = "";
-          __privateGet(this, _percentText).textContent = "0.00 %";
+          __privateGet(this, _percentText).textContent = "0 %";
           __privateGet(this, _percentLine).style.transform = `scaleX(0)`;
+          ViewHelper.setModalState(true);
           ViewHelper.toggleVisibility(__privateGet(this, _root3), true);
         }
         hide() {
           ViewHelper.toggleVisibility(__privateGet(this, _root3), false);
+          ViewHelper.setModalState(false);
           __privateGet(this, _body).innerHTML = "";
         }
         updateProgress(percent, message) {
           requestAnimationFrame(() => {
             const scale = percent / 100;
-            __privateGet(this, _percentText).textContent = `${percent.toFixed(2)} %`;
+            __privateGet(this, _percentText).textContent = `${percent.toFixed(0)} %`;
             __privateGet(this, _percentLine).style.transform = `scaleX(${scale})`;
             const paragraph = document.createElement("p");
             paragraph.textContent = message;
@@ -1320,10 +1331,12 @@
           __privateSet(this, _onSettingsChanged, callback);
         }
         show() {
+          ViewHelper.setModalState(true);
           ViewHelper.toggleVisibility(__privateGet(this, _root5), true);
         }
         hide() {
           ViewHelper.toggleVisibility(__privateGet(this, _root5), false);
+          ViewHelper.setModalState(false);
         }
         update(model) {
           var _a;
@@ -1458,10 +1471,12 @@
           });
         }
         show() {
+          ViewHelper.setModalState(true);
           ViewHelper.toggleVisibility(__privateGet(this, _root6), true);
         }
         hide() {
           ViewHelper.toggleVisibility(__privateGet(this, _root6), false);
+          ViewHelper.setModalState(false);
         }
         getSortDirectionFromView() {
           return __privateGet(this, _ascending).classList.contains("active") ? 0 /* Ascending */ : 1 /* Descending */;

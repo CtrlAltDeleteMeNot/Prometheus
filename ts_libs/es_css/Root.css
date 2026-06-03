@@ -1,8 +1,8 @@
 :root {
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-top: max(env(safe-area-inset-top, 0px), 1rem);
+  --safe-right: max(env(safe-area-inset-right, 0px), 1rem);
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+  --safe-left: max(env(safe-area-inset-left, 0px), 1rem);
 
   --surface-0: #0b0f1a;
   --surface-1: #0e1422;
@@ -16,8 +16,8 @@
   --muted: #9aa4b2;
   --accent: #3b82f6;
   --sidebar-width: 240px;
-  --navbar-height: 4rem;
-  --footer-height: 4rem;
+  --navbar-height: calc(3rem + var(--safe-top) + var(--safe-top));
+  --footer-height: calc(3rem + var(--safe-bottom) + var(--safe-bottom));
   --font-primary: system-ui, sans-serif;
   --font-heading: ui-sans-serif, system-ui, sans-serif;
   --font-size-base: 1rem;
@@ -48,7 +48,12 @@ body {
   height: 100%;
   overflow: hidden;
   background: var(--surface-0);
-  overscroll-behavior-y: contain !important;
+}
+
+@supports (height: 100dvh) {
+  html, body {
+    height: 100dvh;
+  }
 }
 
 
@@ -62,10 +67,6 @@ body {
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  padding-top: var(--safe-top);
-  padding-bottom: var(--safe-bottom);
-  padding-left: var(--safe-left);
-  padding-right: var(--safe-right);
 }
 
 /* Apply heading font to headings */
@@ -106,7 +107,6 @@ p {
 
 body.app {
   height: 100vh;
-  height: 100dvh;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
@@ -115,10 +115,14 @@ body.app {
     "header header"
     "sidebar main"
     "footer footer";
-
+}
+@supports (height: 100dvh) {
+  body.app {
+    height: 100dvh;
+  }
 }
 
-.app > script {
+.app>script {
   display: none !important;
 }
 
@@ -132,6 +136,10 @@ body.app {
   box-shadow: 0 1px 0 var(--border);
   z-index: 1000;
   height: var(--navbar-height);
+  padding-top: var(--safe-top);
+  padding-right: var(--safe-right);
+  padding-left: var(--safe-left);
+  padding-bottom: var(--safe-top);
 }
 
 
@@ -150,11 +158,14 @@ body.app {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--space-4);
   background: var(--surface-0);
   box-shadow: 0 -1px 0 var(--border);
   height: var(--footer-height);
   z-index: 1000;
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-top: var(--safe-bottom);
 }
 
 .sidebar-nav {
@@ -188,10 +199,20 @@ body.app {
 
 .app-main {
   grid-area: main;
-  overflow: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  padding-bottom: var(--safe-bottom);
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+.modal-opened > .app-main{
+  overflow: hidden !important;
+  touch-action: none;
 }
 
 
@@ -216,15 +237,13 @@ body.app {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100dvh;
+    height: 100vh;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 2000;
-    width: 100dvw;
+    width: 100vw;
     will-change: transform;
-
     grid-area: auto;
-
   }
 
   .app-sidebar.open {
@@ -242,12 +261,14 @@ body.app {
 
 .d-none {
   display: none !important;
-  
+
 }
 
 .d-hidden {
   visibility: hidden !important;
 }
+
+
 
 .brand-gradient {
   background: linear-gradient(0deg, #4dabf7, #3b82f6);
