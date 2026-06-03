@@ -38,13 +38,9 @@
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
   padding-top: var(--safe-bottom);
-  overflow:hidden;
-  overflow-y:hidden;
-}
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
 
-.modal-opened  .modal-body {
-  overflow-y: auto !important;
-  overflow: auto !important;
 }
 
 .modal-footer {

@@ -46,7 +46,6 @@
 html,
 body {
   height: 100%;
-  overflow: hidden;
   background: var(--surface-0);
 }
 
@@ -210,7 +209,7 @@ body.app {
   padding-right: var(--safe-right);
 }
 
-.modal-opened > .app-main{
+.modal-opened  .app-main{
   overflow: hidden !important;
   touch-action: none;
 }

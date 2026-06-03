@@ -4,17 +4,24 @@
 *::after {
   box-sizing: border-box;
 }
-*:not(dialog) {
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure {
   margin: 0;
 }
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    interpolate-size: allow-keywords;
-  }
+html {
+  interpolate-size: allow-keywords;
 }
 body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 img,
 picture,
@@ -97,7 +104,6 @@ h6 {
 html,
 body {
   height: 100%;
-  overflow: hidden;
   background: var(--surface-0);
 }
 @supports (height: 100dvh) {
@@ -230,7 +236,7 @@ body.app {
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
 }
-.modal-opened > .app-main {
+.modal-opened .app-main {
   overflow: hidden !important;
   touch-action: none;
 }
@@ -653,12 +659,8 @@ button.icon-only-pill .icon {
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
   padding-top: var(--safe-bottom);
-  overflow: hidden;
-  overflow-y: hidden;
-}
-.modal-opened .modal-body {
-  overflow-y: auto !important;
-  overflow: auto !important;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .modal-footer {
   display: flex;
