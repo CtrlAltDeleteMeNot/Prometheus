@@ -1,15 +1,11 @@
 .modal-overlay {
-  position: fixed;
-  inset:0;
-  top: 0;
-  left: 0;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
   background: var(--surface-0);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
-  width: 100dvw;   /* Dynamic Viewport Width */
-  height: 100dvh;  /* Dynamic Viewport Height */
 }
 
 .modal-content {
