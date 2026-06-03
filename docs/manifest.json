@@ -14,12 +14,17 @@
       "type": "image/png"
     }
   ],
+  "categories": [
+    "productivity",
+    "utilities",
+    "financial"
+  ],
   "display": "standalone",
   "background_color": "#0b0f1a",
   "theme_color": "#0b0f1a",
   "orientation": "portrait",
   "lang": "en-US",
   "start_url": "https://ctrlaltdeletemenot.github.io/Prometheus/",
-  "scope": "/Prometheus/",
-  "id": "/Prometheus/"
+  "scope": "https://ctrlaltdeletemenot.github.io/Prometheus/",
+  "id": "Prometheus"
 }

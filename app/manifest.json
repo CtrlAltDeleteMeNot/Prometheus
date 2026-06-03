@@ -14,12 +14,17 @@
       "type": "image/png"
     }
   ],
+  "categories": [
+    "productivity",
+    "utilities",
+    "financial"
+  ],
   "display": "standalone",
   "background_color": "#0b0f1a",
   "theme_color": "#0b0f1a",
   "orientation": "portrait",
   "lang": "en-US",
   "start_url": "http://localhost:9000/",
-  "scope": "/",
-  "id": "/"
+  "scope": "http://localhost:9000/",
+  "id": "Prometheus.DEV"
 }

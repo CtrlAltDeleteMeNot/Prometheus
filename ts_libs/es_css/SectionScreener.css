@@ -22,10 +22,11 @@
   }
 }
 
+
 #screener-body::after {
   content: "";
   grid-column: 1 / -1;
-  height: 2rem;
+  height: var(--space-4);
 }
 
 

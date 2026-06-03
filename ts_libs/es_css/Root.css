@@ -147,8 +147,10 @@ body.app {
 .app-sidebar {
   grid-area: sidebar;
   background: var(--surface-0);
-  padding: var(--space-6);
-  padding-left: var(--space-4);
+  padding-top: var(--safe-top);
+  padding-right: var(--safe-right);
+  padding-left: var(--safe-left);
+  padding-bottom: var(--safe-top);
 }
 
 
@@ -274,4 +276,16 @@ body.app {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+body.app {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
 }

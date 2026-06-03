@@ -149,7 +149,7 @@
   padding: 0.75rem 1rem;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(18, 24, 40, 0.5);
+  background: var(--surface-1);
   color: var(--text);
   font-family: var(--font-primary);
   font-size: 1rem;
@@ -159,7 +159,6 @@
 #settings-modal input[type="number"]:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 #settings-modal .field-description {
@@ -179,7 +178,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
   color: var(--text);
   cursor: pointer;
 }
@@ -187,11 +185,8 @@
 #settings-modal .checkbox-label input[type="checkbox"] {
   width: 1.25rem;
   height: 1.25rem;
-  border-radius: 6px;
   border: 1px solid var(--border);
-  background: rgba(18, 24, 40, 0.5);
   cursor: pointer;
-  accent-color: var(--accent);
   transition: all 0.2s ease;
 }
 

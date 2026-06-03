@@ -116,16 +116,17 @@ export class Configuration {
             "description": "Prometheus is the ultimate companion for crypto traders focused on USDC pairs.",
             "icons": [
                 {
-                    "src": `${this.manifest_start_url}img/logo-192x192.png`,
+                    "src": `${this.manifest_scope}img/logo-192x192.png`,
                     "sizes": "192x192",
                     "type": "image/png"
                 },
                 {
-                    "src": `${this.manifest_start_url}img/logo-512x512.png`,
+                    "src": `${this.manifest_scope}img/logo-512x512.png`,
                     "sizes": "512x512",
                     "type": "image/png"
                 }
             ],
+            "categories": ["productivity", "utilities", "financial"],
             "display": "standalone",
             "background_color": "#0b0f1a",
             "theme_color": "#0b0f1a",
@@ -138,5 +139,5 @@ export class Configuration {
     }
 };
 
-export const developmentConfiguration = new Configuration({ app: './app/', isDevelopmentVersion: true, localDevPort: 9000, manifest_start_url: "http://localhost:9000/", manifest_scope: "/", manifest_id: "/" });
-export const publishConfiguration = new Configuration({ app: './docs/', isDevelopmentVersion: false, localDevPort: 9000, manifest_start_url: "https://ctrlaltdeletemenot.github.io/Prometheus/", manifest_scope: "/Prometheus/", manifest_id: "/Prometheus/" });
+export const developmentConfiguration = new Configuration({ app: './app/', isDevelopmentVersion: true, localDevPort: 9000, manifest_start_url: "http://localhost:9000/", manifest_scope: "http://localhost:9000/", manifest_id: "Prometheus.DEV" });
+export const publishConfiguration = new Configuration({ app: './docs/', isDevelopmentVersion: false, localDevPort: 9000, manifest_start_url: "https://ctrlaltdeletemenot.github.io/Prometheus/", manifest_scope: "https://ctrlaltdeletemenot.github.io/Prometheus/", manifest_id: "Prometheus" });
