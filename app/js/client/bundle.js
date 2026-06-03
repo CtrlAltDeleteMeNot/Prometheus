@@ -2199,6 +2199,7 @@
           return __async(this, null, function* () {
             if (!("serviceWorker" in navigator)) return;
             this.registration = yield navigator.serviceWorker.register(swPath);
+            yield navigator.serviceWorker.ready;
             this.registration.update();
             this.registerUpdateListeners();
           });

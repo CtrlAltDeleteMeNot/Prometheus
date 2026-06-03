@@ -525,6 +525,11 @@ button.icon-only-pill .icon {
     grid-template-columns: 1fr;
   }
 }
+#screener-body::after {
+  content: "";
+  grid-column: 1 / -1;
+  height: 2rem;
+}
 .screener-card {
   display: flex;
   flex-direction: column;

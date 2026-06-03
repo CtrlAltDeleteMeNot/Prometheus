@@ -31,6 +31,7 @@ export class ThinServiceWorkerController {
         if (!('serviceWorker' in navigator)) return;
 
         this.registration = await navigator.serviceWorker.register(swPath);
+        await navigator.serviceWorker.ready;
         this.registration.update();
 
         this.registerUpdateListeners();
