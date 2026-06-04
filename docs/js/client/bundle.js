@@ -2197,6 +2197,9 @@
         }
         init(swPath) {
           return __async(this, null, function* () {
+            window.addEventListener("focus", () => {
+              window.dispatchEvent(new Event("resize"));
+            });
             if (!("serviceWorker" in navigator)) return;
             this.registration = yield navigator.serviceWorker.register(swPath);
             yield navigator.serviceWorker.ready;
