@@ -711,17 +711,16 @@ button.icon-only-pill .icon {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.1rem;
+  justify-content: space-evenly;
 }
 #progress-modal .progress-container-line {
   height: 0.2rem;
   background-color: var(--accent);
   transition: width 0.3s ease;
   width: 100%;
-  max-width: 100%;
   transform-origin: left;
   transition: transform 0.3s;
-  transform: scaleX(0.5);
+  transform: scaleX(0);
 }
 #progress-modal .progress-container-value {
   color: white;
