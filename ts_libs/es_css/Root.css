@@ -49,11 +49,7 @@ body {
   background: #0b0f1a !important;
 }
 
-@supports (height: 100dvh) {
-  html, body {
-    height: 100dvh;
-  }
-}
+
 
 
 
@@ -105,7 +101,7 @@ p {
 
 
 body.app {
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
@@ -115,11 +111,7 @@ body.app {
     "sidebar main"
     "footer footer";
 }
-@supports (height: 100dvh) {
-  body.app {
-    height: 100dvh;
-  }
-}
+
 
 .app>script {
   display: none !important;
@@ -238,11 +230,11 @@ body.app {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
+    height: 100%;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 2000;
-    width: 100vw;
+    width: 100%;
     will-change: transform;
     grid-area: auto;
   }

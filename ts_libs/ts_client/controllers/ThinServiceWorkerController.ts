@@ -28,9 +28,9 @@ export class ThinServiceWorkerController {
     private constructor() { }
 
     private async init(swPath: string) {
-        window.addEventListener('focus', () => {
-            window.dispatchEvent(new Event('resize'));
-        });
+        //window.addEventListener('focus', () => {
+        //    window.dispatchEvent(new Event('resize'));
+        //});
         if (!('serviceWorker' in navigator)) return;
 
         this.registration = await navigator.serviceWorker.register(swPath);

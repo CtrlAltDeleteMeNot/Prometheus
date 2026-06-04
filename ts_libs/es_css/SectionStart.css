@@ -12,8 +12,6 @@
     border-radius: var(--border-radius);
     border: 1px solid var(--border);
     text-align: center;
-    
-    max-width: 600px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -21,7 +19,6 @@
     background: var(--surface-1);
     margin-left: calc(-1* var(--sidebar-width));
     padding: var(--space-8);
-    min-height: clamp(376px, 50vh, 500px); 
     justify-content: center;
 }
 

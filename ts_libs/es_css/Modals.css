@@ -38,9 +38,9 @@
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
   padding-top: var(--safe-bottom);
-  overflow:auto;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-
+  overscroll-behavior: contain;
 }
 
 .modal-footer {

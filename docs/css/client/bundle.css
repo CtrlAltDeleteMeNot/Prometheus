@@ -106,12 +106,6 @@ body {
   height: 100%;
   background: #0b0f1a !important;
 }
-@supports (height: 100dvh) {
-  html,
-  body {
-    height: 100dvh;
-  }
-}
 body {
   margin: 0;
   font-family: var(--font-primary);
@@ -150,17 +144,12 @@ p {
   margin: 1rem 0;
 }
 body.app {
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
   grid-template-areas: "header header" "sidebar main" "footer footer";
-}
-@supports (height: 100dvh) {
-  body.app {
-    height: 100dvh;
-  }
 }
 .app > script {
   display: none !important;
@@ -256,11 +245,11 @@ body.app {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
+    height: 100%;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 2000;
-    width: 100vw;
+    width: 100%;
     will-change: transform;
     grid-area: auto;
   }
@@ -621,7 +610,6 @@ button.icon-only-pill .icon {
   border-radius: var(--border-radius);
   border: 1px solid var(--border);
   text-align: center;
-  max-width: 600px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -629,7 +617,6 @@ button.icon-only-pill .icon {
   background: var(--surface-1);
   margin-left: calc(-1* var(--sidebar-width));
   padding: var(--space-8);
-  min-height: clamp(376px, 50vh, 500px);
   justify-content: center;
 }
 @media (max-width: 900px) {
@@ -676,8 +663,9 @@ button.icon-only-pill .icon {
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
   padding-top: var(--safe-bottom);
-  overflow: auto;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .modal-footer {
   display: flex;
