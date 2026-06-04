@@ -2202,11 +2202,6 @@
             yield navigator.serviceWorker.ready;
             this.registration.update();
             this.registerUpdateListeners();
-            document.addEventListener("visibilitychange", () => {
-              if (document.visibilityState === "visible") {
-                setTimeout(this.forceLayoutRecalculation, 80);
-              }
-            });
           });
         }
         registerUpdateListeners() {
@@ -2243,16 +2238,6 @@
             var _a;
             yield (_a = this.registration) == null ? void 0 : _a.update();
           });
-        }
-        forceLayoutRecalculation() {
-          const bodyHeight = document.body.offsetHeight;
-          const body = document.body;
-          if (body) {
-            body.style.transform = "translateZ(0.1px)";
-            requestAnimationFrame(() => {
-              body.style.transform = "";
-            });
-          }
         }
       };
     }

@@ -34,11 +34,6 @@ export class ThinServiceWorkerController {
         await navigator.serviceWorker.ready;
         this.registration.update();
         this.registerUpdateListeners();
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                setTimeout(this.forceLayoutRecalculation, 80);
-            }
-        });
     }
 
     private registerUpdateListeners() {
@@ -79,22 +74,5 @@ export class ThinServiceWorkerController {
         await this.registration?.update();
     }
 
-    public forceLayoutRecalculation() {
-        // 1. Forțăm un reflow citind o proprietate geometrică de pe body/header
-        // Acest lucru obligă Chrome să recalculeze pixelii instantaneu
-        const bodyHeight = document.body.offsetHeight;
-
-        // 2. Opțional: Putem forța un "repaint" adăugând și eliminând rapid o clasă 
-        // sau un stil inline pe containerul Grid (body) sau pe header
-        const body = document.body;
-        if (body) {
-            // Schimbăm imperceptibil stilul pentru a forța motorul grafic să redeseneze
-            body.style.transform = 'translateZ(0.1px)';
-
-            // Curățăm stilul imediat în următorul cadru de animație (asincron)
-            requestAnimationFrame(() => {
-                body.style.transform = '';
-            });
-        }
-    }
+    
 }

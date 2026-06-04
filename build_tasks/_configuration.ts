@@ -127,7 +127,7 @@ export class Configuration {
                 }
             ],
             "categories": ["productivity", "utilities", "financial"],
-            "display": "standalone",
+            "display": "fullscreen",
             "background_color": "#0b0f1a",
             "theme_color": "#0b0f1a",
             "orientation": "portrait",
