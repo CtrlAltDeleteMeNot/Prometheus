@@ -159,7 +159,6 @@ body.app {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--space-4);
   background: var(--surface-0);
   box-shadow: 0 1px 0 var(--border);
   z-index: 1000;
@@ -217,17 +216,11 @@ body.app {
 }
 .app-main {
   grid-area: main;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding-bottom: var(--safe-bottom);
-  padding-top: var(--safe-top);
-  padding-left: var(--safe-left);
-  padding-right: var(--safe-right);
 }
-.modal-opened .app-main {
+.modal-opened #screener-scroll {
   overflow: hidden !important;
   touch-action: none;
 }
@@ -513,23 +506,41 @@ button.icon-only-pill .icon {
   flex-direction: column;
 }
 #screener-body {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: var(--space-6);
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
-  grid-auto-rows: min-content;
+}
+#screener-scroll {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+#screener-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--space-6);
+  grid-auto-rows: auto;
   align-content: start;
+  overflow-anchor: none;
+  contain: layout paint;
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+#screener-footer {
+  display: block;
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
 }
 @media (max-width: 600px) {
-  #screener-body {
+  #screener-grid {
     grid-template-columns: 1fr;
   }
-}
-#screener-body::after {
-  content: "";
-  grid-column: 1 / -1;
-  height: var(--space-4);
 }
 .screener-card {
   display: flex;
@@ -539,6 +550,9 @@ button.icon-only-pill .icon {
   border-radius: var(--border-radius);
   background: var(--surface-3);
   padding: 1rem;
+  min-height: 180px;
+  contain: layout paint style;
+  overflow: hidden;
 }
 .asset-pair-description {
   display: grid;
@@ -546,6 +560,7 @@ button.icon-only-pill .icon {
   gap: 1rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border);
+  min-height: 3.5rem;
 }
 .asset-and-exchange-images-holder {
   display: block;
@@ -790,6 +805,10 @@ button.icon-only-pill .icon {
 
 /* ts_libs/es_css/SectionAbout.css */
 #about {
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-bottom: var(--safe-bottom);
 }
 #about p:first-of-type {
   margin-top: 0;

@@ -1060,7 +1060,7 @@
   });
 
   // ts_libs/ts_client/views/ScreenerSectionView.ts
-  var _root4, _screenerBody, _allData, _currentPage, _pageSize, _loadMoreBtn, ScreenerSectionView;
+  var _root4, _screenerGrid, _allData, _currentPage, _pageSize, _loadMoreBtn, ScreenerSectionView;
   var init_ScreenerSectionView = __esm({
     "ts_libs/ts_client/views/ScreenerSectionView.ts"() {
       "use strict";
@@ -1070,7 +1070,7 @@
       ScreenerSectionView = class {
         constructor() {
           __privateAdd(this, _root4);
-          __privateAdd(this, _screenerBody);
+          __privateAdd(this, _screenerGrid);
           __privateAdd(this, _allData, []);
           __privateAdd(this, _currentPage, 1);
           __privateAdd(this, _pageSize, 30);
@@ -1079,13 +1079,9 @@
           this.title = "Screener";
           this.id = "screener";
           __privateSet(this, _root4, ViewHelper.getHtmlElementOrThrow(this.id));
-          __privateSet(this, _screenerBody, ViewHelper.getHtmlElementOrThrow("screener-body"));
-          __privateSet(this, _loadMoreBtn, document.createElement("button"));
-          __privateGet(this, _loadMoreBtn).textContent = "Load more";
-          __privateGet(this, _loadMoreBtn).className = "pill-button";
-          __privateGet(this, _loadMoreBtn).style = "flex: 1 1 100%;text-align: center;";
+          __privateSet(this, _screenerGrid, ViewHelper.getHtmlElementOrThrow("screener-grid"));
+          __privateSet(this, _loadMoreBtn, ViewHelper.getButtonOrThrow("screener-load-more"));
           __privateGet(this, _loadMoreBtn).onclick = () => this.loadNextPage();
-          __privateGet(this, _screenerBody).appendChild(__privateGet(this, _loadMoreBtn));
         }
         hasExternalActions() {
           return true;
@@ -1098,7 +1094,7 @@
           }
         }
         renderCards() {
-          __privateGet(this, _screenerBody).querySelectorAll(".screener-card").forEach((el) => el.remove());
+          __privateGet(this, _screenerGrid).querySelectorAll(".screener-card").forEach((el) => el.remove());
           const start = 0;
           const end = __privateGet(this, _currentPage) * __privateGet(this, _pageSize);
           const pageData = __privateGet(this, _allData).slice(start, end);
@@ -1106,7 +1102,7 @@
             const card = document.createElement("div");
             card.className = "screener-card";
             card.appendChild(this.generateCardInner(tp));
-            __privateGet(this, _screenerBody).insertBefore(card, __privateGet(this, _loadMoreBtn));
+            __privateGet(this, _screenerGrid).appendChild(card);
           });
           if (end >= __privateGet(this, _allData).length) {
             __privateGet(this, _loadMoreBtn).style.display = "none";
@@ -1190,7 +1186,7 @@
         }
       };
       _root4 = new WeakMap();
-      _screenerBody = new WeakMap();
+      _screenerGrid = new WeakMap();
       _allData = new WeakMap();
       _currentPage = new WeakMap();
       _pageSize = new WeakMap();

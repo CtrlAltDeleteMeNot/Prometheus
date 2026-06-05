@@ -5,48 +5,84 @@
   flex-direction: column;
 }
 
+/* 1. Constraint: The parent limits the height to the screen */
 #screener-body {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: var(--space-6);
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
-  grid-auto-rows: min-content;
-  align-content: start;
 }
 
+/* 2. Scroller: Constraints itself to parent and allows content to overflow */
+#screener-scroll {
+  display: block;   /* Use block here to allow children to take full height */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#screener-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--space-6);
+  grid-auto-rows: auto;
+  align-content: start;
+  /* CRITICAL: prevents scroll anchoring jitter */
+  overflow-anchor: none;
+  /* reduces paint thrash during batch inserts */
+  contain: layout paint;
+  
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+
+#screener-footer {
+  display: block;
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+  
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+
+
 @media (max-width: 600px) {
-  #screener-body {
+  #screener-grid {
     grid-template-columns: 1fr;
     /* one column on phones */
   }
 }
 
 
-#screener-body::after {
-  content: "";
-  grid-column: 1 / -1;
-  height: var(--space-4);
-}
 
 
 .screener-card {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  /*backdrop-filter: blur(14px);*/
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
   background: var(--surface-3);
   padding: 1rem;
+  /* CRITICAL: stabilizes grid measurement */
+  min-height: 180px;
+
+  /* prevents internal layout repaint from affecting grid */
+  contain: layout paint style;
+  overflow: hidden;
 }
 
 .asset-pair-description {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto; 
-  gap:1rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border);
+  min-height: 3.5rem;
 }
 
 .asset-and-exchange-images-holder {
@@ -68,7 +104,7 @@
   height: 100%;
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 50%; 
+  border-radius: 50%;
   object-fit: cover;
   aspect-ratio: 1 / 1;
 }
@@ -81,18 +117,18 @@
   width: 44%;
   border: 1px solid var(--border);
   padding: 3px;
-  border-radius: 50%; 
+  border-radius: 50%;
   object-fit: cover;
   background: var(--surface-3);
   aspect-ratio: 1 / 1;
 }
 
 
-.asset-pair-title{
+.asset-pair-title {
   margin: 0;
 }
 
-.asset-pair-subtitle{
+.asset-pair-subtitle {
   margin: 0;
 }
 
@@ -105,6 +141,6 @@
   padding-bottom: 0.1rem;
 }
 
-.asset-attributes{
+.asset-attributes {
   padding-top: 0.2rem;
 }

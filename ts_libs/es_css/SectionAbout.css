@@ -1,5 +1,8 @@
 #about {
- 
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-bottom: var(--safe-bottom);
 }
 
 #about p:first-of-type {

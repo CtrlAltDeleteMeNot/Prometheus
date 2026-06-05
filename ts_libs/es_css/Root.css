@@ -122,7 +122,6 @@ body.app {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--space-4);
   background: var(--surface-0);
   box-shadow: 0 1px 0 var(--border);
   z-index: 1000;
@@ -192,18 +191,12 @@ body.app {
 
 .app-main {
   grid-area: main;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding-bottom: var(--safe-bottom);
-  padding-top: var(--safe-top);
-  padding-left: var(--safe-left);
-  padding-right: var(--safe-right);
 }
 
-.modal-opened  .app-main{
+.modal-opened  #screener-scroll{
   overflow: hidden !important;
   touch-action: none;
 }

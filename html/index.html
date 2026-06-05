@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="#0b0f1a">
     <meta name="color-scheme" content="only dark" />
     <link rel="stylesheet" href="css/client/bundle.css?v=1.0.0.version">
@@ -60,11 +61,19 @@
 
     <main class="app-main">
 
-        
+
 
 
         <section id="screener" class="d-none">
             <div id="screener-body">
+                <div id="screener-scroll">
+                    <div id="screener-grid"></div>
+                    <div id="screener-footer">
+                        <button id="screener-load-more" class="pill-button">
+                            Load more
+                        </button>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -124,14 +133,14 @@
     </footer>
 
     <div id="start">
-            <div class="hero-card">
-                <h1>Welcome to <span class="brand-gradient">Prometheus</span></h1>
-                <p>Real-time market intelligence for decisive traders.</p>
-                <button id="start-btn" class="primary" type="button">
-                    <span id="start-btn-text" class="btn-text">Start screening</span>
-                </button>
-                <button id="settings-btn" class="secondary" type="button">Settings</button>
-            </div>
+        <div class="hero-card">
+            <h1>Welcome to <span class="brand-gradient">Prometheus</span></h1>
+            <p>Real-time market intelligence for decisive traders.</p>
+            <button id="start-btn" class="primary" type="button">
+                <span id="start-btn-text" class="btn-text">Start screening</span>
+            </button>
+            <button id="settings-btn" class="secondary" type="button">Settings</button>
+        </div>
     </div>
 
     <div id="sort-fields-modal" class="modal-overlay d-none">
@@ -249,7 +258,7 @@
                         to reduce data volume.</span>
                 </div>
                 <div class="field-wrapper">
-                    <p>Version info</p> 
+                    <p>Version info</p>
                     <span class="field-description">Last build @ ##ts## UTC</span>
                 </div>
             </div>

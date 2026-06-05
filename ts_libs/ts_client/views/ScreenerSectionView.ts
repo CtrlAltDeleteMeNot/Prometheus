@@ -7,7 +7,7 @@ import { getSymbolSvgUrlById } from './generated/SymbolIconsRegistry';
 
 export class ScreenerSectionView implements ISection {
     #root: HTMLElement;
-    #screenerBody: HTMLElement;
+    #screenerGrid: HTMLElement;
     #allData: readonly TradingPairModel[] = [];
     #currentPage = 1;
     #pageSize = 30;
@@ -21,16 +21,9 @@ export class ScreenerSectionView implements ISection {
         this.id = "screener";
         // Initialize the root
         this.#root = ViewHelper.getHtmlElementOrThrow(this.id);
-        this.#screenerBody = ViewHelper.getHtmlElementOrThrow('screener-body');
-
-
-        // Create Load More button at the bottom
-        this.#loadMoreBtn = document.createElement('button');
-        this.#loadMoreBtn.textContent = 'Load more';
-        this.#loadMoreBtn.className = 'pill-button';
-        this.#loadMoreBtn.style = 'flex: 1 1 100%;text-align: center;';
+        this.#screenerGrid = ViewHelper.getHtmlElementOrThrow('screener-grid');
+        this.#loadMoreBtn = ViewHelper.getButtonOrThrow('screener-load-more');
         this.#loadMoreBtn.onclick = () => this.loadNextPage();
-        this.#screenerBody.appendChild(this.#loadMoreBtn);
     }
 
     hasExternalActions(): boolean {
@@ -48,7 +41,7 @@ export class ScreenerSectionView implements ISection {
 
     private renderCards() {
         // Clear existing cards
-        this.#screenerBody.querySelectorAll('.screener-card').forEach(el => el.remove());
+        this.#screenerGrid.querySelectorAll('.screener-card').forEach(el => el.remove());
 
         const start = 0;
         const end = this.#currentPage * this.#pageSize;
@@ -58,7 +51,7 @@ export class ScreenerSectionView implements ISection {
             const card = document.createElement('div');
             card.className = 'screener-card';
             card.appendChild(this.generateCardInner(tp));
-            this.#screenerBody.insertBefore(card, this.#loadMoreBtn); 
+            this.#screenerGrid.appendChild(card);
         });
 
         // Hide Load More if all cards are loaded
