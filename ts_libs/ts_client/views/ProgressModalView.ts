@@ -34,7 +34,6 @@ export class ProgressModalView {
         const scale = percent / 100; 
         const percentValue = percent.toFixed(0);
         requestAnimationFrame(() => {
-            
             this.#percentText.textContent = `${percentValue} %`;
             this.#percentLine.style.transform = `scaleX(${scale})`;
             const paragraph = document.createElement('p');

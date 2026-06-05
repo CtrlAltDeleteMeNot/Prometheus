@@ -221,8 +221,10 @@ body.app {
   flex-direction: column;
 }
 .modal-opened #screener-scroll {
-  overflow: hidden !important;
-  touch-action: none;
+  overflow-y: hidden !important;
+}
+.modal-opened .modal-body {
+  overflow-y: auto !important;
 }
 @media (max-width: 900px) {
   body.app {
@@ -646,7 +648,6 @@ button.icon-only-pill .icon {
   inset: 0;
   background: var(--surface-0);
   display: flex;
-  align-items: center;
   z-index: 2000;
 }
 .modal-content {
@@ -676,7 +677,6 @@ button.icon-only-pill .icon {
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
   padding-top: var(--safe-bottom);
-  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   min-height: 0;
@@ -730,7 +730,6 @@ button.icon-only-pill .icon {
 }
 #settings-modal .modal-body {
   display: flex;
-  overflow-y: auto;
   flex: 1;
   flex-direction: column;
   gap: 1rem;

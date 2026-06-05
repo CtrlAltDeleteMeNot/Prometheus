@@ -197,8 +197,11 @@ body.app {
 }
 
 .modal-opened  #screener-scroll{
-  overflow: hidden !important;
-  touch-action: none;
+  overflow-y: hidden !important;
+}
+
+.modal-opened  .modal-body {
+  overflow-y: auto !important;
 }
 
 
