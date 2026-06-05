@@ -396,9 +396,10 @@
           __privateGet(this, _body).innerHTML = "";
         }
         updateProgress(percent, message) {
+          const scale = percent / 100;
+          const percentValue = percent.toFixed(0);
           requestAnimationFrame(() => {
-            const scale = percent / 100;
-            __privateGet(this, _percentText).textContent = `${percent.toFixed(0)} %`;
+            __privateGet(this, _percentText).textContent = `${percentValue} %`;
             __privateGet(this, _percentLine).style.transform = `scaleX(${scale})`;
             const paragraph = document.createElement("p");
             paragraph.textContent = message;
@@ -951,7 +952,7 @@
   });
 
   // ts_libs/ts_client/views/ScreenerSectionView.ts
-  var _root4, _screenerGrid, _allData, _currentPage, _pageSize, _loadMoreBtn, ScreenerSectionView;
+  var _root4, _screenerGrid, _allData, _currentPage, _pageSize, _loadMoreBtn, _cards, ScreenerSectionView;
   var init_ScreenerSectionView = __esm({
     "ts_libs/ts_client/views/ScreenerSectionView.ts"() {
       "use strict";
@@ -967,6 +968,7 @@
           __privateAdd(this, _pageSize, 30);
           // Optional "Load More" button
           __privateAdd(this, _loadMoreBtn);
+          __privateAdd(this, _cards, []);
           this.title = "Screener";
           this.id = "screener";
           __privateSet(this, _root4, ViewHelper.getHtmlElementOrThrow(this.id));
@@ -985,7 +987,8 @@
           }
         }
         renderCards() {
-          __privateGet(this, _screenerGrid).querySelectorAll(".screener-card").forEach((el) => el.remove());
+          __privateGet(this, _cards).forEach((el) => el.remove());
+          __privateSet(this, _cards, []);
           const start = 0;
           const end = __privateGet(this, _currentPage) * __privateGet(this, _pageSize);
           const pageData = __privateGet(this, _allData).slice(start, end);
@@ -993,12 +996,13 @@
             const card = document.createElement("div");
             card.className = "screener-card";
             card.appendChild(this.generateCardInner(tp));
+            __privateGet(this, _cards).push(card);
             __privateGet(this, _screenerGrid).appendChild(card);
           });
           if (end >= __privateGet(this, _allData).length) {
-            __privateGet(this, _loadMoreBtn).style.display = "none";
+            ViewHelper.toggleVisibility(__privateGet(this, _loadMoreBtn), false);
           } else {
-            __privateGet(this, _loadMoreBtn).style.display = "block";
+            ViewHelper.toggleVisibility(__privateGet(this, _loadMoreBtn), true);
           }
         }
         generateCardInner(tp) {
@@ -1065,8 +1069,7 @@
           __privateSet(this, _currentPage, 1);
           this.renderCards();
           requestAnimationFrame(() => {
-            var _a;
-            (_a = document.scrollingElement) == null ? void 0 : _a.scrollTo(0, 0);
+            __privateGet(this, _screenerGrid).scrollTo(0, 0);
           });
         }
         show() {
@@ -1082,6 +1085,7 @@
       _currentPage = new WeakMap();
       _pageSize = new WeakMap();
       _loadMoreBtn = new WeakMap();
+      _cards = new WeakMap();
     }
   });
 

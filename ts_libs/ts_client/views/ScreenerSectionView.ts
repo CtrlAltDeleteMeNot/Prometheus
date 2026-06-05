@@ -15,6 +15,7 @@ export class ScreenerSectionView implements ISection {
     id: string;
     // Optional "Load More" button
     #loadMoreBtn: HTMLButtonElement;
+    #cards: HTMLDivElement[] = [];
 
     constructor() {
         this.title = "Screener";
@@ -41,7 +42,8 @@ export class ScreenerSectionView implements ISection {
 
     private renderCards() {
         // Clear existing cards
-        this.#screenerGrid.querySelectorAll('.screener-card').forEach(el => el.remove());
+        this.#cards.forEach(el=>el.remove());
+        this.#cards = [];
 
         const start = 0;
         const end = this.#currentPage * this.#pageSize;
@@ -51,14 +53,15 @@ export class ScreenerSectionView implements ISection {
             const card = document.createElement('div');
             card.className = 'screener-card';
             card.appendChild(this.generateCardInner(tp));
+            this.#cards.push(card);
             this.#screenerGrid.appendChild(card);
         });
 
         // Hide Load More if all cards are loaded
         if (end >= this.#allData.length) {
-            this.#loadMoreBtn!.style.display = 'none';
+            ViewHelper.toggleVisibility(this.#loadMoreBtn, false);
         } else {
-            this.#loadMoreBtn!.style.display = 'block';
+            ViewHelper.toggleVisibility(this.#loadMoreBtn, true);
         }
     }
 
@@ -154,7 +157,7 @@ export class ScreenerSectionView implements ISection {
         this.#currentPage = 1;
         this.renderCards();
         requestAnimationFrame(() => {
-            document.scrollingElement?.scrollTo(0, 0);
+            this.#screenerGrid.scrollTo(0, 0);
         });
     }
 

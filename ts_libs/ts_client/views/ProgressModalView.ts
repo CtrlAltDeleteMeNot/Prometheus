@@ -31,9 +31,11 @@ export class ProgressModalView {
     }
 
     public updateProgress(percent: number, message: string): void {
+        const scale = percent / 100; 
+        const percentValue = percent.toFixed(0);
         requestAnimationFrame(() => {
-            const scale = percent / 100; 
-            this.#percentText.textContent = `${percent.toFixed(0)} %`;
+            
+            this.#percentText.textContent = `${percentValue} %`;
             this.#percentLine.style.transform = `scaleX(${scale})`;
             const paragraph = document.createElement('p');
             paragraph.textContent = message;
