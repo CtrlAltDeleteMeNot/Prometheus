@@ -285,6 +285,15 @@ textarea {
   -webkit-user-select: text;
   user-select: text;
 }
+html {
+  background: red;
+}
+body {
+  background: blue;
+}
+.modal-overlay {
+  background: green;
+}
 
 /* ts_libs/es_css/Button.css */
 button.primary {

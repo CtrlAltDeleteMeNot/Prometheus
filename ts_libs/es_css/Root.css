@@ -277,3 +277,17 @@ textarea {
   -webkit-user-select: text;
   user-select: text;
 }
+
+
+/*experimental*/
+html {
+  background: red;
+}
+
+body {
+  background: blue;
+}
+
+.modal-overlay {
+  background: green;
+}
