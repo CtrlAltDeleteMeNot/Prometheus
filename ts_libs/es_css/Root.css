@@ -279,15 +279,3 @@ textarea {
 }
 
 
-/*experimental*/
-html {
-  background: red;
-}
-
-body {
-  background: blue;
-}
-
-.modal-overlay {
-  background: green;
-}
