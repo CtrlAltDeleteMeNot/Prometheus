@@ -143,16 +143,15 @@ p {
   line-height: 1.6;
   margin: 1rem 0;
 }
-body.app {
+.app-shell {
   height: 100%;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
+  grid-template-rows: var(--navbar-height) minmax(0, 1fr) var(--footer-height);
   grid-template-areas: "header header" "sidebar main" "footer footer";
-}
-.app > script {
-  display: none !important;
+  position: fixed;
+  inset: 0;
 }
 .app-header {
   grid-area: header;
@@ -227,7 +226,7 @@ body.app {
   overflow-y: auto !important;
 }
 @media (max-width: 900px) {
-  body.app {
+  .app-shell {
     grid-template-columns: 1fr;
     grid-template-areas: "header" "main" "footer";
     grid-template-rows: auto 1fr auto;
@@ -275,7 +274,7 @@ body.app {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-body.app {
+.app-shell {
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -617,7 +616,7 @@ button.icon-only-pill .icon {
 
 /* ts_libs/es_css/SectionStart.css */
 #start {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: var(--surface-0);
   display: flex;
@@ -644,7 +643,7 @@ button.icon-only-pill .icon {
 
 /* ts_libs/es_css/Modals.css */
 .modal-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: var(--surface-0);
   display: flex;
@@ -718,7 +717,6 @@ button.icon-only-pill .icon {
 #progress-modal .progress-container-line {
   height: 0.2rem;
   background-color: var(--accent);
-  transition: width 0.3s ease;
   width: 100%;
   transform-origin: left;
   transition: transform 0.3s;
@@ -785,16 +783,8 @@ button.icon-only-pill .icon {
 #settings-modal .checkbox-label input[type=checkbox] {
   width: 1.25rem;
   height: 1.25rem;
-  border: 1px solid var(--border);
+  accent-color: var(--accent);
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-#settings-modal .checkbox-label input[type=checkbox]:hover {
-  border-color: var(--accent);
-}
-#settings-modal .checkbox-label input[type=checkbox]:checked {
-  background-color: var(--accent);
-  border-color: var(--accent);
 }
 
 /* ts_libs/es_css/SectionAbout.css */

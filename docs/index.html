@@ -7,8 +7,8 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="#0b0f1a">
     <meta name="color-scheme" content="only dark" />
-    <link rel="stylesheet" href="css/client/bundle.css?v=1780667979681">
-    <script src="js/client/bundle.js?v=1780667979681"></script>
+    <link rel="stylesheet" href="css/client/bundle.css?v=1780732745939">
+    <script src="js/client/bundle.js?v=1780732745939"></script>
     <link rel="manifest" href="manifest.json">
     <title>Prometheus</title>
     <!--ALWAYS FRESH DATA
@@ -18,232 +18,238 @@
     -->
 </head>
 
-<body class="app">
-    <header id="nav-header" class="app-header d-hidden">
-        <div class="header-inner">
-            <button id="menu-open" class="icon-only-transparent" aria-label="Open menu">
-                <svg class="icon" role="img" width="25" height="24" viewBox="0 0 25 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M3.5625 6C3.5625 5.58579 3.89829 5.25 4.3125 5.25H20.3125C20.7267 5.25 21.0625 5.58579 21.0625 6C21.0625 6.41421 20.7267 6.75 20.3125 6.75L4.3125 6.75C3.89829 6.75 3.5625 6.41422 3.5625 6Z" />
-                    <path
-                        d="M3.5625 18C3.5625 17.5858 3.89829 17.25 4.3125 17.25L20.3125 17.25C20.7267 17.25 21.0625 17.5858 21.0625 18C21.0625 18.4142 20.7267 18.75 20.3125 18.75L4.3125 18.75C3.89829 18.75 3.5625 18.4142 3.5625 18Z" />
-                    <path
-                        d="M4.3125 11.25C3.89829 11.25 3.5625 11.5858 3.5625 12C3.5625 12.4142 3.89829 12.75 4.3125 12.75L20.3125 12.75C20.7267 12.75 21.0625 12.4142 21.0625 12C21.0625 11.5858 20.7267 11.25 20.3125 11.25L4.3125 11.25Z" />
-                </svg>
-            </button>
-
-            <div class="brand">
-                <h1 class="brand-main brand-gradient">Prometheus</h1>
-                <h2 class="brand-sub" id="current-section">Screener</h2>
-            </div>
-
-
-        </div>
-    </header>
-
-    <aside id="nav-sidebar" class="app-sidebar d-hidden">
-        <nav class="sidebar-nav">
-            <div class="sidebar-nav-mobile-only">
-                <h1 class="brand-main brand-gradient">Prometheus</h1>
-                <button type="button" id="menu-close" class="icon-only-transparent" aria-label="Open menu">
-                    <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
+<body>
+    <div class="app-shell">
+        <header id="nav-header" class="app-header d-hidden">
+            <div class="header-inner">
+                <button id="menu-open" class="icon-only-transparent" aria-label="Open menu">
+                    <svg class="icon" role="img" width="25" height="24" viewBox="0 0 25 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path
-                            d="M6.21967 7.28033C5.92678 6.98744 5.92678 6.51256 6.21967 6.21967C6.51256 5.92678 6.98744 5.92678 7.28033 6.21967L11.999 10.9384L16.7176 6.2198C17.0105 5.92691 17.4854 5.92691 17.7782 6.2198C18.0711 6.51269 18.0711 6.98757 17.7782 7.28046L13.0597 11.999L17.7782 16.7176C18.0711 17.0105 18.0711 17.4854 17.7782 17.7782C17.4854 18.0711 17.0105 18.0711 16.7176 17.7782L11.999 13.0597L7.28033 17.7784C6.98744 18.0713 6.51256 18.0713 6.21967 17.7784C5.92678 17.4855 5.92678 17.0106 6.21967 16.7177L10.9384 11.999L6.21967 7.28033Z" />
+                            d="M3.5625 6C3.5625 5.58579 3.89829 5.25 4.3125 5.25H20.3125C20.7267 5.25 21.0625 5.58579 21.0625 6C21.0625 6.41421 20.7267 6.75 20.3125 6.75L4.3125 6.75C3.89829 6.75 3.5625 6.41422 3.5625 6Z" />
+                        <path
+                            d="M3.5625 18C3.5625 17.5858 3.89829 17.25 4.3125 17.25L20.3125 17.25C20.7267 17.25 21.0625 17.5858 21.0625 18C21.0625 18.4142 20.7267 18.75 20.3125 18.75L4.3125 18.75C3.89829 18.75 3.5625 18.4142 3.5625 18Z" />
+                        <path
+                            d="M4.3125 11.25C3.89829 11.25 3.5625 11.5858 3.5625 12C3.5625 12.4142 3.89829 12.75 4.3125 12.75L20.3125 12.75C20.7267 12.75 21.0625 12.4142 21.0625 12C21.0625 11.5858 20.7267 11.25 20.3125 11.25L4.3125 11.25Z" />
                     </svg>
                 </button>
+
+                <div class="brand">
+                    <h1 class="brand-main brand-gradient">Prometheus</h1>
+                    <h2 class="brand-sub" id="current-section">Screener</h2>
+                </div>
+
+
             </div>
-            <a id='nav-menu-screener' class="active" data-target-id="screener">Screener</a>
-            <a id='nav-menu-about' data-target-id="about">About</a>
-        </nav>
-    </aside>
+        </header>
 
-    <main class="app-main">
+        <aside id="nav-sidebar" class="app-sidebar d-hidden">
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-mobile-only">
+                    <h1 class="brand-main brand-gradient">Prometheus</h1>
+                    <button type="button" id="menu-close" class="icon-only-transparent" aria-label="Open menu">
+                        <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M6.21967 7.28033C5.92678 6.98744 5.92678 6.51256 6.21967 6.21967C6.51256 5.92678 6.98744 5.92678 7.28033 6.21967L11.999 10.9384L16.7176 6.2198C17.0105 5.92691 17.4854 5.92691 17.7782 6.2198C18.0711 6.51269 18.0711 6.98757 17.7782 7.28046L13.0597 11.999L17.7782 16.7176C18.0711 17.0105 18.0711 17.4854 17.7782 17.7782C17.4854 18.0711 17.0105 18.0711 16.7176 17.7782L11.999 13.0597L7.28033 17.7784C6.98744 18.0713 6.51256 18.0713 6.21967 17.7784C5.92678 17.4855 5.92678 17.0106 6.21967 16.7177L10.9384 11.999L6.21967 7.28033Z" />
+                        </svg>
+                    </button>
+                </div>
+                <a id='nav-menu-screener' class="active" data-target-id="screener">Screener</a>
+                <a id='nav-menu-about' data-target-id="about">About</a>
+            </nav>
+        </aside>
+
+        <main class="app-main">
 
 
 
 
-        <section id="screener" class="d-none">
-            <div id="screener-body">
-                <div id="screener-scroll">
-                    <div id="screener-grid"></div>
-                    <div id="screener-footer">
-                        <button id="screener-load-more" class="pill-button">
-                            Load more
-                        </button>
+            <section id="screener" class="d-none">
+                <div id="screener-body">
+                    <div id="screener-scroll">
+                        <div id="screener-grid"></div>
+                        <div id="screener-footer">
+                            <button id="screener-load-more" class="pill-button">
+                                Load more
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="about" class="d-none">
-            <p>Prometheus is a crypto market screener built for traders who focus on USDC trading pairs across multiple
-                exchanges.</p>
-            <p>Instead of manually scanning markets, Prometheus aggregates and filters real-time data so you can quickly
-                identify liquidity, volatility, and emerging trading opportunities.</p>
-            <p>The goal is simple: reduce noise and surface the signals that matter most to active traders.</p>
-            <p>If you're interested in custom analytics, automation, or a tailored version of the screener, feel free to
-                reach out via <a href="https://www.linkedin.com/in/gabriel-apostol/" target="_blank"
-                    rel="noopener noreferrer">LinkedIn</a> .</p>
-        </section>
-    </main>
-    <footer id="nav-footer" class="app-footer d-hidden">
-        <div class="image-buttons-only-group">
-            <button id="nav-footer-sync" class="icon-only-transparent" aria-label="Sync data" type="button">
-                <svg class="icon" role="img" width="25" height="24" viewBox="0 0 25 24"
+            <section id="about" class="d-none">
+                <p>Prometheus is a crypto market screener built for traders who focus on USDC trading pairs across
+                    multiple
+                    exchanges.</p>
+                <p>Instead of manually scanning markets, Prometheus aggregates and filters real-time data so you can
+                    quickly
+                    identify liquidity, volatility, and emerging trading opportunities.</p>
+                <p>The goal is simple: reduce noise and surface the signals that matter most to active traders.</p>
+                <p>If you're interested in custom analytics, automation, or a tailored version of the screener, feel
+                    free to
+                    reach out via <a href="https://www.linkedin.com/in/gabriel-apostol/" target="_blank"
+                        rel="noopener noreferrer">LinkedIn</a> .</p>
+            </section>
+        </main>
+        <footer id="nav-footer" class="app-footer d-hidden">
+            <div class="image-buttons-only-group">
+                <button id="nav-footer-sync" class="icon-only-transparent" aria-label="Sync data" type="button">
+                    <svg class="icon" role="img" width="25" height="24" viewBox="0 0 25 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M3.13644 9.54175C3.02923 9.94185 3.26667 10.3531 3.66676 10.4603C4.06687 10.5675 4.47812 10.3301 4.58533 9.92998C5.04109 8.22904 6.04538 6.72602 7.44243 5.65403C8.83948 4.58203 10.5512 4.00098 12.3122 4.00098C14.0731 4.00098 15.7848 4.58203 17.1819 5.65403C18.3999 6.58866 19.3194 7.85095 19.8371 9.28639L18.162 8.34314C17.801 8.1399 17.3437 8.26774 17.1405 8.62867C16.9372 8.98959 17.0651 9.44694 17.426 9.65017L20.5067 11.3849C20.68 11.4825 20.885 11.5072 21.0766 11.4537C21.2682 11.4001 21.4306 11.2727 21.5282 11.0993L23.2629 8.01828C23.4661 7.65734 23.3382 7.2 22.9773 6.99679C22.6163 6.79358 22.159 6.92145 21.9558 7.28239L21.195 8.63372C20.5715 6.98861 19.5007 5.54258 18.095 4.464C16.436 3.19099 14.4033 2.50098 12.3122 2.50098C10.221 2.50098 8.1883 3.19099 6.52928 4.464C4.87027 5.737 3.67766 7.52186 3.13644 9.54175Z" />
+                        <path
+                            d="M21.4906 14.4582C21.5978 14.0581 21.3604 13.6469 20.9603 13.5397C20.5602 13.4325 20.1489 13.6699 20.0417 14.07C19.5859 15.7709 18.5816 17.274 17.1846 18.346C15.7875 19.418 14.0758 19.999 12.3149 19.999C10.5539 19.999 8.84219 19.418 7.44514 18.346C6.2292 17.4129 5.31079 16.1534 4.79261 14.721L6.45529 15.6573C6.81622 15.8605 7.27356 15.7327 7.47679 15.3718C7.68003 15.0108 7.55219 14.5535 7.19127 14.3502L4.11056 12.6155C3.93723 12.5179 3.73222 12.4932 3.54065 12.5467C3.34907 12.6003 3.18662 12.7278 3.08903 12.9011L1.3544 15.9821C1.15119 16.3431 1.27906 16.8004 1.64 17.0036C2.00094 17.2068 2.45828 17.079 2.66149 16.718L3.42822 15.3562C4.05115 17.0054 5.12348 18.4552 6.532 19.536C8.19102 20.809 10.2237 21.499 12.3149 21.499C14.406 21.499 16.4387 20.809 18.0977 19.536C19.7568 18.263 20.9494 16.4781 21.4906 14.4582Z" />
+                    </svg>
+                </button>
+                <button id="nav-footer-filter" class="icon-only-transparent" aria-label="Filter data" type="button">
+                    <span class="d-none">27</span>
+                    <svg class="icon" role="img" width="25" height="25" viewBox="0 0 25 25"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M4.0625 4.47852C4.0625 3.23587 5.06986 2.22852 6.3125 2.22852H17.5625C18.8051 2.22852 19.8125 3.23587 19.8125 4.47852V5.83904C19.8125 6.66156 19.5421 7.46126 19.0429 8.11497L14.7164 13.7806C14.6166 13.9113 14.5625 14.0712 14.5625 14.2358V20.474C14.5625 21.8343 13.0786 22.6745 11.9121 21.9747L10.4049 21.0703C9.72717 20.6637 9.3125 19.9313 9.3125 19.1409V14.2358C9.3125 14.0712 9.25842 13.9113 9.15858 13.7806L4.83212 8.11497C4.33292 7.46126 4.0625 6.66156 4.0625 5.83904V4.47852ZM6.3125 3.72852C5.89829 3.72852 5.5625 4.0643 5.5625 4.47852V5.83904C5.5625 6.33255 5.72475 6.81237 6.02427 7.2046L10.3507 12.8702C10.6502 13.2624 10.8125 13.7422 10.8125 14.2358V19.1409C10.8125 19.4044 10.9507 19.6485 11.1766 19.7841L12.6839 20.6884C12.8505 20.7884 13.0625 20.6684 13.0625 20.474V14.2358C13.0625 13.7422 13.2248 13.2624 13.5243 12.8702L17.8507 7.2046C18.1502 6.81237 18.3125 6.33255 18.3125 5.83904V4.47852C18.3125 4.0643 17.9767 3.72852 17.5625 3.72852H6.3125Z" />
+                    </svg>
+                </button>
+            </div>
+
+            <button id="nav-footer-sort" class="pill-button" type="button">
+                <svg id="nav-footer-sort-svg" class="button-image" role="img" width="25" height="24" viewBox="0 0 25 24"
                     xmlns="http://www.w3.org/2000/svg">
                     <path
-                        d="M3.13644 9.54175C3.02923 9.94185 3.26667 10.3531 3.66676 10.4603C4.06687 10.5675 4.47812 10.3301 4.58533 9.92998C5.04109 8.22904 6.04538 6.72602 7.44243 5.65403C8.83948 4.58203 10.5512 4.00098 12.3122 4.00098C14.0731 4.00098 15.7848 4.58203 17.1819 5.65403C18.3999 6.58866 19.3194 7.85095 19.8371 9.28639L18.162 8.34314C17.801 8.1399 17.3437 8.26774 17.1405 8.62867C16.9372 8.98959 17.0651 9.44694 17.426 9.65017L20.5067 11.3849C20.68 11.4825 20.885 11.5072 21.0766 11.4537C21.2682 11.4001 21.4306 11.2727 21.5282 11.0993L23.2629 8.01828C23.4661 7.65734 23.3382 7.2 22.9773 6.99679C22.6163 6.79358 22.159 6.92145 21.9558 7.28239L21.195 8.63372C20.5715 6.98861 19.5007 5.54258 18.095 4.464C16.436 3.19099 14.4033 2.50098 12.3122 2.50098C10.221 2.50098 8.1883 3.19099 6.52928 4.464C4.87027 5.737 3.67766 7.52186 3.13644 9.54175Z" />
+                        d="M13.504 3.25C13.0898 3.25 12.754 3.58579 12.754 4C12.754 4.41421 13.0898 4.75 13.504 4.75L20.5 4.75C20.9142 4.75 21.25 4.41421 21.25 4C21.25 3.58579 20.9142 3.25 20.5 3.25H13.504Z" />
                     <path
-                        d="M21.4906 14.4582C21.5978 14.0581 21.3604 13.6469 20.9603 13.5397C20.5602 13.4325 20.1489 13.6699 20.0417 14.07C19.5859 15.7709 18.5816 17.274 17.1846 18.346C15.7875 19.418 14.0758 19.999 12.3149 19.999C10.5539 19.999 8.84219 19.418 7.44514 18.346C6.2292 17.4129 5.31079 16.1534 4.79261 14.721L6.45529 15.6573C6.81622 15.8605 7.27356 15.7327 7.47679 15.3718C7.68003 15.0108 7.55219 14.5535 7.19127 14.3502L4.11056 12.6155C3.93723 12.5179 3.73222 12.4932 3.54065 12.5467C3.34907 12.6003 3.18662 12.7278 3.08903 12.9011L1.3544 15.9821C1.15119 16.3431 1.27906 16.8004 1.64 17.0036C2.00094 17.2068 2.45828 17.079 2.66149 16.718L3.42822 15.3562C4.05115 17.0054 5.12348 18.4552 6.532 19.536C8.19102 20.809 10.2237 21.499 12.3149 21.499C14.406 21.499 16.4387 20.809 18.0977 19.536C19.7568 18.263 20.9494 16.4781 21.4906 14.4582Z" />
+                        d="M13.504 15.4167C13.0898 15.4167 12.754 15.0809 12.754 14.6667C12.754 14.2525 13.0898 13.9167 13.504 13.9167H17.5C17.9142 13.9167 18.25 14.2525 18.25 14.6667C18.25 15.0809 17.9142 15.4167 17.5 15.4167H13.504Z" />
+                    <path
+                        d="M16 20.75H13.504C13.0898 20.75 12.754 20.4142 12.754 20C12.754 19.5858 13.0898 19.25 13.504 19.25H16C16.4142 19.25 16.75 19.5858 16.75 20C16.75 20.4142 16.4142 20.75 16 20.75Z" />
+                    <path
+                        d="M13.504 10.0833L19 10.0833C19.4142 10.0833 19.75 9.7475 19.75 9.33329C19.75 8.91908 19.4142 8.58329 19 8.58329L13.504 8.58329C13.0898 8.58329 12.754 8.91908 12.754 9.33329C12.754 9.74751 13.0898 10.0833 13.504 10.0833Z" />
+                    <path
+                        d="M8.25206 18.1901L9.97387 16.4695C10.2669 16.1767 10.7417 16.1769 11.0345 16.4699C11.3273 16.7629 11.3271 17.2377 11.0342 17.5305L8.03205 20.5305C7.73919 20.8232 7.26459 20.8232 6.97174 20.5305L3.96984 17.5305C3.67685 17.2377 3.6767 16.7628 3.9695 16.4698C4.2623 16.1769 4.73718 16.1767 5.03016 16.4695L6.75206 18.1903L6.75206 4.49915C6.75206 4.08493 7.08784 3.74915 7.50206 3.74915C7.91627 3.74915 8.25206 4.08493 8.25206 4.49915L8.25206 18.1901Z" />
                 </svg>
+                <span class="button-text">
+                    <span id="nav-footer-sort-main-text" class="main-text">Pending RVA (14, 1D)</span>
+                    <span id="nav-footer-sort-sub-text" class="sub-text">Sorting ascending</span>
+                </span>
             </button>
-            <button id="nav-footer-filter" class="icon-only-transparent" aria-label="Filter data" type="button">
-                <span class="d-none">27</span>
-                <svg class="icon" role="img" width="25" height="25" viewBox="0 0 25 25"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd"
-                        d="M4.0625 4.47852C4.0625 3.23587 5.06986 2.22852 6.3125 2.22852H17.5625C18.8051 2.22852 19.8125 3.23587 19.8125 4.47852V5.83904C19.8125 6.66156 19.5421 7.46126 19.0429 8.11497L14.7164 13.7806C14.6166 13.9113 14.5625 14.0712 14.5625 14.2358V20.474C14.5625 21.8343 13.0786 22.6745 11.9121 21.9747L10.4049 21.0703C9.72717 20.6637 9.3125 19.9313 9.3125 19.1409V14.2358C9.3125 14.0712 9.25842 13.9113 9.15858 13.7806L4.83212 8.11497C4.33292 7.46126 4.0625 6.66156 4.0625 5.83904V4.47852ZM6.3125 3.72852C5.89829 3.72852 5.5625 4.0643 5.5625 4.47852V5.83904C5.5625 6.33255 5.72475 6.81237 6.02427 7.2046L10.3507 12.8702C10.6502 13.2624 10.8125 13.7422 10.8125 14.2358V19.1409C10.8125 19.4044 10.9507 19.6485 11.1766 19.7841L12.6839 20.6884C12.8505 20.7884 13.0625 20.6684 13.0625 20.474V14.2358C13.0625 13.7422 13.2248 13.2624 13.5243 12.8702L17.8507 7.2046C18.1502 6.81237 18.3125 6.33255 18.3125 5.83904V4.47852C18.3125 4.0643 17.9767 3.72852 17.5625 3.72852H6.3125Z" />
-                </svg>
-            </button>
-        </div>
-
-        <button id="nav-footer-sort" class="pill-button" type="button">
-            <svg id="nav-footer-sort-svg" class="button-image" role="img" width="25" height="24" viewBox="0 0 25 24"
-                xmlns="http://www.w3.org/2000/svg">
-                <path
-                    d="M13.504 3.25C13.0898 3.25 12.754 3.58579 12.754 4C12.754 4.41421 13.0898 4.75 13.504 4.75L20.5 4.75C20.9142 4.75 21.25 4.41421 21.25 4C21.25 3.58579 20.9142 3.25 20.5 3.25H13.504Z" />
-                <path
-                    d="M13.504 15.4167C13.0898 15.4167 12.754 15.0809 12.754 14.6667C12.754 14.2525 13.0898 13.9167 13.504 13.9167H17.5C17.9142 13.9167 18.25 14.2525 18.25 14.6667C18.25 15.0809 17.9142 15.4167 17.5 15.4167H13.504Z" />
-                <path
-                    d="M16 20.75H13.504C13.0898 20.75 12.754 20.4142 12.754 20C12.754 19.5858 13.0898 19.25 13.504 19.25H16C16.4142 19.25 16.75 19.5858 16.75 20C16.75 20.4142 16.4142 20.75 16 20.75Z" />
-                <path
-                    d="M13.504 10.0833L19 10.0833C19.4142 10.0833 19.75 9.7475 19.75 9.33329C19.75 8.91908 19.4142 8.58329 19 8.58329L13.504 8.58329C13.0898 8.58329 12.754 8.91908 12.754 9.33329C12.754 9.74751 13.0898 10.0833 13.504 10.0833Z" />
-                <path
-                    d="M8.25206 18.1901L9.97387 16.4695C10.2669 16.1767 10.7417 16.1769 11.0345 16.4699C11.3273 16.7629 11.3271 17.2377 11.0342 17.5305L8.03205 20.5305C7.73919 20.8232 7.26459 20.8232 6.97174 20.5305L3.96984 17.5305C3.67685 17.2377 3.6767 16.7628 3.9695 16.4698C4.2623 16.1769 4.73718 16.1767 5.03016 16.4695L6.75206 18.1903L6.75206 4.49915C6.75206 4.08493 7.08784 3.74915 7.50206 3.74915C7.91627 3.74915 8.25206 4.08493 8.25206 4.49915L8.25206 18.1901Z" />
-            </svg>
-            <span class="button-text">
-                <span id="nav-footer-sort-main-text" class="main-text">Pending RVA (14, 1D)</span>
-                <span id="nav-footer-sort-sub-text" class="sub-text">Sorting ascending</span>
-            </span>
-        </button>
 
 
-    </footer>
+        </footer>
 
-    <div id="start">
-        <div class="hero-card">
-            <h1>Welcome to <span class="brand-gradient">Prometheus</span></h1>
-            <p>Real-time market intelligence for decisive traders.</p>
-            <button id="start-btn" class="primary" type="button">
-                <span id="start-btn-text" class="btn-text">Start screening</span>
-            </button>
-            <button id="settings-btn" class="secondary" type="button">Settings</button>
-        </div>
-    </div>
-
-    <div id="sort-fields-modal" class="modal-overlay d-none">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Sort fields</h2>
-                <button id="sort-fields-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
-                    type="button">
-                    <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M6.21967 7.28033C5.92678 6.98744 5.92678 6.51256 6.21967 6.21967C6.51256 5.92678 6.98744 5.92678 7.28033 6.21967L11.999 10.9384L16.7176 6.2198C17.0105 5.92691 17.4854 5.92691 17.7782 6.2198C18.0711 6.51269 18.0711 6.98757 17.7782 7.28046L13.0597 11.999L17.7782 16.7176C18.0711 17.0105 18.0711 17.4854 17.7782 17.7782C17.4854 18.0711 17.0105 18.0711 16.7176 17.7782L11.999 13.0597L7.28033 17.7784C6.98744 18.0713 6.51256 18.0713 6.21967 17.7784C5.92678 17.4855 5.92678 17.0106 6.21967 16.7177L10.9384 11.999L6.21967 7.28033Z" />
-                    </svg>
+        <div id="start">
+            <div class="hero-card">
+                <h1>Welcome to <span class="brand-gradient">Prometheus</span></h1>
+                <p>Real-time market intelligence for decisive traders.</p>
+                <button id="start-btn" class="primary" type="button">
+                    <span id="start-btn-text" class="btn-text">Start screening</span>
                 </button>
-            </div>
-            <div id="sort-fields-modal-body" class="modal-body">
-                <button type="button" class="pill-button active">Pending RVA (14, 1D)</button>
-                <button type="button" class="pill-button">Daily price change %</button>
-                <button type="button" class="pill-button">RSI (14, close, 1D)</button>
-            </div>
-            <div class="modal-footer">
-                <div class="pill-group">
-                    <button type="button" id="sort-fields-modal-ascending" class="pill-button active">Ascending</button>
-                    <button type="button" id="sort-fields-modal-descending" class="pill-button">Descending</button>
-                </div>
-                <button type="button" id="sort-fields-modal-apply" class="pill-button">Apply</button>
+                <button id="settings-btn" class="secondary" type="button">Settings</button>
             </div>
         </div>
-    </div>
 
-    <div id="filter-fields-modal" class="modal-overlay d-none">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Filters</h2>
-                <button id="filter-fields-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
-                    type="button">
-                    <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M6.21967 7.28033C5.92678 6.98744 5.92678 6.51256 6.21967 6.21967C6.51256 5.92678 6.98744 5.92678 7.28033 6.21967L11.999 10.9384L16.7176 6.2198C17.0105 5.92691 17.4854 5.92691 17.7782 6.2198C18.0711 6.51269 18.0711 6.98757 17.7782 7.28046L13.0597 11.999L17.7782 16.7176C18.0711 17.0105 18.0711 17.4854 17.7782 17.7782C17.4854 18.0711 17.0105 18.0711 16.7176 17.7782L11.999 13.0597L7.28033 17.7784C6.98744 18.0713 6.51256 18.0713 6.21967 17.7784C5.92678 17.4855 5.92678 17.0106 6.21967 16.7177L10.9384 11.999L6.21967 7.28033Z" />
-                    </svg>
-                </button>
-            </div>
-            <div id="filter-fields-modal-body" class="modal-body">
-                <button type="button" class="pill-button active">Pending RVA (14, 1D)</button>
-                <button type="button" class="pill-button">Daily price change %</button>
-                <button type="button" class="pill-button">RSI (14, close, 1D)</button>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="filter-fields-modal-cancel" class="pill-button">Cancel</button>
-                <button type="button" id="filter-fields-modal-apply" class="pill-button">Apply</button>
+        <div id="sort-fields-modal" class="modal-overlay d-none">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Sort fields</h2>
+                    <button id="sort-fields-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
+                        type="button">
+                        <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M6.21967 7.28033C5.92678 6.98744 5.92678 6.51256 6.21967 6.21967C6.51256 5.92678 6.98744 5.92678 7.28033 6.21967L11.999 10.9384L16.7176 6.2198C17.0105 5.92691 17.4854 5.92691 17.7782 6.2198C18.0711 6.51269 18.0711 6.98757 17.7782 7.28046L13.0597 11.999L17.7782 16.7176C18.0711 17.0105 18.0711 17.4854 17.7782 17.7782C17.4854 18.0711 17.0105 18.0711 16.7176 17.7782L11.999 13.0597L7.28033 17.7784C6.98744 18.0713 6.51256 18.0713 6.21967 17.7784C5.92678 17.4855 5.92678 17.0106 6.21967 16.7177L10.9384 11.999L6.21967 7.28033Z" />
+                        </svg>
+                    </button>
+                </div>
+                <div id="sort-fields-modal-body" class="modal-body">
+                    <button type="button" class="pill-button active">Pending RVA (14, 1D)</button>
+                    <button type="button" class="pill-button">Daily price change %</button>
+                    <button type="button" class="pill-button">RSI (14, close, 1D)</button>
+                </div>
+                <div class="modal-footer">
+                    <div class="pill-group">
+                        <button type="button" id="sort-fields-modal-ascending"
+                            class="pill-button active">Ascending</button>
+                        <button type="button" id="sort-fields-modal-descending" class="pill-button">Descending</button>
+                    </div>
+                    <button type="button" id="sort-fields-modal-apply" class="pill-button">Apply</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="progress-modal" class="modal-overlay d-none">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="progress-modal-title">Operation in progress</h2>
-            </div>
-            <div id="progress-modal-body" class="modal-body">
-
-            </div>
-            <div class="modal-footer">
-                <span id="progress-modal-progress-percent-text" class="progress-container-value">0%</span>
-                <span id="progress-modal-progress-percent-line" class="progress-container-line"></span>
+        <div id="filter-fields-modal" class="modal-overlay d-none">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Filters</h2>
+                    <button id="filter-fields-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
+                        type="button">
+                        <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M6.21967 7.28033C5.92678 6.98744 5.92678 6.51256 6.21967 6.21967C6.51256 5.92678 6.98744 5.92678 7.28033 6.21967L11.999 10.9384L16.7176 6.2198C17.0105 5.92691 17.4854 5.92691 17.7782 6.2198C18.0711 6.51269 18.0711 6.98757 17.7782 7.28046L13.0597 11.999L17.7782 16.7176C18.0711 17.0105 18.0711 17.4854 17.7782 17.7782C17.4854 18.0711 17.0105 18.0711 16.7176 17.7782L11.999 13.0597L7.28033 17.7784C6.98744 18.0713 6.51256 18.0713 6.21967 17.7784C5.92678 17.4855 5.92678 17.0106 6.21967 16.7177L10.9384 11.999L6.21967 7.28033Z" />
+                        </svg>
+                    </button>
+                </div>
+                <div id="filter-fields-modal-body" class="modal-body">
+                    <button type="button" class="pill-button active">Pending RVA (14, 1D)</button>
+                    <button type="button" class="pill-button">Daily price change %</button>
+                    <button type="button" class="pill-button">RSI (14, close, 1D)</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="filter-fields-modal-cancel" class="pill-button">Cancel</button>
+                    <button type="button" id="filter-fields-modal-apply" class="pill-button">Apply</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="settings-modal" class="modal-overlay d-none">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="settings-modal-title">Settings</h2>
-                <button id="settings-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
-                    type="button">
-                    <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M6.21967 7.28033C5.92678 6.98744 5.92678 6.51256 6.21967 6.21967C6.51256 5.92678 6.98744 5.92678 7.28033 6.21967L11.999 10.9384L16.7176 6.2198C17.0105 5.92691 17.4854 5.92691 17.7782 6.2198C18.0711 6.51269 18.0711 6.98757 17.7782 7.28046L13.0597 11.999L17.7782 16.7176C18.0711 17.0105 18.0711 17.4854 17.7782 17.7782C17.4854 18.0711 17.0105 18.0711 16.7176 17.7782L11.999 13.0597L7.28033 17.7784C6.98744 18.0713 6.51256 18.0713 6.21967 17.7784C5.92678 17.4855 5.92678 17.0106 6.21967 16.7177L10.9384 11.999L6.21967 7.28033Z" />
-                    </svg>
-                </button>
+        <div id="progress-modal" class="modal-overlay d-none">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="progress-modal-title">Operation in progress</h2>
+                </div>
+                <div id="progress-modal-body" class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <span id="progress-modal-progress-percent-text" class="progress-container-value">0%</span>
+                    <span id="progress-modal-progress-percent-line" class="progress-container-line"></span>
+                </div>
             </div>
-            <div id="settings-modal-body" class="modal-body">
-                <div class="field-wrapper">
-                    <label for="settings-parallel-requests-count">Parallel requests</label>
-                    <input type="number" id="settings-parallel-requests-count" name="settings-parallel-requests-count"
-                        min="1" max="20">
-                    <span class="field-description">Number of concurrent API requests to fetch market data. Higher
-                        values = faster loading but more server load. Use 1-4 for stable connections, 5-10 for fast
-                        networks, and avoid exceeding 20 to prevent rate limiting.</span>
+        </div>
+
+        <div id="settings-modal" class="modal-overlay d-none">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="settings-modal-title">Settings</h2>
+                    <button id="settings-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
+                        type="button">
+                        <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M6.21967 7.28033C5.92678 6.98744 5.92678 6.51256 6.21967 6.21967C6.51256 5.92678 6.98744 5.92678 7.28033 6.21967L11.999 10.9384L16.7176 6.2198C17.0105 5.92691 17.4854 5.92691 17.7782 6.2198C18.0711 6.51269 18.0711 6.98757 17.7782 7.28046L13.0597 11.999L17.7782 16.7176C18.0711 17.0105 18.0711 17.4854 17.7782 17.7782C17.4854 18.0711 17.0105 18.0711 16.7176 17.7782L11.999 13.0597L7.28033 17.7784C6.98744 18.0713 6.51256 18.0713 6.21967 17.7784C5.92678 17.4855 5.92678 17.0106 6.21967 16.7177L10.9384 11.999L6.21967 7.28033Z" />
+                        </svg>
+                    </button>
                 </div>
-                <div class="field-wrapper">
-                    <label for="settings-maximum-pairs-count">Maximum pairs count per exchange</label>
-                    <input type="number" id="settings-maximum-pairs-count" name="settings-maximum-pairs-count" min="1"
-                        max="10000">
-                    <span class="field-description">Total number of trading pairs to analyze. More pairs = more data but
-                        slower performance.</span>
-                </div>
-                <div class="field-wrapper">
-                    <p>Include exchanges</p>
-                    <div id="settings-include-exchanges" class="checkbox-group">
-                        <!--
+                <div id="settings-modal-body" class="modal-body">
+                    <div class="field-wrapper">
+                        <label for="settings-parallel-requests-count">Parallel requests</label>
+                        <input type="number" id="settings-parallel-requests-count"
+                            name="settings-parallel-requests-count" min="1" max="20">
+                        <span class="field-description">Number of concurrent API requests to fetch market data. Higher
+                            values = faster loading but more server load. Use 1-4 for stable connections, 5-10 for fast
+                            networks, and avoid exceeding 20 to prevent rate limiting.</span>
+                    </div>
+                    <div class="field-wrapper">
+                        <label for="settings-maximum-pairs-count">Maximum pairs count per exchange</label>
+                        <input type="number" id="settings-maximum-pairs-count" name="settings-maximum-pairs-count"
+                            min="1" max="10000">
+                        <span class="field-description">Total number of trading pairs to analyze. More pairs = more data
+                            but
+                            slower performance.</span>
+                    </div>
+                    <div class="field-wrapper">
+                        <p>Include exchanges</p>
+                        <div id="settings-include-exchanges" class="checkbox-group">
+                            <!--
                         <label class="checkbox-label">
                             <input type="checkbox" checked>
                             Binance
@@ -253,22 +259,23 @@
                             Bybit
                         </label>
                         -->
+                        </div>
+                        <span class="field-description">Select which exchanges to include in the analysis. Remove
+                            exchanges
+                            to reduce data volume.</span>
                     </div>
-                    <span class="field-description">Select which exchanges to include in the analysis. Remove exchanges
-                        to reduce data volume.</span>
+                    <div class="field-wrapper">
+                        <p>Version info</p>
+                        <span class="field-description">Last updated @ 06 Jun 2026, 07:59:05 UTC</span>
+                    </div>
                 </div>
-                <div class="field-wrapper">
-                    <p>Version info</p>
-                    <span class="field-description">Last updated @ 05 Jun 2026, 13:59:39 UTC</span>
+                <div class="modal-footer">
+                    <button type="button" id="settings-modal-cancel" class="pill-button">Cancel</button>
+                    <button type="button" id="settings-modal-apply" class="pill-button">Apply</button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="settings-modal-cancel" class="pill-button">Cancel</button>
-                <button type="button" id="settings-modal-apply" class="pill-button">Apply</button>
             </div>
         </div>
     </div>
-
 </body>
 
 </html>

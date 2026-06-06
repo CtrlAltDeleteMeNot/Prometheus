@@ -100,21 +100,18 @@ p {
 }
 
 
-body.app {
+.app-shell {
   height: 100%;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-rows: var(--navbar-height) 1fr var(--footer-height);
+  grid-template-rows: var(--navbar-height) minmax(0, 1fr) var(--footer-height);
   grid-template-areas:
     "header header"
     "sidebar main"
     "footer footer";
-}
-
-
-.app>script {
-  display: none !important;
+  position: fixed;
+  inset: 0;
 }
 
 .app-header {
@@ -207,7 +204,7 @@ body.app {
 
 @media (max-width: 900px) {
 
-  body.app {
+  .app-shell {
     grid-template-columns: 1fr;
     grid-template-areas:
       "header"
@@ -266,7 +263,7 @@ body.app {
   -webkit-text-fill-color: transparent;
 }
 
-body.app {
+.app-shell {
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;

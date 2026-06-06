@@ -1,6 +1,6 @@
 
 .modal-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: var(--surface-0);
   display: flex;
@@ -91,7 +91,6 @@
 #progress-modal .progress-container-line {
   height: 0.2rem;
   background-color: var(--accent);
-  transition: width 0.3s ease;
   width: 100%;
   transform-origin: left;
   transition: transform 0.3s;
@@ -170,16 +169,6 @@
 #settings-modal .checkbox-label input[type="checkbox"] {
   width: 1.25rem;
   height: 1.25rem;
-  border: 1px solid var(--border);
+  accent-color: var(--accent);
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-#settings-modal .checkbox-label input[type="checkbox"]:hover {
-  border-color: var(--accent);
-}
-
-#settings-modal .checkbox-label input[type="checkbox"]:checked {
-  background-color: var(--accent);
-  border-color: var(--accent);
 }
