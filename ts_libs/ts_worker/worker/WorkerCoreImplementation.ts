@@ -23,6 +23,7 @@ import { Period } from "../domain/ta/core/Period";
 import { RsiOversoldFilter } from "../application/mappers/filters/RsiOversoldFilter";
 import { SmaDowntrendFilter } from "../application/mappers/filters/SmaDowntrendFilter";
 import { RsiOverboughtFilter } from "../application/mappers/filters/RsiOverboughtFilter";
+import { FifteenMinutesRvaExtractor } from "../application/mappers/extractors/FifteenMinutesRvaExtractor";
 
 
 
@@ -48,6 +49,7 @@ export class WorkerCoreImplementation {
     #currentPriceExtractor: CurrentPriceExtractor;
     #dailyPendingRvaExtractor: DailyPendingRvaExtractor;
     #dailyRvaExtractor: DailyRvaExtractor;
+    #fifteenMinutesRvaExtractor: FifteenMinutesRvaExtractor;
     #thirtyDaysPercentChangeExtractor: ThirtyDayPercentChangeExtractor;
 
     #filterableFieldsExtractors: BaseFilterableAttributeExtractor[];
@@ -64,7 +66,8 @@ export class WorkerCoreImplementation {
         this.#dailyPendingRvaExtractor = new DailyPendingRvaExtractor();
         this.#dailyRvaExtractor = new DailyRvaExtractor();
         this.#thirtyDaysPercentChangeExtractor = new ThirtyDayPercentChangeExtractor();
-        this.#sortableFieldsExtractors = [this.#currentPriceExtractor, this.#dailyPriceChangeExtractor, this.#dailyPendingRvaExtractor, this.#dailyRvaExtractor, this.#thirtyDaysPercentChangeExtractor];
+        this.#fifteenMinutesRvaExtractor = new FifteenMinutesRvaExtractor();
+        this.#sortableFieldsExtractors = [this.#currentPriceExtractor, this.#dailyPriceChangeExtractor, this.#dailyPendingRvaExtractor, this.#dailyRvaExtractor, this.#fifteenMinutesRvaExtractor ,this.#thirtyDaysPercentChangeExtractor];
 
         this.#filterableFieldsExtractors = [];
         let tfs = TimeFrame.values();

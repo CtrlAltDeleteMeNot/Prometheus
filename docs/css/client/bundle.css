@@ -104,7 +104,7 @@ h6 {
 html,
 body {
   height: 100%;
-  background: #0b0f1a !important;
+  overflow: hidden;
 }
 body {
   margin: 0;
@@ -144,7 +144,6 @@ p {
   margin: 1rem 0;
 }
 .app-shell {
-  height: 100%;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
@@ -152,6 +151,8 @@ p {
   grid-template-areas: "header header" "sidebar main" "footer footer";
   position: fixed;
   inset: 0;
+  height: 100dvh;
+  min-height: 100dvh;
 }
 .app-header {
   grid-area: header;

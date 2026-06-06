@@ -4029,8 +4029,40 @@
     }
   });
 
+  // ts_libs/ts_worker/application/mappers/extractors/FifteenMinutesRvaExtractor.ts
+  var FifteenMinutesRvaExtractor;
+  var init_FifteenMinutesRvaExtractor = __esm({
+    "ts_libs/ts_worker/application/mappers/extractors/FifteenMinutesRvaExtractor.ts"() {
+      "use strict";
+      init_Period();
+      init_TimeFrame();
+      init_NamedAttribute();
+      init_BaseSortableAttributeExtractor();
+      FifteenMinutesRvaExtractor = class _FifteenMinutesRvaExtractor extends BaseSortableAttributeExtractor {
+        constructor() {
+          super();
+          this.rvaParams = this.useRvaIndicator(TimeFrame.FIFTEEN_MINUTES, new Period(14));
+          this.metadata = new NamedAttributeMetadata(`${this.rvaParams.getId()}`, `${this.rvaParams.getDescription()}`, "number");
+        }
+        getNamedAttributeMetadata() {
+          return this.metadata;
+        }
+        extractNamedAttributeFrom(data) {
+          const rvaIndicator = data.findIndicator(this.rvaParams);
+          if (rvaIndicator.isReady()) {
+            return NumericNamedAttribute.fromMetadata(this.metadata, rvaIndicator.getValue().getRelativeValue(), 2);
+          }
+          return NumericNamedAttribute.fromMetadata(this.metadata, void 0, void 0);
+        }
+        getId() {
+          return _FifteenMinutesRvaExtractor.name;
+        }
+      };
+    }
+  });
+
   // ts_libs/ts_worker/worker/WorkerCoreImplementation.ts
-  var _container, _mapper, _timeProvider, _mtf, _candlesPerTimeFrame2, _sortableFieldsExtractors, _dailyPriceChangeExtractor, _currentPriceExtractor, _dailyPendingRvaExtractor, _dailyRvaExtractor, _thirtyDaysPercentChangeExtractor, _filterableFieldsExtractors, _WorkerCoreImplementation, WorkerCoreImplementation;
+  var _container, _mapper, _timeProvider, _mtf, _candlesPerTimeFrame2, _sortableFieldsExtractors, _dailyPriceChangeExtractor, _currentPriceExtractor, _dailyPendingRvaExtractor, _dailyRvaExtractor, _fifteenMinutesRvaExtractor, _thirtyDaysPercentChangeExtractor, _filterableFieldsExtractors, _WorkerCoreImplementation, WorkerCoreImplementation;
   var init_WorkerCoreImplementation = __esm({
     "ts_libs/ts_worker/worker/WorkerCoreImplementation.ts"() {
       "use strict";
@@ -4055,6 +4087,7 @@
       init_RsiOversoldFilter();
       init_SmaDowntrendFilter();
       init_RsiOverboughtFilter();
+      init_FifteenMinutesRvaExtractor();
       _WorkerCoreImplementation = class _WorkerCoreImplementation {
         constructor(container) {
           __privateAdd(this, _container);
@@ -4067,6 +4100,7 @@
           __privateAdd(this, _currentPriceExtractor);
           __privateAdd(this, _dailyPendingRvaExtractor);
           __privateAdd(this, _dailyRvaExtractor);
+          __privateAdd(this, _fifteenMinutesRvaExtractor);
           __privateAdd(this, _thirtyDaysPercentChangeExtractor);
           __privateAdd(this, _filterableFieldsExtractors);
           __privateSet(this, _container, container);
@@ -4079,7 +4113,8 @@
           __privateSet(this, _dailyPendingRvaExtractor, new DailyPendingRvaExtractor());
           __privateSet(this, _dailyRvaExtractor, new DailyRvaExtractor());
           __privateSet(this, _thirtyDaysPercentChangeExtractor, new ThirtyDayPercentChangeExtractor());
-          __privateSet(this, _sortableFieldsExtractors, [__privateGet(this, _currentPriceExtractor), __privateGet(this, _dailyPriceChangeExtractor), __privateGet(this, _dailyPendingRvaExtractor), __privateGet(this, _dailyRvaExtractor), __privateGet(this, _thirtyDaysPercentChangeExtractor)]);
+          __privateSet(this, _fifteenMinutesRvaExtractor, new FifteenMinutesRvaExtractor());
+          __privateSet(this, _sortableFieldsExtractors, [__privateGet(this, _currentPriceExtractor), __privateGet(this, _dailyPriceChangeExtractor), __privateGet(this, _dailyPendingRvaExtractor), __privateGet(this, _dailyRvaExtractor), __privateGet(this, _fifteenMinutesRvaExtractor), __privateGet(this, _thirtyDaysPercentChangeExtractor)]);
           __privateSet(this, _filterableFieldsExtractors, []);
           let tfs = TimeFrame.values();
           tfs.forEach((aTf) => {
@@ -4204,6 +4239,7 @@
       _currentPriceExtractor = new WeakMap();
       _dailyPendingRvaExtractor = new WeakMap();
       _dailyRvaExtractor = new WeakMap();
+      _fifteenMinutesRvaExtractor = new WeakMap();
       _thirtyDaysPercentChangeExtractor = new WeakMap();
       _filterableFieldsExtractors = new WeakMap();
       WorkerCoreImplementation = _WorkerCoreImplementation;

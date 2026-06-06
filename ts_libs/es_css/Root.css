@@ -38,18 +38,10 @@
 }
 
 
-
-
-
-
-/*no scroll*/
-html,
-body {
+html, body {
   height: 100%;
-  background: #0b0f1a !important;
+  overflow: hidden;
 }
-
-
 
 
 
@@ -101,7 +93,6 @@ p {
 
 
 .app-shell {
-  height: 100%;
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
@@ -112,6 +103,9 @@ p {
     "footer footer";
   position: fixed;
   inset: 0;
+  /*viewport stabilization experiments*/
+  height: 100dvh; /* optional fallback safety */
+  min-height: 100dvh;
 }
 
 .app-header {
