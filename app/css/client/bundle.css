@@ -105,6 +105,7 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+  background: var(--surface-0);
 }
 body {
   margin: 0;
@@ -680,6 +681,7 @@ button.icon-only-pill .icon {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   min-height: 0;
+  overflow: hidden;
 }
 .modal-footer {
   display: flex;

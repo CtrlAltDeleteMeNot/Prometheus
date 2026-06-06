@@ -40,6 +40,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   min-height: 0;
+  overflow: hidden;
 }
 
 .modal-footer {
