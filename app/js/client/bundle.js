@@ -1508,7 +1508,7 @@
   });
 
   // ts_libs/ts_client/views/StartSectionView.ts
-  var _root7, _startButton, _settingsButton, _startButtonText, StartSectionView;
+  var _root7, _startButton, _settingsButton, StartSectionView;
   var init_StartSectionView = __esm({
     "ts_libs/ts_client/views/StartSectionView.ts"() {
       "use strict";
@@ -1518,12 +1518,10 @@
           __privateAdd(this, _root7);
           __privateAdd(this, _startButton);
           __privateAdd(this, _settingsButton);
-          __privateAdd(this, _startButtonText);
           this.title = "Start";
           this.id = "start";
           __privateSet(this, _root7, ViewHelper.getHtmlElementOrThrow(this.id));
           __privateSet(this, _startButton, ViewHelper.getButtonOrThrow("start-btn"));
-          __privateSet(this, _startButtonText, ViewHelper.getSpanOrThrow("start-btn-text"));
           __privateSet(this, _settingsButton, ViewHelper.getButtonOrThrow("settings-btn"));
         }
         hasExternalActions() {
@@ -1545,7 +1543,6 @@
             try {
               yield callback();
             } finally {
-              __privateGet(this, _startButtonText).classList.remove("d-none");
               __privateGet(this, _startButton).removeAttribute("disabled");
               this.hide();
             }
@@ -1560,7 +1557,6 @@
       _root7 = new WeakMap();
       _startButton = new WeakMap();
       _settingsButton = new WeakMap();
-      _startButtonText = new WeakMap();
     }
   });
 

@@ -14,7 +14,7 @@
   --border: #293149;
   --text: #e6edf3;
   --muted: #9aa4b2;
-  --accent: #3b82f6;
+  --accent: #2a62be;
   --sidebar-width: 240px;
   --navbar-height: calc(3rem + var(--safe-top) + var(--safe-top));
   --footer-height: calc(3rem + var(--safe-bottom) + var(--safe-bottom));
@@ -33,6 +33,7 @@
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
 }

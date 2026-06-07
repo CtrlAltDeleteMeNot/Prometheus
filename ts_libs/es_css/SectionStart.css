@@ -10,16 +10,43 @@
 
 
 .hero-card {
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border);
-    text-align: center;
+    display: grid;
+    gap: 1rem;
+    grid-template-areas:
+        "title"
+        "description"
+        "actions";
+    max-width: 380px;
+}
+
+.hero-title {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-6);
-    background: var(--surface-1);
-    padding: var(--space-8);
-    justify-content: center;
+    align-items: flex-start;
+    line-height: 1;
+}
+
+.hero-title-top {
+    font-size: 1em;
+    transform: translateX(3px);
+    line-height: 1;
+}
+
+.hero-title-brand {
+    font-size: 2em;
+    line-height: 1;
+}
+
+.hero-card p{
+    transform: translateX(3px);
+}
+
+
+.hero-actions {
+    grid-area: actions;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 0.5rem;
 }
 
 

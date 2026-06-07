@@ -5,7 +5,6 @@ export class StartSectionView implements ISection {
     #root: HTMLElement;
     #startButton: HTMLButtonElement;
     #settingsButton: HTMLButtonElement;
-    #startButtonText: HTMLSpanElement;
     title: string;
     id: string;
 
@@ -15,7 +14,6 @@ export class StartSectionView implements ISection {
         this.id = "start";
         this.#root = ViewHelper.getHtmlElementOrThrow(this.id);
         this.#startButton = ViewHelper.getButtonOrThrow('start-btn');
-        this.#startButtonText = ViewHelper.getSpanOrThrow('start-btn-text');
         this.#settingsButton = ViewHelper.getButtonOrThrow('settings-btn');
     }
 
@@ -43,7 +41,6 @@ export class StartSectionView implements ISection {
             try {
                 await callback();
             } finally {
-                this.#startButtonText.classList.remove('d-none');
                 this.#startButton.removeAttribute('disabled');
                 this.hide();
             }
