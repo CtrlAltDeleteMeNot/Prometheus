@@ -671,11 +671,18 @@ button.icon-only-pill .icon {
 }
 .hero-card {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-4);
   grid-template-areas: "title" "description" "actions";
-  max-width: 380px;
+  grid-template-rows: 1fr 1fr 1fr;
+  padding-right: var(--safe-right);
+  padding-left: var(--safe-left);
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  align-items: center;
+  max-width: 400px;
 }
 .hero-title {
+  grid-area: title;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -686,20 +693,18 @@ button.icon-only-pill .icon {
 .hero-title-brand {
   font-size: 2em;
 }
-.hero-card p {
+.hero-description {
+  grid-area: description;
   text-align: center;
   margin: 0;
+  align-self: flex-start;
 }
 .hero-actions {
   grid-area: actions;
-  display: grid;
-  grid-template-columns: 1fr 2fr;
+  display: flex;
+  flex-direction: row;
   gap: var(--space-4);
-}
-@media (max-width: 900px) {
-  .hero-card {
-    width: 85%;
-  }
+  justify-content: center;
 }
 
 /* ts_libs/es_css/Modals.css */
