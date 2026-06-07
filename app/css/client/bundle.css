@@ -693,7 +693,7 @@ button.icon-only-pill .icon {
 .hero-actions {
   grid-area: actions;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: var(--space-4);
 }
 @media (max-width: 900px) {
