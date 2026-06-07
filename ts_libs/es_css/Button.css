@@ -44,10 +44,12 @@
 
 .btn--ghost:hover {
   background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
 }
 
 .btn--ghost:active {
   background: rgba(255, 255, 255, 0.1);
+  transform: translateY(0);
 }
 
 /* old */

@@ -11,7 +11,7 @@
 
 .hero-card {
     display: grid;
-    gap: 1rem;
+    gap: var(--space-8);
     grid-template-areas:
         "title"
         "description"
@@ -22,31 +22,30 @@
 .hero-title {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    line-height: 1;
+    align-items: center;
 }
 
 .hero-title-top {
     font-size: 1em;
-    transform: translateX(3px);
-    line-height: 1;
 }
 
 .hero-title-brand {
     font-size: 2em;
-    line-height: 1;
 }
 
 .hero-card p{
-    transform: translateX(3px);
+    text-align: center;
+    margin: 0;
 }
+
+
 
 
 .hero-actions {
     grid-area: actions;
     display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
 }
 
 
