@@ -2610,17 +2610,18 @@
   });
 
   // ts_libs/ts_worker/application/usecases/FilterTradingPairs/FilterTradingPairsRequest.ts
-  var _exchanges, _quoteAssets, _requiredQuoteAssets, _limit, FilterTradingPairsRequest;
+  var _exchanges, _quoteAssets, _requiredQuoteAssets, _excludedBaseAssets, _limit, FilterTradingPairsRequest;
   var init_FilterTradingPairsRequest = __esm({
     "ts_libs/ts_worker/application/usecases/FilterTradingPairs/FilterTradingPairsRequest.ts"() {
       "use strict";
       init_ExchangeDescriptor();
       init_Asset();
       FilterTradingPairsRequest = class {
-        constructor(exchanges = [], quoteAssets = [], requiredQuoteAssets = [], limit = void 0) {
+        constructor(exchanges = [], quoteAssets = [], requiredQuoteAssets = [], excludedBaseAssets = [], limit = void 0) {
           __privateAdd(this, _exchanges);
           __privateAdd(this, _quoteAssets);
           __privateAdd(this, _requiredQuoteAssets);
+          __privateAdd(this, _excludedBaseAssets);
           __privateAdd(this, _limit);
           __privateSet(this, _exchanges, Object.freeze(
             exchanges.map((ex) => ExchangeDescriptor.fromUnknown(ex))
@@ -2630,6 +2631,9 @@
           ));
           __privateSet(this, _requiredQuoteAssets, Object.freeze(
             requiredQuoteAssets.map((a) => Asset.fromUnknown(a))
+          ));
+          __privateSet(this, _excludedBaseAssets, Object.freeze(
+            excludedBaseAssets.map((a) => Asset.fromUnknown(a))
           ));
           __privateSet(this, _limit, limit !== void 0 && limit > 0 ? limit : void 0);
           Object.freeze(this);
@@ -2646,6 +2650,10 @@
         getRequiredQuoteAssets() {
           return [...__privateGet(this, _requiredQuoteAssets)];
         }
+        /** Base assets to exclude */
+        getExcludedBaseAssets() {
+          return [...__privateGet(this, _excludedBaseAssets)];
+        }
         /** Whether full quote coverage is required */
         requiresFullQuoteCoverage() {
           return __privateGet(this, _requiredQuoteAssets).length > 0;
@@ -2658,6 +2666,7 @@
       _exchanges = new WeakMap();
       _quoteAssets = new WeakMap();
       _requiredQuoteAssets = new WeakMap();
+      _excludedBaseAssets = new WeakMap();
       _limit = new WeakMap();
     }
   });
@@ -3629,9 +3638,16 @@
             }
             const covered = [];
             const requiredQuotes = requestModel.getRequiredQuoteAssets();
+            const excludedBaseAssets = requestModel.getExcludedBaseAssets();
             for (const pair of pairs) {
               const baseAsset = pair.getBaseAsset();
               const exchange = pair.getExchangeDescriptor();
+              const isExcluded = excludedBaseAssets.some((anExcludedAsset, anIndex) => {
+                return anExcludedAsset.equals(baseAsset);
+              });
+              if (isExcluded) {
+                continue;
+              }
               let acceptable = true;
               for (const quoteAsset of requiredQuotes) {
                 if (!__privateGet(this, _tradingPairRepository).isTradingPairAvailable(exchange, baseAsset, quoteAsset)) {
@@ -4169,7 +4185,13 @@
           return __async(this, null, function* () {
             const exchangesResponse = yield __privateGet(this, _container).enumerateExchangesUseCase.execute(new EnumerateExchangesRequest(screenerSettings.getIncludedExchangeNames()));
             const tradingPairsResponse = yield __privateGet(this, _container).filterTradingPairsUseCase.execute(
-              new FilterTradingPairsRequest(exchangesResponse.descriptors, [Asset.fromUnknown("usdc")], [Asset.fromUnknown("usdc"), Asset.fromUnknown("usdt")], screenerSettings.maximumPairsCountPerExchange)
+              new FilterTradingPairsRequest(
+                exchangesResponse.descriptors,
+                [Asset.fromUnknown("usdc")],
+                [Asset.fromUnknown("usdc"), Asset.fromUnknown("usdt")],
+                [Asset.fromUnknown("usd1"), Asset.fromUnknown("bfusd"), Asset.fromUnknown("usde"), Asset.fromUnknown("fdusd"), Asset.fromUnknown("euri"), Asset.fromUnknown("eur")],
+                screenerSettings.maximumPairsCountPerExchange
+              )
             );
             const tradingPairs = tradingPairsResponse.getTradingPairs();
             const sixHours = 216e5;

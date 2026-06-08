@@ -115,7 +115,12 @@ export class WorkerCoreImplementation {
     public async fetch(screenerSettings: ScreenerSettings, progressCallback: ProgressCallback): Promise<readonly TradingPairModel[]> {
         const exchangesResponse = await this.#container.enumerateExchangesUseCase.execute(new EnumerateExchangesRequest(screenerSettings.getIncludedExchangeNames()));
         const tradingPairsResponse = await this.#container.filterTradingPairsUseCase.execute(
-            new FilterTradingPairsRequest(exchangesResponse.descriptors, [Asset.fromUnknown('usdc')], [Asset.fromUnknown('usdc'), Asset.fromUnknown('usdt')], screenerSettings.maximumPairsCountPerExchange)
+            new FilterTradingPairsRequest(
+                exchangesResponse.descriptors, 
+                [Asset.fromUnknown('usdc')], 
+                [Asset.fromUnknown('usdc'), Asset.fromUnknown('usdt')], 
+                [Asset.fromUnknown('usd1'), Asset.fromUnknown('bfusd'), Asset.fromUnknown('usde'), Asset.fromUnknown('fdusd'), Asset.fromUnknown('euri'), Asset.fromUnknown('eur')],
+                screenerSettings.maximumPairsCountPerExchange)
         );
         const tradingPairs = tradingPairsResponse.getTradingPairs();
         const sixHours = 21_600_000;

@@ -35,10 +35,14 @@ export class FilterTradingPairsUseCase extends UseCaseBase<
 
         const covered: TradingPair[] = [];
         const requiredQuotes = requestModel.getRequiredQuoteAssets();
-
+        const excludedBaseAssets = requestModel.getExcludedBaseAssets();
         for (const pair of pairs) {
             const baseAsset = pair.getBaseAsset();
             const exchange = pair.getExchangeDescriptor();
+            const isExcluded = excludedBaseAssets.some((anExcludedAsset, anIndex) => { return anExcludedAsset.equals(baseAsset) });
+            if (isExcluded) {
+                continue;
+            }
 
             let acceptable = true;
 
