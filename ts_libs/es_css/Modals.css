@@ -25,6 +25,7 @@
   align-items: center;
   box-shadow: 0 1px 0 var(--border);
   height: var(--navbar-height);
+  min-height: var(--navbar-height);
   padding-right: var(--safe-right);
   padding-left: var(--safe-left);
   z-index: 2001;
@@ -49,6 +50,7 @@
   align-items: center;
   box-shadow: 0 -1px 0 var(--border);
   height: var(--footer-height);
+  min-height: var(--footer-height);
   padding-bottom: var(--safe-bottom);
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
@@ -56,6 +58,11 @@
   z-index: 2001;
 }
 
+
+.modal-header,
+.modal-footer {
+  flex-shrink: 0;
+}
 
 
 
