@@ -7,8 +7,8 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="#0b0f1a">
     <meta name="color-scheme" content="only dark" />
-    <link rel="stylesheet" href="css/client/bundle.css?v=1780931861942">
-    <script src="js/client/bundle.js?v=1780931861942"></script>
+    <link rel="stylesheet" href="css/client/bundle.css?v=1781033660936">
+    <script src="js/client/bundle.js?v=1781033660936"></script>
     <link rel="manifest" href="manifest.json">
     <title>Prometheus</title>
     <!--ALWAYS FRESH DATA
@@ -22,7 +22,7 @@
     <div class="app-shell">
         <header id="nav-header" class="app-header d-hidden">
             <div class="header-inner">
-                <button id="menu-open" class="icon-only-transparent" aria-label="Open menu">
+                <button id="menu-open" class="btn btn--ghost btn--img btn--square" aria-label="Open menu">
                     <svg class="icon" role="img" width="25" height="24" viewBox="0 0 25 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -47,7 +47,7 @@
             <nav class="sidebar-nav">
                 <div class="sidebar-nav-mobile-only">
                     <h1 class="brand-main brand-gradient">Prometheus</h1>
-                    <button type="button" id="menu-close" class="icon-only-transparent" aria-label="Open menu">
+                    <button type="button" id="menu-close" class="btn btn--ghost btn--img btn--square" aria-label="Open menu">
                         <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
                             <path
@@ -62,15 +62,12 @@
 
         <main class="app-main">
 
-
-
-
             <section id="screener" class="d-none">
                 <div id="screener-body">
                     <div id="screener-scroll">
                         <div id="screener-grid"></div>
                         <div id="screener-footer">
-                            <button id="screener-load-more" class="pill-button">
+                            <button id="screener-load-more" class="btn">
                                 Load more
                             </button>
                         </div>
@@ -93,8 +90,8 @@
             </section>
         </main>
         <footer id="nav-footer" class="app-footer d-hidden">
-            <div class="image-buttons-only-group">
-                <button id="nav-footer-sync" class="icon-only-transparent" aria-label="Sync data" type="button">
+            <div class="button-group spaced">
+                <button id="nav-footer-sync" class="btn btn--ghost btn--img btn--square" aria-label="Sync data" type="button">
                     <svg class="icon" role="img" width="25" height="24" viewBox="0 0 25 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -103,8 +100,8 @@
                             d="M21.4906 14.4582C21.5978 14.0581 21.3604 13.6469 20.9603 13.5397C20.5602 13.4325 20.1489 13.6699 20.0417 14.07C19.5859 15.7709 18.5816 17.274 17.1846 18.346C15.7875 19.418 14.0758 19.999 12.3149 19.999C10.5539 19.999 8.84219 19.418 7.44514 18.346C6.2292 17.4129 5.31079 16.1534 4.79261 14.721L6.45529 15.6573C6.81622 15.8605 7.27356 15.7327 7.47679 15.3718C7.68003 15.0108 7.55219 14.5535 7.19127 14.3502L4.11056 12.6155C3.93723 12.5179 3.73222 12.4932 3.54065 12.5467C3.34907 12.6003 3.18662 12.7278 3.08903 12.9011L1.3544 15.9821C1.15119 16.3431 1.27906 16.8004 1.64 17.0036C2.00094 17.2068 2.45828 17.079 2.66149 16.718L3.42822 15.3562C4.05115 17.0054 5.12348 18.4552 6.532 19.536C8.19102 20.809 10.2237 21.499 12.3149 21.499C14.406 21.499 16.4387 20.809 18.0977 19.536C19.7568 18.263 20.9494 16.4781 21.4906 14.4582Z" />
                     </svg>
                 </button>
-                <button id="nav-footer-filter" class="icon-only-transparent" aria-label="Filter data" type="button">
-                    <span class="d-none">27</span>
+                <button id="nav-footer-filter" class="btn btn--ghost btn--img btn--square btn--badge" aria-label="Filter data" type="button">
+                    <span class="badge d-none">27</span>
                     <svg class="icon" role="img" width="25" height="25" viewBox="0 0 25 25"
                         xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" clip-rule="evenodd"
@@ -113,8 +110,8 @@
                 </button>
             </div>
 
-            <button id="nav-footer-sort" class="pill-button" type="button">
-                <svg id="nav-footer-sort-svg" class="button-image" role="img" width="25" height="24" viewBox="0 0 25 24"
+            <button id="nav-footer-sort" class="btn btn--img" type="button">
+                <svg id="nav-footer-sort-svg" class="icon" role="img" width="25" height="24" viewBox="0 0 25 24"
                     xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M13.504 3.25C13.0898 3.25 12.754 3.58579 12.754 4C12.754 4.41421 13.0898 4.75 13.504 4.75L20.5 4.75C20.9142 4.75 21.25 4.41421 21.25 4C21.25 3.58579 20.9142 3.25 20.5 3.25H13.504Z" />
@@ -166,7 +163,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>Sort fields</h2>
-                    <button id="sort-fields-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
+                    <button id="sort-fields-modal-close" class="btn btn--ghost btn--img btn--square" aria-label="Close"
                         type="button">
                         <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -176,17 +173,19 @@
                     </button>
                 </div>
                 <div id="sort-fields-modal-body" class="modal-body">
-                    <button type="button" class="pill-button active">Pending RVA (14, 1D)</button>
-                    <button type="button" class="pill-button">Daily price change %</button>
-                    <button type="button" class="pill-button">RSI (14, close, 1D)</button>
+                    <!--
+                    <button type="button" class="btn active">Pending RVA (14, 1D)</button>
+                    <button type="button" class="btn">Daily price change %</button>
+                    <button type="button" class="btn">RSI (14, close, 1D)</button>
+                    -->
                 </div>
                 <div class="modal-footer">
-                    <div class="pill-group">
+                    <div class="button-group">
                         <button type="button" id="sort-fields-modal-ascending"
-                            class="pill-button active">Ascending</button>
-                        <button type="button" id="sort-fields-modal-descending" class="pill-button">Descending</button>
+                            class="btn active">Ascending</button>
+                        <button type="button" id="sort-fields-modal-descending" class="btn">Descending</button>
                     </div>
-                    <button type="button" id="sort-fields-modal-apply" class="pill-button">Apply</button>
+                    <button type="button" id="sort-fields-modal-apply" class="btn btn--primary">Apply</button>
                 </div>
             </div>
         </div>
@@ -195,7 +194,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>Filters</h2>
-                    <button id="filter-fields-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
+                    <button id="filter-fields-modal-close" class="btn btn--ghost btn--img btn--square" aria-label="Close"
                         type="button">
                         <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -205,13 +204,15 @@
                     </button>
                 </div>
                 <div id="filter-fields-modal-body" class="modal-body">
-                    <button type="button" class="pill-button active">Pending RVA (14, 1D)</button>
-                    <button type="button" class="pill-button">Daily price change %</button>
-                    <button type="button" class="pill-button">RSI (14, close, 1D)</button>
+                    <!--
+                    <button type="button" class="btn active">Pending RVA (14, 1D)</button>
+                    <button type="button" class="btn">Daily price change %</button>
+                    <button type="button" class="btn">RSI (14, close, 1D)</button>
+                    -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" id="filter-fields-modal-cancel" class="pill-button">Cancel</button>
-                    <button type="button" id="filter-fields-modal-apply" class="pill-button">Apply</button>
+                    <button type="button" id="filter-fields-modal-cancel" class="btn">Cancel</button>
+                    <button type="button" id="filter-fields-modal-apply" class="btn btn--primary">Apply</button>
                 </div>
             </div>
         </div>
@@ -235,7 +236,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 id="settings-modal-title">Settings</h2>
-                    <button id="settings-modal-close" class="icon-only-transparent modal-close" aria-label="Close"
+                    <button id="settings-modal-close" class="btn btn--ghost btn--img btn--square" aria-label="Close"
                         type="button">
                         <svg class="icon" role="img" width="24" height="24" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
@@ -281,12 +282,12 @@
                     </div>
                     <div class="field-wrapper">
                         <p>Version info</p>
-                        <span class="field-description">Last updated @ 08 Jun 2026, 15:17:41 UTC</span>
+                        <span class="field-description">Last updated @ 09 Jun 2026, 19:34:20 UTC</span>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" id="settings-modal-cancel" class="pill-button">Cancel</button>
-                    <button type="button" id="settings-modal-apply" class="pill-button">Apply</button>
+                    <button type="button" id="settings-modal-cancel" class="btn">Cancel</button>
+                    <button type="button" id="settings-modal-apply" class="btn btn--primary">Apply</button>
                 </div>
             </div>
         </div>

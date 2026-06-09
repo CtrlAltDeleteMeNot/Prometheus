@@ -192,7 +192,8 @@
           }
           __privateSet(this, _buttons, __privateGet(this, _attributes).flatMap((attr) => {
             var button = document.createElement("button");
-            button.classList.add("filter-button");
+            button.classList.add("btn");
+            button.classList.add("checkable");
             const isActive = __privateGet(this, _active) !== void 0 && __privateGet(this, _active).some((s) => s.key === attr.key);
             if (isActive) {
               button.classList.add("active");
@@ -1033,7 +1034,7 @@
           textContainer.appendChild(title);
           textContainer.appendChild(subtitle);
           const button = document.createElement("button");
-          button.className = "icon-only-pill";
+          button.className = "btn btn--square btn--icon";
           button.type = "button";
           button.addEventListener("click", () => {
             window.open(tp.exchangeUrl, "_blank", "noopener,noreferrer");
@@ -1450,7 +1451,8 @@
           __privateSet(this, _transientSortKey, model.getSortNamedAttributeMetadata().key);
           __privateSet(this, _sortByButtons, attributes.map((attr) => {
             var button = document.createElement("button");
-            button.classList.add("filter-button");
+            button.classList.add("btn");
+            button.classList.add("checkable");
             if (attr.key === __privateGet(this, _transientSortKey)) {
               button.classList.add("active");
             }

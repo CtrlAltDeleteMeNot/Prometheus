@@ -82,7 +82,8 @@ export class FilterModalView {
 
         this.#buttons = this.#attributes.flatMap(attr => {
             var button = document.createElement('button');
-            button.classList.add('filter-button');
+            button.classList.add('btn');
+            button.classList.add('checkable');
             const isActive = this.#active !== undefined && this.#active.some(s => s.key === attr.key);
             if (isActive) {
                 button.classList.add('active');

@@ -106,7 +106,7 @@ export class ScreenerSectionView implements ISection {
         textContainer.appendChild(subtitle);
 
         const button = document.createElement('button');
-        button.className = 'icon-only-pill';
+        button.className = 'btn btn--square btn--icon';
         button.type = 'button';
 
         button.addEventListener('click', () => {

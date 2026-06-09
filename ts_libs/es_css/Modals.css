@@ -96,6 +96,9 @@
   transform-origin: left;
   transition: transform 0.3s;
   transform: scaleX(0);
+  box-shadow:
+    0 0 3px rgba(42, 98, 190, .30),
+    0 0 8px rgba(42, 98, 190, .15);
 }
 
 #progress-modal .progress-container-value {

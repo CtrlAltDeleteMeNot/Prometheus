@@ -82,7 +82,8 @@ export class SortModalView {
         this.#transientSortKey = model.getSortNamedAttributeMetadata().key;
         this.#sortByButtons = attributes.map(attr => {
             var button = document.createElement('button');
-            button.classList.add('filter-button');
+            button.classList.add('btn');
+            button.classList.add('checkable');
             if (attr.key === this.#transientSortKey) {
                 button.classList.add('active');
             }
@@ -118,7 +119,6 @@ export class SortModalView {
     }
 
     private getSortKeyFromView(): string {
-        //const selectedButton = this.#fields.querySelector('.pill-button.active') as HTMLButtonElement;
         const selectedButton = this.#sortByButtons?.find(aButton => aButton.classList.contains('active'));
         if (!selectedButton) {
             throw new Error('No active selected button found');

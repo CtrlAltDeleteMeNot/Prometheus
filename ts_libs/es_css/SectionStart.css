@@ -99,6 +99,8 @@
 
 #settings-btn {
     align-self: center;
+    text-decoration: underline;
+    text-underline-offset: var(--space-1);
 }
 
 .hero-logo-box {
