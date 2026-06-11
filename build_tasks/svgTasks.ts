@@ -5,40 +5,38 @@ import path from 'path';
 import { glob } from 'glob';
 
 
-export const svgCryptoIconsRegistryGenerator = (configuration: Configuration): gulp.TaskFunction => {
-    return async function svgCryptoIconsRegistryGeneratorImpl(cb) {
-        const { optimize } = await import('svgo');
-
-        
-        const opName = 'svgCryptoIconsRegistryGenerator';
+export const cryptoIconsRegistryGenerator = (configuration: Configuration): gulp.TaskFunction => {
+    return async function cryptoIconsRegistryGeneratorImpl(cb) {        
+        const opName = 'cryptoIconsRegistryGenerator';
         const baseDir = process.cwd();
         const icons: Record<string, string> = {};
         
 
-        const inputDir = path.resolve(baseDir, configuration.symbolIconsSvgs.inputDir);
-        const outputDir = path.resolve(baseDir, configuration.symbolIconsSvgs.outputDir);
-        const pattern = '*.svg';
-        const svgFilePaths = await glob(pattern, { cwd: inputDir, absolute: true });
-        if (svgFilePaths.length === 0) {
-            throw new Error(`No valid SVG files found for ${opName} task`);
+        const inputDir = path.resolve(baseDir, configuration.symbolIcons.inputDir);
+        const outputDir = path.resolve(baseDir, configuration.symbolIcons.outputDir);
+        const pattern = '*.png';
+        const filePaths = await glob(pattern, { cwd: inputDir, absolute: true });
+        if (filePaths.length === 0) {
+            throw new Error(`No valid image files found for ${opName} task`);
         } else {
-            console.info(`Found ${svgFilePaths.length} valid SVG files for ${opName} task.`);
+            console.info(`Found ${filePaths.length} valid SVG files for ${opName} task.`);
         }
         fs.mkdirSync(outputDir);
 
 
-        for (const svgFilePath of svgFilePaths) {
-            const fileName = path.basename(svgFilePath);
-            const id = path.basename(fileName, '.svg').toLowerCase();
-            const svgRaw = fs.readFileSync(svgFilePath, 'utf-8');
-            const svgOptimised = optimize(svgRaw, { multipass: true }).data;
+        for (const imageFilePath of filePaths) {
+            const fileName = path.basename(imageFilePath);
+            const id = path.basename(fileName, '.png').toLowerCase();
+            //const svgRaw = fs.readFileSync(svgFilePath, 'utf-8');
+            //const svgOptimised = optimize(svgRaw, { multipass: true }).data;
             const outFilePath = path.join(outputDir, fileName);
-            fs.writeFileSync(outFilePath, svgOptimised, 'utf-8');
-            icons[id] = configuration.symbolIconsSvgs.relativeUrlPrefix + path.basename(outFilePath);
+            //fs.writeFileSync(outFilePath, svgOptimised, 'utf-8');
+            fs.copyFileSync(imageFilePath, outFilePath);
+            icons[id] = configuration.symbolIcons.relativeUrlPrefix + path.basename(outFilePath);
         }
-
-
-
+        let fallbackDest = path.join(outputDir, "generic-fallback.png");
+        fs.copyFileSync(configuration.symbolIcons.genericImagePath, fallbackDest);
+        icons['generic-fallback'] = configuration.symbolIcons.relativeUrlPrefix + path.basename(fallbackDest);
 
 
 
@@ -49,14 +47,14 @@ export const svgCryptoIconsRegistryGenerator = (configuration: Configuration): g
 
 export const SYMBOL_ICON_REGISTRY : Record<string, string> = ${JSON.stringify(icons, null, 2)};
 
-export function getSymbolSvgUrlById(input: string, fallback = 'generic') {
+export function getSymbolImageUrlById(input: string, fallback = 'generic-fallback') {
   const id = input.toLowerCase();
   return SYMBOL_ICON_REGISTRY[id.toLowerCase()] || SYMBOL_ICON_REGISTRY[fallback];
 }
 `;
         const registryFilePath = path.resolve(
             process.cwd(),
-            configuration.symbolIconsSvgs.outputRegistryTsFile
+            configuration.symbolIcons.outputRegistryTsFile
         );
         fs.mkdirSync(path.dirname(registryFilePath), { recursive: true });
         fs.writeFileSync(registryFilePath, ts);

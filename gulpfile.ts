@@ -3,7 +3,7 @@ import gulp from 'gulp';
 import { developmentConfiguration, publishConfiguration } from './build_tasks/_configuration';
 import { cssGenerate, cssClean, cssWatch } from './build_tasks/cssTasks';
 import { jsBundleClient, jsBundleWorker, jsCleanClient, jsCleanWorker, jsWatchClient, jsWatchWorker } from './build_tasks/jsTasks';
-import { svgActionIconsRegistryGenerator, svgCryptoIconsRegistryGenerator } from './build_tasks/svgTasks';
+import { svgActionIconsRegistryGenerator, cryptoIconsRegistryGenerator } from './build_tasks/svgTasks';
 import { startServer, reloadServer } from './build_tasks/localServerTasks'
 import { htmlClean, htmlGenerate, htmlWatch } from './build_tasks/htmlTasks';
 import { manifestCleanup, manifestGenerate } from './build_tasks/manifestTasks';
@@ -13,7 +13,7 @@ const devConfig = developmentConfiguration;
 const releaseConfig = publishConfiguration;
 
 const cleanDev = gulp.parallel(imagesClean(devConfig), htmlClean(devConfig), cssClean(devConfig), jsCleanClient(devConfig), jsCleanWorker(devConfig), manifestCleanup(devConfig));
-const buildDev = gulp.parallel(imagesGenerate(devConfig), manifestGenerate(devConfig), htmlGenerate(devConfig), svgActionIconsRegistryGenerator(devConfig), svgCryptoIconsRegistryGenerator(devConfig), cssGenerate(devConfig), jsBundleClient(devConfig), jsBundleWorker(devConfig));
+const buildDev = gulp.parallel(imagesGenerate(devConfig), manifestGenerate(devConfig), htmlGenerate(devConfig), svgActionIconsRegistryGenerator(devConfig), cryptoIconsRegistryGenerator(devConfig), cssGenerate(devConfig), jsBundleClient(devConfig), jsBundleWorker(devConfig));
 const watchDev = gulp.parallel(
   jsWatchClient(devConfig, reloadServer()),
   jsWatchWorker(devConfig, reloadServer()),
@@ -29,7 +29,7 @@ export const pub = gulp.series(
   manifestGenerate(releaseConfig),
   htmlGenerate(releaseConfig),
   svgActionIconsRegistryGenerator(releaseConfig),
-  svgCryptoIconsRegistryGenerator(releaseConfig),
+  cryptoIconsRegistryGenerator(releaseConfig),
   cssGenerate(releaseConfig),
   jsBundleClient(releaseConfig),
   jsBundleWorker(releaseConfig)

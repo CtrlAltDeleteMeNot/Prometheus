@@ -7,8 +7,8 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="#0b0f1a">
     <meta name="color-scheme" content="only dark" />
-    <link rel="stylesheet" href="css/client/bundle.css?v=1781034368374">
-    <script src="js/client/bundle.js?v=1781034368374"></script>
+    <link rel="stylesheet" href="css/client/bundle.css?v=1781195457100">
+    <script src="js/client/bundle.js?v=1781195457100"></script>
     <link rel="manifest" href="manifest.json">
     <title>Prometheus</title>
     <!--ALWAYS FRESH DATA
@@ -247,22 +247,6 @@
                 </div>
                 <div id="settings-modal-body" class="modal-body">
                     <div class="field-wrapper">
-                        <label for="settings-parallel-requests-count">Parallel requests</label>
-                        <input type="number" id="settings-parallel-requests-count"
-                            name="settings-parallel-requests-count" min="1" max="20">
-                        <span class="field-description">Number of concurrent API requests to fetch market data. Higher
-                            values = faster loading but more server load. Use 1-4 for stable connections, 5-10 for fast
-                            networks, and avoid exceeding 20 to prevent rate limiting.</span>
-                    </div>
-                    <div class="field-wrapper">
-                        <label for="settings-maximum-pairs-count">Maximum pairs count per exchange</label>
-                        <input type="number" id="settings-maximum-pairs-count" name="settings-maximum-pairs-count"
-                            min="1" max="10000">
-                        <span class="field-description">Total number of trading pairs to analyze. More pairs = more data
-                            but
-                            slower performance.</span>
-                    </div>
-                    <div class="field-wrapper">
                         <p>Include exchanges</p>
                         <div id="settings-include-exchanges" class="checkbox-group">
                             <!--
@@ -281,8 +265,25 @@
                             to reduce data volume.</span>
                     </div>
                     <div class="field-wrapper">
+                        <label for="settings-parallel-requests-count">Parallel requests</label>
+                        <input type="number" id="settings-parallel-requests-count"
+                            name="settings-parallel-requests-count" min="1" max="20">
+                        <span class="field-description">Number of concurrent API requests to fetch market data. Higher
+                            values = faster loading but more server load. Use 1-4 for stable connections, 5-10 for fast
+                            networks, and avoid exceeding 20 to prevent rate limiting.</span>
+                    </div>
+                    <div class="field-wrapper">
+                        <label for="settings-maximum-pairs-count">Maximum pairs count per exchange</label>
+                        <input type="number" id="settings-maximum-pairs-count" name="settings-maximum-pairs-count"
+                            min="1" max="10000">
+                        <span class="field-description">Total number of trading pairs to analyze. More pairs = more data
+                            but
+                            slower performance.</span>
+                    </div>
+                    
+                    <div class="field-wrapper">
                         <p>Version info</p>
-                        <span class="field-description">Last updated @ 09 Jun 2026, 19:46:08 UTC</span>
+                        <span class="field-description">Last updated @ 11 Jun 2026, 16:30:57 UTC</span>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -2,7 +2,7 @@ import { TradingPairModel } from '../../ts_worker/application/exports/TradingPai
 import { ViewHelper } from './ViewHelper';
 import { getActionIconSVGElement } from './generated/ActionIconsRegistry'
 import { ISection } from './ISection'
-import { getSymbolSvgUrlById } from './generated/SymbolIconsRegistry';
+import { getSymbolImageUrlById } from './generated/SymbolIconsRegistry';
 
 
 export class ScreenerSectionView implements ISection {
@@ -77,7 +77,7 @@ export class ScreenerSectionView implements ISection {
         imagesHolder.className = 'asset-and-exchange-images-holder';
 
 
-        const assetIconUrl = getSymbolSvgUrlById(tp.baseAsset, 'generic'); // URL
+        const assetIconUrl = getSymbolImageUrlById(tp.exchangeName + "_" + tp.baseAsset); // URL
         const assetImg = document.createElement('img');
         assetImg.className = 'asset-image';
         assetImg.src = assetIconUrl;

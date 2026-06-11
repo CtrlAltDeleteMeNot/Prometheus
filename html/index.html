@@ -247,22 +247,6 @@
                 </div>
                 <div id="settings-modal-body" class="modal-body">
                     <div class="field-wrapper">
-                        <label for="settings-parallel-requests-count">Parallel requests</label>
-                        <input type="number" id="settings-parallel-requests-count"
-                            name="settings-parallel-requests-count" min="1" max="20">
-                        <span class="field-description">Number of concurrent API requests to fetch market data. Higher
-                            values = faster loading but more server load. Use 1-4 for stable connections, 5-10 for fast
-                            networks, and avoid exceeding 20 to prevent rate limiting.</span>
-                    </div>
-                    <div class="field-wrapper">
-                        <label for="settings-maximum-pairs-count">Maximum pairs count per exchange</label>
-                        <input type="number" id="settings-maximum-pairs-count" name="settings-maximum-pairs-count"
-                            min="1" max="10000">
-                        <span class="field-description">Total number of trading pairs to analyze. More pairs = more data
-                            but
-                            slower performance.</span>
-                    </div>
-                    <div class="field-wrapper">
                         <p>Include exchanges</p>
                         <div id="settings-include-exchanges" class="checkbox-group">
                             <!--
@@ -280,6 +264,23 @@
                             exchanges
                             to reduce data volume.</span>
                     </div>
+                    <div class="field-wrapper">
+                        <label for="settings-parallel-requests-count">Parallel requests</label>
+                        <input type="number" id="settings-parallel-requests-count"
+                            name="settings-parallel-requests-count" min="1" max="20">
+                        <span class="field-description">Number of concurrent API requests to fetch market data. Higher
+                            values = faster loading but more server load. Use 1-4 for stable connections, 5-10 for fast
+                            networks, and avoid exceeding 20 to prevent rate limiting.</span>
+                    </div>
+                    <div class="field-wrapper">
+                        <label for="settings-maximum-pairs-count">Maximum pairs count per exchange</label>
+                        <input type="number" id="settings-maximum-pairs-count" name="settings-maximum-pairs-count"
+                            min="1" max="10000">
+                        <span class="field-description">Total number of trading pairs to analyze. More pairs = more data
+                            but
+                            slower performance.</span>
+                    </div>
+                    
                     <div class="field-wrapper">
                         <p>Version info</p>
                         <span class="field-description">Last build @ ##ts## UTC</span>

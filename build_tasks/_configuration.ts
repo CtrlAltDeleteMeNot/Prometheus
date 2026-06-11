@@ -40,10 +40,11 @@ export class Configuration {
         outputDir: string;
         watch: string;
     };
-    readonly symbolIconsSvgs: {
+    readonly symbolIcons: {
         inputDir: string;
         outputRegistryTsFile: string;
         relativeUrlPrefix: string;
+        genericImagePath: string;
         outputDir: string;
     };
     readonly actionIconsSvgs: {
@@ -92,8 +93,9 @@ export class Configuration {
         this.manifestPath = `${this.app}manifest.json`;
         this.imagesDestPath = `${this.app}img/`;
         this.imagesSourcePath = './images/**/*';
-        this.symbolIconsSvgs = {
-            inputDir: 'node_modules/cryptocurrency-icons/svg/color/',
+        this.symbolIcons = {
+            inputDir: 'download_tasks/coin-icons-cmc/',
+            genericImagePath: 'download_tasks/fallback/generic.png',
             outputDir: `${opts.app}img/symbols/`,
             outputRegistryTsFile: 'ts_libs/ts_client/views/generated/SymbolIconsRegistry.ts',
             relativeUrlPrefix: "img/symbols/"

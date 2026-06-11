@@ -7,7 +7,8 @@
   "private": true,
   "scripts": {
     "start": "npx gulp",
-    "test": "npx jest"
+    "test": "npx jest",
+    "download": "tsx download_tasks/index.ts"
   },
   "devDependencies": {
     "@types/browser-sync": "^2.29.1",
@@ -17,6 +18,7 @@
     "@types/gulp-svgmin": "^1.2.5",
     "@types/jest": "^30.0.0",
     "browser-sync": "^3.0.4",
+    "cheerio": "^1.2.0",
     "cryptocurrency-icons": "0.18.1",
     "esbuild": "^0.27.2",
     "fancy-log": "^2.0.0",

@@ -4189,7 +4189,7 @@
                 exchangesResponse.descriptors,
                 [Asset.fromUnknown("usdc")],
                 [Asset.fromUnknown("usdc"), Asset.fromUnknown("usdt")],
-                [Asset.fromUnknown("usd1"), Asset.fromUnknown("bfusd"), Asset.fromUnknown("usde"), Asset.fromUnknown("fdusd"), Asset.fromUnknown("euri"), Asset.fromUnknown("eur")],
+                [Asset.fromUnknown("aedz"), Asset.fromUnknown("xaut"), Asset.fromUnknown("usd1"), Asset.fromUnknown("bfusd"), Asset.fromUnknown("usde"), Asset.fromUnknown("fdusd"), Asset.fromUnknown("euri"), Asset.fromUnknown("eur")],
                 screenerSettings.maximumPairsCountPerExchange
               )
             );

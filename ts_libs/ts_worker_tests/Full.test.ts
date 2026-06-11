@@ -46,6 +46,7 @@ describe("Container", () => {
             exchangesResponse.descriptors,
             [usdc],
             [usdc, usdt],
+            undefined,
             5000
         );
         const tradingPairsResponse = await container.filterTradingPairsUseCase.execute(tradingPairsRequest);
