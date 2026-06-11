@@ -5,6 +5,9 @@
   background: var(--surface-0);
   display: flex;
   z-index: 2000;
+
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
 }
 
 .modal-content {
