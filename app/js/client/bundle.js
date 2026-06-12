@@ -2169,6 +2169,14 @@
           sw.dispose();
         }
       }));
+      if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+      }
+      window.addEventListener("load", () => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+        });
+      });
     }
   });
   require_index();

@@ -41,3 +41,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 });
+
+//viewport stuff
+if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+}
+
+window.addEventListener("load", () => {
+    requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+    });
+});
