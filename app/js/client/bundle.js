@@ -2147,11 +2147,6 @@
       if ("scrollRestoration" in history) {
         history.scrollRestoration = "manual";
       }
-      window.addEventListener("load", () => {
-        requestAnimationFrame(() => {
-          window.scrollTo(0, 0);
-        });
-      });
       document.addEventListener("DOMContentLoaded", () => __async(null, null, function* () {
         const [swResult, appResult] = yield Promise.allSettled([
           ServiceWorkerController.Create("sw.js"),
@@ -2176,13 +2171,21 @@
           yield sw.forceUpdateCheck();
           sw.dispose();
         }
-        requestAnimationFrame(() => {
-          window.scrollTo(0, 0);
-          requestAnimationFrame(() => {
-            window.scrollTo(0, 0);
-          });
-        });
       }));
+      function fixVieport() {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        window.scrollTo(0, 0);
+        requestAnimationFrame(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          window.scrollTo(0, 0);
+        });
+      }
+      window.addEventListener("pageshow", (_event) => {
+        console.log(`${PageTransitionEvent.name}: ${_event}`);
+        fixVieport();
+      });
     }
   });
   require_index();

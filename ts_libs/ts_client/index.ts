@@ -1,17 +1,12 @@
 import { CLSMonitor } from './controllers/ClsMonitor';
 import { ThinController } from './controllers/ThinController';
 import { ServiceWorkerController } from './controllers/ServiceWorkerController';
+
 //viewport stuff
 if ("scrollRestoration" in history) {
     history.scrollRestoration = "manual";
 }
 
-window.addEventListener("load", () => {
-    requestAnimationFrame(() => {
-        window.scrollTo(0, 0);
-    });
-});
-//
 document.addEventListener('DOMContentLoaded', async () => {
     const [swResult, appResult] = await Promise.allSettled([
         ServiceWorkerController.Create('sw.js'),
@@ -49,16 +44,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         await sw.forceUpdateCheck();
         sw.dispose();
     }
-
-    requestAnimationFrame(() => {
-        window.scrollTo(0, 0);
-
-        requestAnimationFrame(() => {
-            window.scrollTo(0, 0);
-        });
-    });
-
 });
 
+
+function fixVieport(): void {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+
+    requestAnimationFrame(() => {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        window.scrollTo(0, 0);
+    });
+}
+
+window.addEventListener("pageshow", (_event: PageTransitionEvent) => {
+    console.log(`${PageTransitionEvent.name}: ${_event}`)
+    fixVieport();
+});
 
 
