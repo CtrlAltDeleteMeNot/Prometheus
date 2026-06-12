@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         //During startup: update may reload the app.
         //After startup: no update listener remains, so users are not interrupted.
         await sw.forceUpdateCheck();
-        sw.dispose();
+        
     }
 });
 

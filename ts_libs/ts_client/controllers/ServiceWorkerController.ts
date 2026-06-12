@@ -46,7 +46,7 @@ export class ServiceWorkerController {
         navigator.serviceWorker.addEventListener("controllerchange", this.onControllerChange);
     }
 
-     public dispose(): void {
+     public disableUpdateChecks(): void {
         this.registration.removeEventListener("updatefound", this.onUpdateFound);
         navigator.serviceWorker.removeEventListener("controllerchange", this.onControllerChange);
     }

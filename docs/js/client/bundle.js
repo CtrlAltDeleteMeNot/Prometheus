@@ -2095,7 +2095,7 @@
           this.registration.addEventListener("updatefound", this.onUpdateFound);
           navigator.serviceWorker.addEventListener("controllerchange", this.onControllerChange);
         }
-        dispose() {
+        disableUpdateChecks() {
           this.registration.removeEventListener("updatefound", this.onUpdateFound);
           navigator.serviceWorker.removeEventListener("controllerchange", this.onControllerChange);
         }
@@ -2166,7 +2166,6 @@
         }
         if (sw) {
           yield sw.forceUpdateCheck();
-          sw.dispose();
         }
       }));
     }
