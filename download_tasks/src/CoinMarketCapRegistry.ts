@@ -351,7 +351,7 @@ export class CoinMarketCapRegistry {
         repo.set("eth", 1027);
         repo.set("xrp", 52);
         repo.set("ltc", 2);
-        repo.set("zec", 143);
+        repo.set("zec", 1437);
         repo.set("ada", 2010);
         repo.set("doge", 74);
         repo.set("sol", 5426);

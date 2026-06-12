@@ -231,7 +231,6 @@ export const SYMBOL_ICON_REGISTRY : Record<string, string> = {
   "binance_lunc": "img/symbols/binance_lunc.png",
   "binance_luna": "img/symbols/binance_luna.png",
   "binance_ltc": "img/symbols/binance_ltc.png",
-  "binance_lsk": "img/symbols/binance_lsk.png",
   "binance_lpt": "img/symbols/binance_lpt.png",
   "binance_lista": "img/symbols/binance_lista.png",
   "binance_link": "img/symbols/binance_link.png",
