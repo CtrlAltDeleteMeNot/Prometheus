@@ -1890,6 +1890,9 @@
             return toReturn;
           });
         }
+        showUpdateInfo(title, message) {
+          console.log(`${_ThinController.name}::${this.showUpdateInfo.name} -> title: ${title}, message:${message}`);
+        }
         showSection(aPageName) {
           var section = __privateGet(this, _mainView).findSectionById(aPageName);
           __privateGet(this, _mainView).showSection(section);
@@ -2054,77 +2057,85 @@
     }
   });
 
-  // ts_libs/ts_client/controllers/ThinServiceWorkerController.ts
-  var ThinServiceWorkerController;
-  var init_ThinServiceWorkerController = __esm({
-    "ts_libs/ts_client/controllers/ThinServiceWorkerController.ts"() {
+  // ts_libs/ts_client/controllers/ServiceWorkerController.ts
+  var _ServiceWorkerController, ServiceWorkerController;
+  var init_ServiceWorkerController = __esm({
+    "ts_libs/ts_client/controllers/ServiceWorkerController.ts"() {
       "use strict";
-      ThinServiceWorkerController = class _ThinServiceWorkerController {
-        constructor() {
-          this.registration = null;
+      _ServiceWorkerController = class _ServiceWorkerController {
+        constructor(registration) {
+          this.registration = registration;
           this.hasReloaded = false;
+          this.onControllerChange = () => {
+            this.reloadAfterActivation();
+          };
+          this.onUpdateFound = () => {
+            const worker = this.registration.installing;
+            if (!worker) return;
+            worker.addEventListener("statechange", () => {
+              if (worker.state === "installed" && navigator.serviceWorker.controller) {
+                console.log("[SW] Update installed during startup");
+              }
+            });
+          };
         }
         static Create(swPath = "sw.js") {
           return __async(this, null, function* () {
-            const controller = new _ThinServiceWorkerController();
-            yield controller.init(swPath);
-            controller.onUpdateCallback = () => {
-              const ok = confirm("New version available. Reload now?");
-              if (ok) {
-                controller.forceUpdateCheck();
-              }
-            };
-            controller.onActivatedCallback = () => {
-              console.log("App updated");
-            };
+            if (!("serviceWorker" in navigator)) {
+              return void 0;
+            }
+            const registration = yield navigator.serviceWorker.register(swPath);
+            yield navigator.serviceWorker.ready;
+            const controller = new _ServiceWorkerController(registration);
+            controller.registerUpdateListeners();
             return controller;
           });
         }
-        init(swPath) {
-          return __async(this, null, function* () {
-            if (!("serviceWorker" in navigator)) return;
-            this.registration = yield navigator.serviceWorker.register(swPath);
-            yield navigator.serviceWorker.ready;
-            this.registration.update();
-            this.registerUpdateListeners();
-          });
-        }
         registerUpdateListeners() {
-          if (!this.registration) return;
-          this.registration.addEventListener("updatefound", () => {
-            var _a;
-            const newWorker = (_a = this.registration) == null ? void 0 : _a.installing;
-            if (!newWorker) return;
-            newWorker.addEventListener("statechange", () => {
-              if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                this.onUpdateAvailable();
-              }
-            });
-          });
-          navigator.serviceWorker.addEventListener("controllerchange", () => {
-            this.onActivated();
-          });
+          this.registration.addEventListener("updatefound", this.onUpdateFound);
+          navigator.serviceWorker.addEventListener("controllerchange", this.onControllerChange);
         }
-        onUpdateAvailable() {
-          var _a;
-          console.log("[SW] Update available");
-          (_a = this.onUpdateCallback) == null ? void 0 : _a.call(this);
+        dispose() {
+          this.registration.removeEventListener("updatefound", this.onUpdateFound);
+          navigator.serviceWorker.removeEventListener("controllerchange", this.onControllerChange);
         }
-        onActivated() {
-          var _a;
-          console.log("[SW] Activated new version");
-          if (this.hasReloaded) return;
+        reloadAfterActivation() {
+          if (this.hasReloaded) {
+            return;
+          }
           this.hasReloaded = true;
-          (_a = this.onActivatedCallback) == null ? void 0 : _a.call(this);
-          window.location.reload();
+          const url = new URL(window.location.href);
+          url.searchParams.set(
+            _ServiceWorkerController.UPDATED_QUERY_PARAM,
+            "1"
+          );
+          window.location.replace(url.toString());
+        }
+        static WasUpdated() {
+          const url = new URL(window.location.href);
+          if (url.searchParams.get(
+            _ServiceWorkerController.UPDATED_QUERY_PARAM
+          ) !== "1") {
+            return false;
+          }
+          url.searchParams.delete(
+            _ServiceWorkerController.UPDATED_QUERY_PARAM
+          );
+          history.replaceState(
+            {},
+            document.title,
+            url.pathname + url.search + url.hash
+          );
+          return true;
         }
         forceUpdateCheck() {
           return __async(this, null, function* () {
-            var _a;
-            yield (_a = this.registration) == null ? void 0 : _a.update();
+            yield this.registration.update();
           });
         }
       };
+      _ServiceWorkerController.UPDATED_QUERY_PARAM = "updated";
+      ServiceWorkerController = _ServiceWorkerController;
     }
   });
 
@@ -2132,10 +2143,31 @@
   var require_index = __commonJS({
     "ts_libs/ts_client/index.ts"(exports) {
       init_ThinController();
-      init_ThinServiceWorkerController();
+      init_ServiceWorkerController();
       document.addEventListener("DOMContentLoaded", () => __async(null, null, function* () {
-        yield ThinServiceWorkerController.Create("sw.js").catch(console.error);
-        yield ThinController.Create("js/worker/worker.js").catch(console.error);
+        const [swResult, appResult] = yield Promise.allSettled([
+          ServiceWorkerController.Create("sw.js"),
+          ThinController.Create("js/worker/worker.js")
+        ]);
+        if (swResult.status === "rejected") {
+          console.error("ServiceWorker startup failed", swResult.reason);
+        }
+        if (appResult.status === "rejected") {
+          console.error("Application startup failed", appResult.reason);
+        }
+        const sw = swResult.status === "fulfilled" ? swResult.value : void 0;
+        const app = appResult.status === "fulfilled" ? appResult.value : void 0;
+        if (!sw || !app) {
+          console.error("sw or app undefined");
+          return;
+        }
+        if (ServiceWorkerController.WasUpdated()) {
+          app.showUpdateInfo("Updated", "Application was updated to a new version.");
+        }
+        if (sw) {
+          yield sw.forceUpdateCheck();
+          sw.dispose();
+        }
       }));
     }
   });

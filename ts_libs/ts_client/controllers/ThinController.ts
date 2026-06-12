@@ -15,6 +15,7 @@ type WorkerEventHandler<T = any> = (payload: T) => void;
 
 
 export class ThinController {
+    
     static async Create(workerPath: string) {
         let mainModel = new MainModel();
         let mainView = new MainView(mainModel);
@@ -48,6 +49,10 @@ export class ThinController {
         this.#promises = new Map<number, Pending>();
         this.#eventHandlers = new Map<string, Set<WorkerEventHandler>>();
         this.#id = 0;
+    }
+
+    showUpdateInfo(title: string, message: string) {
+        console.log(`${ThinController.name}::${this.showUpdateInfo.name} -> title: ${title}, message:${message}`)
     }
 
 
