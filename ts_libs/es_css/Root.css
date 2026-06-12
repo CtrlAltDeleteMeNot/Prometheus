@@ -41,7 +41,8 @@
 }
 
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
   background: var(--surface-0);
@@ -107,9 +108,7 @@ p {
     "footer footer";
   position: fixed;
   inset: 0;
-  /*viewport stabilization experiments*/
-  height: 100dvh; /* optional fallback safety */
-  min-height: 100dvh;
+  height: 100%;
 }
 
 .app-header {
@@ -191,11 +190,11 @@ p {
   flex-direction: column;
 }
 
-.modal-opened  #screener-scroll{
+.modal-opened #screener-scroll {
   overflow-y: hidden !important;
 }
 
-.modal-opened  .modal-body {
+.modal-opened .modal-body {
   overflow-y: auto !important;
 }
 
@@ -274,3 +273,15 @@ textarea {
 }
 
 
+/*viewport stabilization experiments*/
+.app-shell {
+  height: 100vh;
+  height: 100svh;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.app-sidebar {
+  height: 100vh;
+  height: 100svh;
+}

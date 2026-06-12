@@ -155,8 +155,7 @@ p {
   grid-template-areas: "header header" "sidebar main" "footer footer";
   position: fixed;
   inset: 0;
-  height: 100dvh;
-  min-height: 100dvh;
+  height: 100%;
 }
 .app-header {
   grid-area: header;
@@ -288,6 +287,16 @@ input,
 textarea {
   -webkit-user-select: text;
   user-select: text;
+}
+.app-shell {
+  height: 100vh;
+  height: 100svh;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+.app-sidebar {
+  height: 100vh;
+  height: 100svh;
 }
 
 /* ts_libs/es_css/Button.css */

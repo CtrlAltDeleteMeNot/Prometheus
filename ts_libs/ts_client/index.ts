@@ -2,10 +2,6 @@ import { CLSMonitor } from './controllers/ClsMonitor';
 import { ThinController } from './controllers/ThinController';
 import { ServiceWorkerController } from './controllers/ServiceWorkerController';
 
-//viewport stuff
-if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-}
 
 document.addEventListener('DOMContentLoaded', async () => {
     const [swResult, appResult] = await Promise.allSettled([
@@ -47,21 +43,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 
-function fixVieport(): void {
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    window.scrollTo(0, 0);
 
-    requestAnimationFrame(() => {
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-        window.scrollTo(0, 0);
-    });
-}
-
-window.addEventListener("pageshow", (_event: PageTransitionEvent) => {
-    console.log(`${PageTransitionEvent.name}: ${_event}`)
-    fixVieport();
-});
 
 

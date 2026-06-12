@@ -2144,9 +2144,6 @@
     "ts_libs/ts_client/index.ts"(exports) {
       init_ThinController();
       init_ServiceWorkerController();
-      if ("scrollRestoration" in history) {
-        history.scrollRestoration = "manual";
-      }
       document.addEventListener("DOMContentLoaded", () => __async(null, null, function* () {
         const [swResult, appResult] = yield Promise.allSettled([
           ServiceWorkerController.Create("sw.js"),
@@ -2172,20 +2169,6 @@
           sw.dispose();
         }
       }));
-      function fixVieport() {
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-        window.scrollTo(0, 0);
-        requestAnimationFrame(() => {
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          window.scrollTo(0, 0);
-        });
-      }
-      window.addEventListener("pageshow", (_event) => {
-        console.log(`${PageTransitionEvent.name}: ${_event}`);
-        fixVieport();
-      });
     }
   });
   require_index();
