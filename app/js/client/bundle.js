@@ -2144,6 +2144,14 @@
     "ts_libs/ts_client/index.ts"(exports) {
       init_ThinController();
       init_ServiceWorkerController();
+      if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+      }
+      window.addEventListener("load", () => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+        });
+      });
       document.addEventListener("DOMContentLoaded", () => __async(null, null, function* () {
         const [swResult, appResult] = yield Promise.allSettled([
           ServiceWorkerController.Create("sw.js"),
@@ -2168,15 +2176,13 @@
           yield sw.forceUpdateCheck();
           sw.dispose();
         }
-      }));
-      if ("scrollRestoration" in history) {
-        history.scrollRestoration = "manual";
-      }
-      window.addEventListener("load", () => {
         requestAnimationFrame(() => {
           window.scrollTo(0, 0);
+          requestAnimationFrame(() => {
+            window.scrollTo(0, 0);
+          });
         });
-      });
+      }));
     }
   });
   require_index();

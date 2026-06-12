@@ -1,7 +1,17 @@
 import { CLSMonitor } from './controllers/ClsMonitor';
 import { ThinController } from './controllers/ThinController';
 import { ServiceWorkerController } from './controllers/ServiceWorkerController';
+//viewport stuff
+if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+}
 
+window.addEventListener("load", () => {
+    requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+    });
+});
+//
 document.addEventListener('DOMContentLoaded', async () => {
     const [swResult, appResult] = await Promise.allSettled([
         ServiceWorkerController.Create('sw.js'),
@@ -40,15 +50,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         sw.dispose();
     }
 
-});
-
-//viewport stuff
-if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-}
-
-window.addEventListener("load", () => {
     requestAnimationFrame(() => {
         window.scrollTo(0, 0);
+
+        requestAnimationFrame(() => {
+            window.scrollTo(0, 0);
+        });
     });
+
 });
+
+
+
