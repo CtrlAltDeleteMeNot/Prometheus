@@ -106,10 +106,21 @@ export class SettingsModalView {
             cb.setAttribute("type", "checkbox");
             cb.setAttribute("data-exchange-name", criteria.name);
             cb.checked = criteria.include;
+
+            var slider = document.createElement('span');
+            slider.classList.add('checkbox-slider');
+
+            var text = document.createElement('span');
+            text.classList.add('checkbox-text');
+            text.textContent = criteria.name;
+
             var label = document.createElement('label');
             label.classList.add('checkbox-label');
+
             label.appendChild(cb);
-            label.appendChild(document.createTextNode(criteria.name));
+            label.appendChild(slider);
+            label.appendChild(text);
+
             this.#includeExchangesArea.appendChild(label);
             this.#exchangeInclusions?.push(cb);
         });

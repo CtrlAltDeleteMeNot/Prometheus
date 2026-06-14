@@ -29,8 +29,9 @@ export const htmlGenerate = (configuration: Configuration): gulp.TaskFunction =>
         const workerJs = `const VERSION = "${ts}";
 const BUILD_TIME = "${utcTimestamp}";
 self.addEventListener('install', event => {
-                    self.skipWaiting();
+    self.skipWaiting();
 });
+
 
 self.addEventListener('activate', event => {
     event.waitUntil(self.clients.claim());

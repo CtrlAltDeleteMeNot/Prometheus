@@ -1241,10 +1241,16 @@
             cb.setAttribute("type", "checkbox");
             cb.setAttribute("data-exchange-name", criteria.name);
             cb.checked = criteria.include;
+            var slider = document.createElement("span");
+            slider.classList.add("checkbox-slider");
+            var text = document.createElement("span");
+            text.classList.add("checkbox-text");
+            text.textContent = criteria.name;
             var label = document.createElement("label");
             label.classList.add("checkbox-label");
             label.appendChild(cb);
-            label.appendChild(document.createTextNode(criteria.name));
+            label.appendChild(slider);
+            label.appendChild(text);
             __privateGet(this, _includeExchangesArea).appendChild(label);
             (_a2 = __privateGet(this, _exchangeInclusions)) == null ? void 0 : _a2.push(cb);
           });
