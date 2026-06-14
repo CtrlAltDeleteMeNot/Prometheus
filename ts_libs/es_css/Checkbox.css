@@ -38,7 +38,7 @@
     border-color: var(--accent);
 }
 
-.checkbox-label input:checked + .checkbox-slider::before {
+.checkbox-label input[type="checkbox"]:checked + .checkbox-slider::before {
     transform: translateX(24px);
 }
 
