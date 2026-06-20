@@ -1,25 +1,19 @@
-import { MultiTimeframeOhlcv } from "../../../domain/values/MultiTimeframeOhlcv";
+import { TradingPairModel } from "../../exports/TradingPairModel";
 
 export class SyncOhlcvDataResponse {
-    #multiTimeFrameData: readonly MultiTimeframeOhlcv[];
     #updatedEntriesCount: number;
-
-    constructor(multiTimeFrameData: readonly MultiTimeframeOhlcv[], updatedEntriesCount: number) {
-        // Validate input
-        multiTimeFrameData.forEach(mtf => MultiTimeframeOhlcv.fromUnknown(mtf));
-
-        this.#multiTimeFrameData = multiTimeFrameData;
+    #tradingPairModel: readonly TradingPairModel[];
+    constructor(updatedEntriesCount: number, tradingPairModel: readonly TradingPairModel[]) {
         this.#updatedEntriesCount = updatedEntriesCount;
+        this.#tradingPairModel = tradingPairModel;
         Object.freeze(this);
-    }
-
-    getMultiTimeFrameData(): readonly MultiTimeframeOhlcv[] {
-        return this.#multiTimeFrameData;
     }
 
     getUpdatedEntriesCount(): number {
         return this.#updatedEntriesCount;
     }
 
-
+    getTradingPairModel(): readonly TradingPairModel[] {
+        return this.#tradingPairModel;
+    }
 }

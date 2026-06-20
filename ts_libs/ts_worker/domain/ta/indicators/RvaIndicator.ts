@@ -82,9 +82,11 @@ export class RvaIndicatorParameters extends IndicatorParameters<RvaIndicatorOutp
 
 /** RVA indicator */
 export class RvaIndicator extends Indicator<RvaIndicatorOutput> {
+
     private readonly mtf: MultiTimeframeOhlcv;
     private readonly rolling: RollingSimpleMovingAverage;
     private readonly history: RingBuffer<RvaIndicatorOutput>;
+    private readonly pending: RvaIndicatorOutput;
 
     constructor(parameters: RvaIndicatorParameters, mtf: MultiTimeframeOhlcv) {
         super(RvaIndicatorParameters.fromUnknown(parameters));
@@ -94,7 +96,7 @@ export class RvaIndicator extends Indicator<RvaIndicatorOutput> {
             this.mtf.getBuffer(this.getParameters().getTimeFrame()).getCapacity(),
             () => new RvaIndicatorOutput()
         );
-
+        this.pending = new RvaIndicatorOutput();
         // Bootstrap existing buffer
         this.mtf
             .getBuffer(this.getParameters().getTimeFrame())
@@ -109,30 +111,25 @@ export class RvaIndicator extends Indicator<RvaIndicatorOutput> {
     }
 
     #computeCore(volume: number): void {
+        if (!Number.isFinite(volume)) {
+            throw new RangeError("Cannot push infinite values to RVA");
+        }
         const volumeSma = this.rolling.push(volume);
-        if (volumeSma === null) return;
-
-        const relativeValue = volumeSma !== 0 ? volume / volumeSma : 0;
-        this.history.push(sample => sample.update(volumeSma, relativeValue));
+        if (volumeSma === null) {
+            return; //rolling is not ready
+        }
+        if (!Number.isFinite(volumeSma)) {
+            throw new Error("RVA infinite value detected.");
+        }
+        if (volumeSma !== 0) {
+            const relativeValue = volume / volumeSma;
+            this.history.push(sample => sample.update(volumeSma, relativeValue));
+        } else {
+            this.history.push(sample => sample.update(0, 0));
+        }
     }
 
-    computePending(): number | undefined {
-        if (!this.rolling.isReady()) {
-            return undefined;
-        }
-        if (this.parameters.getTimeFrame() === TimeFrame.ONE_MINUTE) {
-            return undefined;
-        }
-        let pendingVolume = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getPendingCandle().volume;
-        if (pendingVolume === undefined || pendingVolume === null || pendingVolume === Infinity) {
-            return undefined;
-        }
-        const volumeSma = this.getValue().getVolumeSma();
-        if (volumeSma == null || volumeSma === 0) return undefined;
-        const relativeValue = pendingVolume / volumeSma;
 
-        return relativeValue;
-    }
 
     /** Call when a new candle is available */
     update(): void {
@@ -148,6 +145,26 @@ export class RvaIndicator extends Indicator<RvaIndicatorOutput> {
         const value = this.history.get(n);
         if (!value) throw new RangeError("RVA value not available");
         return value;
+    }
+
+    getPendingValue(): RvaIndicatorOutput {
+        if (!this.isReady()) {
+            throw new RangeError("RVA value is not ready.");
+        }
+        const pendingCandle = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getPendingCandle();
+        const pendingVolume = pendingCandle.volume;
+
+         if (!Number.isFinite(pendingVolume)) {
+            throw new RangeError("RVA value cannot be computed due to pending value issues.");
+        }
+        const closedVolumeSma = this.getValue().getVolumeSma();
+        if (!Number.isFinite(closedVolumeSma) || closedVolumeSma === 0) {
+            this.pending.update(0, 0);
+            return this.pending;
+        }
+        const relativeValue = pendingVolume / closedVolumeSma;
+        this.pending.update(closedVolumeSma, relativeValue);
+        return this.pending;
     }
 
     getValuesCount(): number {

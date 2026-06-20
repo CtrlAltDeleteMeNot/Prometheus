@@ -22,7 +22,7 @@ export class MainModel {
         this.sortableAttributes = [];
         this.filterableAttributes = [];
         this.sortDirection = SortDirection.Descending;
-        this.sortNamedAttributeMetadata = TradingPairModel.dailyPercentChangeMetadata();
+        this.sortNamedAttributeMetadata = ScreenerSettings.DailyPriceChangeExtractor.getNamedAttributeMetadata();
     }
 
     setSortableAttributes(namedAttributes: readonly NamedAttributeMetadata[]) {

@@ -36,443 +36,49 @@
     });
   };
 
-  // ts_libs/ts_worker/application/exports/settings/ExchangeInclusionCriteria.ts
-  var ExchangeInclusionCriteria;
-  var init_ExchangeInclusionCriteria = __esm({
-    "ts_libs/ts_worker/application/exports/settings/ExchangeInclusionCriteria.ts"() {
+  // ts_libs/ts_worker/domain/ta/core/Period.ts
+  var Period;
+  var init_Period = __esm({
+    "ts_libs/ts_worker/domain/ta/core/Period.ts"() {
       "use strict";
-      ExchangeInclusionCriteria = class _ExchangeInclusionCriteria {
-        constructor(name, id, include) {
-          this.name = name;
-          this.id = id;
-          this.include = include;
-        }
-        static fromJson(json) {
-          if (typeof json.name !== "string") {
-            throw new Error("Invalid name");
-          }
-          if (typeof json.id !== "number") {
-            throw new Error("Invalid id");
-          }
-          if (typeof json.include !== "boolean") {
-            throw new Error("Invalid include flag");
-          }
-          return new _ExchangeInclusionCriteria(json.name, json.id, json.include);
-        }
-        toJson() {
-          return {
-            name: this.name,
-            id: this.id,
-            include: this.include
-          };
-        }
-        deepEquals(other) {
-          if (!other) return false;
-          return this.name === other.name && this.id === other.id && this.include === other.include;
-        }
-        deepClone() {
-          return new _ExchangeInclusionCriteria(this.name, this.id, this.include);
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/exports/ScreenerSettings.ts
-  var ScreenerSettings;
-  var init_ScreenerSettings = __esm({
-    "ts_libs/ts_worker/application/exports/ScreenerSettings.ts"() {
-      "use strict";
-      init_ExchangeInclusionCriteria();
-      ScreenerSettings = class _ScreenerSettings {
-        constructor(exchangeInclusionCriterias) {
-          this._parallelRequestsCount = 5;
-          this._maximumPairsCountPerExchange = 1e3;
-          this._exchangeInclusionCriterias = _ScreenerSettings.validateExchangeInclusionCriterias(exchangeInclusionCriterias);
-        }
-        // =====================
-        // Getters / Setters
-        // =====================
-        get parallelRequestsCount() {
-          return this._parallelRequestsCount;
-        }
-        set parallelRequestsCount(value) {
-          if (typeof value !== "number" || value < 1 || value > 20) {
-            throw new Error("Invalid parallelRequestsCount");
-          }
-          this._parallelRequestsCount = value;
-        }
-        get maximumPairsCountPerExchange() {
-          return this._maximumPairsCountPerExchange;
-        }
-        set maximumPairsCountPerExchange(value) {
-          if (typeof value !== "number" || value < 1 || value > 1e4) {
-            throw new Error("Invalid maximumPairsCountPerExchange");
-          }
-          this._maximumPairsCountPerExchange = value;
-        }
-        get exchangeInclusionCriterias() {
-          return this._exchangeInclusionCriterias;
-        }
-        set exchangeInclusionCriterias(value) {
-          this._exchangeInclusionCriterias = _ScreenerSettings.validateExchangeInclusionCriterias(value);
-        }
-        // =====================
-        // Factory
-        // =====================
-        static fromJson(json) {
-          if (!Array.isArray(json.exchangeInclusionCriterias)) {
-            throw new Error("exchangeInclusionCriterias must be an array");
-          }
-          const criterias = json.exchangeInclusionCriterias.map(
-            (c) => ExchangeInclusionCriteria.fromJson(c)
-          );
-          const settings = new _ScreenerSettings(criterias);
-          settings.parallelRequestsCount = json.parallelRequestsCount;
-          settings.maximumPairsCountPerExchange = json.maximumPairsCountPerExchange;
-          return settings;
-        }
-        // =====================
-        // Serialization
-        // =====================
-        toJson() {
-          return {
-            parallelRequestsCount: this.parallelRequestsCount,
-            maximumPairsCountPerExchange: this.maximumPairsCountPerExchange,
-            exchangeInclusionCriterias: this.exchangeInclusionCriterias.map((c) => ({
-              name: c.name,
-              id: c.id,
-              include: c.include
-            }))
-          };
-        }
-        // =====================
-        // Validation
-        // =====================
-        static validateExchangeInclusionCriterias(criterias) {
-          if (!criterias || !Array.isArray(criterias)) {
-            throw new Error("Exchange inclusion criterias cannot be null");
-          }
-          if (criterias.length === 0) {
-            throw new Error("At least one exchange must be configured");
-          }
-          const hasAtLeastOne = criterias.some((c) => c.include === true);
-          if (!hasAtLeastOne) {
-            throw new Error("At least one exchange must be selected");
-          }
-          return criterias;
-        }
-        // =====================
-        // Deep Clone & Compare
-        // =====================
-        deepClone() {
-          const clonedCriterias = this.exchangeInclusionCriterias.map((c) => c.deepClone());
-          const newSettings = new _ScreenerSettings(clonedCriterias);
-          newSettings.parallelRequestsCount = this.parallelRequestsCount;
-          newSettings.maximumPairsCountPerExchange = this.maximumPairsCountPerExchange;
-          return newSettings;
-        }
-        deepEquals(other) {
-          if (!other) return false;
-          if (this.parallelRequestsCount !== other.parallelRequestsCount || this.maximumPairsCountPerExchange !== other.maximumPairsCountPerExchange) {
-            return false;
-          }
-          if (this.exchangeInclusionCriterias.length !== other.exchangeInclusionCriterias.length) {
-            return false;
-          }
-          for (let i = 0; i < this.exchangeInclusionCriterias.length; i++) {
-            if (!this.exchangeInclusionCriterias[i].deepEquals(other.exchangeInclusionCriterias[i])) {
-              return false;
-            }
-          }
-          return true;
-        }
-        //=========================
-        //Utility methods
-        //=========================
-        getIncludedExchangeNames() {
-          let toReturn = [];
-          for (let index = 0; index < this.exchangeInclusionCriterias.length; index++) {
-            const element = this.exchangeInclusionCriterias[index];
-            if (element.include === true) {
-              toReturn.push(element.name);
-            }
-          }
-          return toReturn;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/exports/NamedAttribute.ts
-  var NamedAttributeMetadata, NumericNamedAttribute, BooleanNamedAttribute, StringNamedAttribute;
-  var init_NamedAttribute = __esm({
-    "ts_libs/ts_worker/application/exports/NamedAttribute.ts"() {
-      "use strict";
-      NamedAttributeMetadata = class {
-        constructor(key, label, type) {
-          this.key = key;
-          this.label = label;
-          this.type = type;
-        }
-      };
-      NumericNamedAttribute = class _NumericNamedAttribute {
-        constructor(key, label, value, precision) {
-          this.key = key;
-          this.label = label;
-          this.value = value;
-          this.precision = precision;
-          this.metadata = new NamedAttributeMetadata(key, label, "number");
-          if (value !== void 0 && !Number.isFinite(value)) {
-            throw new Error("NumericNamedAttribute requires a finite number");
-          }
-          if (precision !== void 0 && (!Number.isInteger(precision) || precision < 0)) {
-            throw new Error("precision must be a non-negative integer");
-          }
-        }
-        static fromMetadata(argMetadata, argValue, argPrecision) {
-          if (argMetadata.type !== "number") {
-            throw new Error("NumericNamedAttribute requires a valid metadata type");
-          }
-          return new _NumericNamedAttribute(argMetadata.key, argMetadata.label, argValue, argPrecision);
-        }
-        compare(other) {
-          if (other.metadata.type !== this.metadata.type) {
-            throw new Error(
-              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
+      Period = class _Period {
+        /**
+         * @param aValue Must be a positive integer ≥ 2
+         */
+        constructor(aValue) {
+          if (!Number.isInteger(aValue)) {
+            throw new TypeError(
+              `Period value must be an integer, got ${aValue}`
             );
           }
-          const a = this.value;
-          const b = other.value;
-          if (a === void 0 && b === void 0) return 0;
-          if (a === void 0) return -1;
-          if (b === void 0) return 1;
-          return a - b;
-        }
-        toString() {
-          if (this.value === void 0) return "";
-          return this.precision === void 0 ? this.value.toString() : this.value.toFixed(this.precision);
-        }
-      };
-      BooleanNamedAttribute = class _BooleanNamedAttribute {
-        constructor(key, label, value) {
-          this.key = key;
-          this.label = label;
-          this.value = value;
-          this.metadata = new NamedAttributeMetadata(key, label, "boolean");
-        }
-        compare(other) {
-          if (other.metadata.type !== this.metadata.type) {
-            throw new Error(
-              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
+          if (aValue < 2) {
+            throw new RangeError(
+              `Period value must be at least 2, got ${aValue}`
             );
           }
-          const a = this.value;
-          const b = other.value;
-          if (a === void 0 && b === void 0) return 0;
-          if (a === void 0) return -1;
-          if (b === void 0) return 1;
-          return Number(a) - Number(b);
-        }
-        toString() {
-          return this.value === void 0 ? "" : this.value ? "true" : "false";
-        }
-        static fromMetadata(argMetadata, argValue) {
-          if (argMetadata.type !== "boolean") {
-            throw new Error("BooleanNamedAttribute requires a valid metadata type");
-          }
-          return new _BooleanNamedAttribute(argMetadata.key, argMetadata.label, argValue);
-        }
-      };
-      StringNamedAttribute = class {
-        constructor(key, label, value) {
-          this.key = key;
-          this.label = label;
-          this.value = value;
-          this.metadata = new NamedAttributeMetadata(key, label, "string");
-          if (value !== void 0 && value.length === 0) {
-            throw new Error("StringNamedAttribute cannot be empty");
-          }
-        }
-        compare(other) {
-          if (other.metadata.type !== this.metadata.type) {
-            throw new Error(
-              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
-            );
-          }
-          const a = this.value;
-          const b = other.value;
-          if (a === void 0 && b === void 0) return 0;
-          if (a === void 0) return -1;
-          if (b === void 0) return 1;
-          return a.localeCompare(b);
-        }
-        toString() {
-          var _a;
-          return (_a = this.value) != null ? _a : "";
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/exports/TradingPairModel.ts
-  var TradingPairModel;
-  var init_TradingPairModel = __esm({
-    "ts_libs/ts_worker/application/exports/TradingPairModel.ts"() {
-      "use strict";
-      init_NamedAttribute();
-      TradingPairModel = class {
-        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, price, exchangeUrl) {
-          this.baseAsset = baseAsset;
-          this.quoteAsset = quoteAsset;
-          this.exchangeName = exchangeName;
-          this.exchangeId = exchangeId;
-          this.price = price;
-          this.exchangeUrl = exchangeUrl;
-          this.extended = [];
+          this.value = aValue;
           Object.freeze(this);
         }
-        // ------------------------
-        // Typed attribute access
-        // ------------------------
-        addAttr(attr) {
-          this.extended.push(attr);
+        getValue() {
+          return this.value;
         }
-        getAttr(key) {
-          return this.extended.find((a) => a.metadata.key === key);
-        }
-        getAttrValue(key, fallback) {
-          var _a, _b;
-          return (_b = (_a = this.getAttr(key)) == null ? void 0 : _a.value) != null ? _b : fallback;
-        }
-        hasAttr(key) {
-          return this.extended.some((a) => a.metadata.key === key);
-        }
-        getAttributes() {
-          return this.extended;
-        }
-        getNumericAttributes() {
-          return this.extended.filter((e) => e instanceof NumericNamedAttribute) || [];
-        }
-        getBooleanAttributes() {
-          return this.extended.filter((e) => e instanceof BooleanNamedAttribute) || [];
-        }
-        static dailyPercentChangeMetadata() {
-          return new NamedAttributeMetadata("daily_percent_change", "Daily change %", "number");
-        }
-        static currentPriceMetadata() {
-          return new NamedAttributeMetadata("price", "Price", "number");
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/exports/TradingPairsCodec.ts
-  var TradingPairsCodec;
-  var init_TradingPairsCodec = __esm({
-    "ts_libs/ts_worker/application/exports/TradingPairsCodec.ts"() {
-      "use strict";
-      init_NamedAttribute();
-      init_TradingPairModel();
-      TradingPairsCodec = class {
-        /** Serialize array of TradingPairModel to JSON string */
-        static toJsonString(tradingPairs) {
-          const dto = tradingPairs.map((tp) => ({
-            baseAsset: tp.baseAsset,
-            quoteAsset: tp.quoteAsset,
-            exchangeName: tp.exchangeName,
-            exchangeId: tp.exchangeId,
-            exchangeUrl: tp.exchangeUrl,
-            price: tp.price,
-            extended: tp.getAttributes().map((attr) => {
-              var _a;
-              return {
-                key: attr.metadata.key,
-                label: attr.metadata.label,
-                type: attr.metadata.type,
-                value: attr.value,
-                precision: (_a = attr.precision) != null ? _a : void 0
-              };
-            })
-          }));
-          return JSON.stringify(dto);
-        }
-        static extractUniqueSortableAttributes(tradingPairs) {
-          const toReturn = [];
-          const count = Math.min(10, tradingPairs.length);
-          for (let i = 0; i < count; i++) {
-            const attrs = tradingPairs[i].getNumericAttributes();
-            for (let j = 0; j < attrs.length; j++) {
-              const meta = attrs[j].metadata;
-              const metaKey = meta.key;
-              const isNew = !toReturn.some((s) => s.key === metaKey);
-              if (isNew) {
-                toReturn.push(meta);
-              }
-            }
+        /**
+         * Runtime validation / normalization helper
+         * Accepts a Period or an integer.
+         *
+         * @param value unknown
+         * @throws TypeError | RangeError
+         */
+        static fromUnknown(value) {
+          if (value instanceof _Period) {
+            return value;
           }
-          return toReturn;
-        }
-        static extractUniqueFilterableAttributes(tradingPairs) {
-          const toReturn = [];
-          const count = Math.min(10, tradingPairs.length);
-          for (let i = 0; i < count; i++) {
-            const attrs = tradingPairs[i].getBooleanAttributes();
-            for (let j = 0; j < attrs.length; j++) {
-              const meta = attrs[j].metadata;
-              const metaKey = meta.key;
-              const isNew = !toReturn.some((s) => s.key === metaKey);
-              if (isNew) {
-                toReturn.push(meta);
-              }
-            }
+          if (typeof value === "number") {
+            return new _Period(value);
           }
-          return toReturn;
-        }
-        /** Deserialize from JSON string to array of TradingPairModel */
-        static fromJsonString(buffer) {
-          const dtoArray = JSON.parse(buffer);
-          return dtoArray.map((dto) => {
-            var _a;
-            const model = new TradingPairModel(
-              dto.baseAsset,
-              dto.quoteAsset,
-              dto.exchangeName,
-              dto.exchangeId,
-              dto.price,
-              dto.exchangeUrl
-            );
-            for (const attrDto of dto.extended) {
-              let attr;
-              switch (attrDto.type) {
-                case "number":
-                  attr = new NumericNamedAttribute(
-                    attrDto.key,
-                    attrDto.label,
-                    attrDto.value,
-                    attrDto.precision
-                  );
-                  break;
-                case "string":
-                  attr = new StringNamedAttribute(
-                    attrDto.key,
-                    attrDto.label,
-                    attrDto.value
-                  );
-                  break;
-                case "boolean":
-                  attr = new BooleanNamedAttribute(
-                    attrDto.key,
-                    attrDto.label,
-                    (_a = attrDto.value) != null ? _a : false
-                  );
-                  break;
-                default:
-                  throw new Error(`Type conversion failed for ${attrDto.type} -> ${attrDto.key}`);
-              }
-              model.addAttr(attr);
-            }
-            return model;
-          });
+          throw new TypeError(
+            `Value must be a Period or an integer, got ${typeof value}`
+          );
         }
       };
     }
@@ -1366,14 +972,6 @@
       init_TimeFrame();
       _MultiTimeframeOhlcv = class _MultiTimeframeOhlcv {
         constructor(tradingPair, oneDay, fourHours, oneHour, fifteenMinutes, fiveMinutes, oneMinute) {
-          this.indicators = /* @__PURE__ */ new Map([
-            [TimeFrame.ONE_DAY, []],
-            [TimeFrame.FOUR_HOURS, []],
-            [TimeFrame.ONE_HOUR, []],
-            [TimeFrame.FIFTEEN_MINUTES, []],
-            [TimeFrame.FIVE_MINUTES, []],
-            [TimeFrame.ONE_MINUTE, []]
-          ]);
           this.tradingPair = TradingPair.fromUnknown(tradingPair);
           this.buffers = /* @__PURE__ */ new Map([
             [TimeFrame.ONE_DAY, OhlcvBuffer.fromUnknown(oneDay)],
@@ -1382,6 +980,14 @@
             [TimeFrame.FIFTEEN_MINUTES, OhlcvBuffer.fromUnknown(fifteenMinutes)],
             [TimeFrame.FIVE_MINUTES, OhlcvBuffer.fromUnknown(fiveMinutes)],
             [TimeFrame.ONE_MINUTE, OhlcvBuffer.fromUnknown(oneMinute)]
+          ]);
+          this.updatedTimeFrames = /* @__PURE__ */ new Map([
+            [TimeFrame.ONE_DAY, true],
+            [TimeFrame.FOUR_HOURS, true],
+            [TimeFrame.ONE_HOUR, true],
+            [TimeFrame.FIFTEEN_MINUTES, true],
+            [TimeFrame.FIVE_MINUTES, true],
+            [TimeFrame.ONE_MINUTE, true]
           ]);
           for (let i = 1; i < _MultiTimeframeOhlcv.TimeframeHierarchy.length; i++) {
             const tf = _MultiTimeframeOhlcv.TimeframeHierarchy[i];
@@ -1420,7 +1026,20 @@
             }
           }
         }
+        markUpdated(timeFrame) {
+          const tf = TimeFrame.fromUnknown(timeFrame);
+          if (!this.updatedTimeFrames.has(tf)) {
+            throw new Error(`Unsupported timeframe: ${tf.getLabel()}`);
+          }
+          this.updatedTimeFrames.set(tf, true);
+        }
+        clearUpdatedTimeFrames() {
+          this.updatedTimeFrames.forEach((_value5, timeFrame) => {
+            this.updatedTimeFrames.set(timeFrame, false);
+          });
+        }
         pushUpdate(timeFrame, open, high, low, close, volume, startTime, endTime, isClosed) {
+          this.clearUpdatedTimeFrames();
           if (!TimeFrame.ONE_MINUTE.equals(timeFrame)) {
             throw new Error(`Cannot push updates for the ${timeFrame.getLabel()} timeframe`);
           }
@@ -1437,7 +1056,7 @@
             isClosed
           );
           if (updatedMain) {
-            this.updateIndicators(mainBuffer.getBaseTimeFrame());
+            this.markUpdated(mainBuffer.getBaseTimeFrame());
           }
           for (let i = 1; i < _MultiTimeframeOhlcv.TimeframeHierarchy.length; i++) {
             const tf = _MultiTimeframeOhlcv.TimeframeHierarchy[i];
@@ -1454,64 +1073,27 @@
               isClosed
             );
             if (updated) {
-              this.updateIndicators(buffer.getBaseTimeFrame());
+              this.markUpdated(buffer.getBaseTimeFrame());
             }
           }
           this.ensureBuffersAreFullyAligned();
+          return this.updatedTimeFrames;
+        }
+        forEachUpdatedTimeFrame(callback) {
+          this.updatedTimeFrames.forEach((updated, timeFrame) => {
+            if (!updated) {
+              return;
+            }
+            callback(timeFrame);
+          });
+        }
+        getUpdatedTimeFrames() {
+          return this.updatedTimeFrames;
         }
         getBuffer(timeFrame) {
           const tf = TimeFrame.fromUnknown(timeFrame);
           const buffer = this.buffers.get(tf);
           return OhlcvBuffer.fromUnknown(buffer);
-        }
-        getIndicators(timeFrame) {
-          const tf = TimeFrame.fromUnknown(timeFrame);
-          const list = this.indicators.get(tf);
-          if (!list) {
-            throw new Error(`Unsupported timeframe: ${tf.getLabel()}`);
-          }
-          return list;
-        }
-        addIndicator(indicatorParams) {
-          const tf = indicatorParams.getTimeFrame();
-          const list = this.getIndicators(tf);
-          const exists = list.some(
-            (ind) => ind.getParameters().equals(indicatorParams)
-          );
-          if (exists) {
-            return false;
-          }
-          const indicator = indicatorParams.createUsing(this);
-          list.push(indicator);
-          return true;
-        }
-        findIndicator(indicatorParams) {
-          const tf = indicatorParams.getTimeFrame();
-          const list = this.getIndicators(tf);
-          const found = list.find(
-            (ind) => ind.getParameters().equals(indicatorParams)
-          );
-          if (!found) {
-            throw new Error(`Indicator ${indicatorParams.getId()} was not found.`);
-          }
-          return found;
-        }
-        removeIndicator(indicatorParams) {
-          const tf = indicatorParams.getTimeFrame();
-          const list = this.getIndicators(tf);
-          const index = list.findIndex(
-            (ind) => ind.getParameters().equals(indicatorParams)
-          );
-          if (index === -1) {
-            return false;
-          }
-          list.splice(index, 1);
-          return true;
-        }
-        updateIndicators(timeFrame) {
-          const tf = TimeFrame.fromUnknown(timeFrame);
-          const list = this.getIndicators(tf);
-          list.forEach((ind) => ind.update());
         }
         getTradingPair() {
           return this.tradingPair;
@@ -1569,54 +1151,6 @@
         }
       };
       _value = new WeakMap();
-    }
-  });
-
-  // ts_libs/ts_worker/domain/ta/core/Period.ts
-  var Period;
-  var init_Period = __esm({
-    "ts_libs/ts_worker/domain/ta/core/Period.ts"() {
-      "use strict";
-      Period = class _Period {
-        /**
-         * @param aValue Must be a positive integer ≥ 2
-         */
-        constructor(aValue) {
-          if (!Number.isInteger(aValue)) {
-            throw new TypeError(
-              `Period value must be an integer, got ${aValue}`
-            );
-          }
-          if (aValue < 2) {
-            throw new RangeError(
-              `Period value must be at least 2, got ${aValue}`
-            );
-          }
-          this.value = aValue;
-          Object.freeze(this);
-        }
-        getValue() {
-          return this.value;
-        }
-        /**
-         * Runtime validation / normalization helper
-         * Accepts a Period or an integer.
-         *
-         * @param value unknown
-         * @throws TypeError | RangeError
-         */
-        static fromUnknown(value) {
-          if (value instanceof _Period) {
-            return value;
-          }
-          if (typeof value === "number") {
-            return new _Period(value);
-          }
-          throw new TypeError(
-            `Value must be a Period or an integer, got ${typeof value}`
-          );
-        }
-      };
     }
   });
 
@@ -1755,6 +1289,153 @@
     }
   });
 
+  // ts_libs/ts_worker/domain/ta/core/PeriodPercentChange.ts
+  var PeriodPercentChange;
+  var init_PeriodPercentChange = __esm({
+    "ts_libs/ts_worker/domain/ta/core/PeriodPercentChange.ts"() {
+      "use strict";
+      init_RingBuffer();
+      init_MathContext();
+      init_MutableFloat();
+      init_Period();
+      PeriodPercentChange = class {
+        constructor(period) {
+          this.period = Period.fromUnknown(period);
+          this.buffer = new RingBuffer(this.period.getValue(), () => new MutableFloat(0));
+        }
+        /**
+             * Add a new value and compute 
+             * @param {number} value
+             * @returns {number | null} Current PCT_CHANGE or null if not ready or undefined on division by zero error
+             */
+        push(value) {
+          const periodValue = this.period.getValue();
+          this.buffer.push((s) => s.update(value));
+          if (this.buffer.getSize() < periodValue) {
+            return null;
+          }
+          const oldest = this.buffer.get(periodValue - 1).getValue();
+          const current = this.buffer.get().getValue();
+          if (oldest === 0) {
+            return void 0;
+          }
+          const pctChange = (current - oldest) / oldest * 100;
+          return MathContext.roundToScale(pctChange);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/domain/ta/indicators/PctChangeIndicator.ts
+  var _value2, PctChangeIndicatorOutput, PctChangeIndicatorParameters, _PctChangeIndicator_instances, computeCore_fn, PctChangeIndicator;
+  var init_PctChangeIndicator = __esm({
+    "ts_libs/ts_worker/domain/ta/indicators/PctChangeIndicator.ts"() {
+      "use strict";
+      init_RingBuffer();
+      init_MultiTimeframeOhlcv();
+      init_TimeFrame();
+      init_MutableFloat();
+      init_Period();
+      init_Source();
+      init_Indicator();
+      init_PeriodPercentChange();
+      PctChangeIndicatorOutput = class extends IndicatorOutput {
+        constructor() {
+          super();
+          __privateAdd(this, _value2);
+          __privateSet(this, _value2, new MutableFloat());
+        }
+        update(argValue) {
+          __privateGet(this, _value2).update(argValue);
+        }
+        getValue() {
+          return __privateGet(this, _value2).getValue();
+        }
+      };
+      _value2 = new WeakMap();
+      PctChangeIndicatorParameters = class _PctChangeIndicatorParameters extends IndicatorParameters {
+        constructor(timeFrame, period, source) {
+          super();
+          this.timeFrame = TimeFrame.fromUnknown(timeFrame);
+          this.period = Period.fromUnknown(period);
+          this.source = Source.fromUnknown(source);
+        }
+        getId() {
+          return `PCT_CHANGE (${this.period.getValue()}, ${this.source.label}, ${this.timeFrame.getLabel()})`;
+        }
+        getDescription() {
+          return `Percent change (${this.period.getValue()}, ${this.source.label}, ${this.timeFrame.getLabel()})`;
+        }
+        getPeriod() {
+          return this.period;
+        }
+        getTimeFrame() {
+          return this.timeFrame;
+        }
+        getSource() {
+          return this.source;
+        }
+        static fromUnknown(value) {
+          if (!(value instanceof _PctChangeIndicatorParameters)) {
+            throw new TypeError("Value is not a PctChangeIndicatorParameters instance");
+          }
+          if (value.getPeriod().getValue() < 2) {
+            throw new RangeError("PctChange period must be >= 2");
+          }
+          return value;
+        }
+        createUsing(buffer) {
+          return new PctChangeIndicator(this, buffer);
+        }
+      };
+      PctChangeIndicator = class extends Indicator {
+        constructor(parameters, mtf) {
+          super(PctChangeIndicatorParameters.fromUnknown(parameters));
+          __privateAdd(this, _PctChangeIndicator_instances);
+          this.mtf = MultiTimeframeOhlcv.fromUnknown(mtf);
+          this.history = new RingBuffer(
+            mtf.getBuffer(parameters.getTimeFrame()).getCapacity(),
+            () => new PctChangeIndicatorOutput()
+          );
+          this.impl = new PeriodPercentChange(this.getParameters().getPeriod());
+          this.mtf.getBuffer(parameters.getTimeFrame()).stream((position, candle) => {
+            const extracted = parameters.getSource().extract(candle);
+            __privateMethod(this, _PctChangeIndicator_instances, computeCore_fn).call(this, extracted);
+          });
+        }
+        isReady() {
+          return this.history.getSize() > 0;
+        }
+        update() {
+          const candle = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getCandle();
+          const extracted = this.getParameters().getSource().extract(candle);
+          __privateMethod(this, _PctChangeIndicator_instances, computeCore_fn).call(this, extracted);
+        }
+        getValue(n = 0) {
+          return this.history.get(n);
+        }
+        getValuesCount() {
+          return this.history.getSize();
+        }
+        getPendingValue() {
+          throw new Error("Method not implemented.");
+        }
+      };
+      _PctChangeIndicator_instances = new WeakSet();
+      computeCore_fn = function(value) {
+        let pctChange = this.impl.push(value);
+        if (pctChange === null) {
+          return;
+        }
+        if (pctChange === void 0) {
+          this.history.push((sample) => sample.update(0));
+        } else {
+          this.history.push((sample) => sample.update(pctChange));
+        }
+      };
+    }
+  });
+
   // ts_libs/ts_worker/domain/ta/core/RollingSimpleMovingAverage.ts
   var RollingSimpleMovingAverage;
   var init_RollingSimpleMovingAverage = __esm({
@@ -1858,7 +1539,7 @@
   });
 
   // ts_libs/ts_worker/domain/ta/indicators/RsiIndicator.ts
-  var _value2, RsiIndicatorOutput, RsiIndicatorParameters, _RsiIndicator_instances, computeCore_fn, RsiIndicator;
+  var _value3, RsiIndicatorOutput, RsiIndicatorParameters, _RsiIndicator_instances, computeCore_fn2, RsiIndicator;
   var init_RsiIndicator = __esm({
     "ts_libs/ts_worker/domain/ta/indicators/RsiIndicator.ts"() {
       "use strict";
@@ -1873,17 +1554,17 @@
       RsiIndicatorOutput = class extends IndicatorOutput {
         constructor() {
           super();
-          __privateAdd(this, _value2);
-          __privateSet(this, _value2, new MutableFloat());
+          __privateAdd(this, _value3);
+          __privateSet(this, _value3, new MutableFloat());
         }
         update(argValue) {
-          __privateGet(this, _value2).update(argValue);
+          __privateGet(this, _value3).update(argValue);
         }
         getValue() {
-          return __privateGet(this, _value2).getValue();
+          return __privateGet(this, _value3).getValue();
         }
       };
-      _value2 = new WeakMap();
+      _value3 = new WeakMap();
       RsiIndicatorParameters = class _RsiIndicatorParameters extends IndicatorParameters {
         constructor(timeFrame, period, source, useWilderSmoothing = true) {
           super();
@@ -1938,7 +1619,7 @@
           );
           this.mtf.getBuffer(parameters.getTimeFrame()).stream((position, candle) => {
             const extracted = parameters.getSource().extract(candle);
-            __privateMethod(this, _RsiIndicator_instances, computeCore_fn).call(this, extracted);
+            __privateMethod(this, _RsiIndicator_instances, computeCore_fn2).call(this, extracted);
           });
         }
         isReady() {
@@ -1947,7 +1628,7 @@
         update() {
           const candle = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getCandle();
           const extracted = this.getParameters().getSource().extract(candle);
-          __privateMethod(this, _RsiIndicator_instances, computeCore_fn).call(this, extracted);
+          __privateMethod(this, _RsiIndicator_instances, computeCore_fn2).call(this, extracted);
         }
         getValue(n = 0) {
           return this.history.get(n);
@@ -1955,9 +1636,12 @@
         getValuesCount() {
           return this.history.getSize();
         }
+        getPendingValue() {
+          throw new Error("Method not implemented.");
+        }
       };
       _RsiIndicator_instances = new WeakSet();
-      computeCore_fn = function(value) {
+      computeCore_fn2 = function(value) {
         const computed = this.rolling.push(value);
         if (computed === null) {
           return;
@@ -1968,7 +1652,7 @@
   });
 
   // ts_libs/ts_worker/domain/ta/indicators/RvaIndicator.ts
-  var _volumeSma, _relativeValue, RvaIndicatorOutput, RvaIndicatorParameters, _RvaIndicator_instances, computeCore_fn2, RvaIndicator;
+  var _volumeSma, _relativeValue, RvaIndicatorOutput, RvaIndicatorParameters, _RvaIndicator_instances, computeCore_fn3, RvaIndicator;
   var init_RvaIndicator = __esm({
     "ts_libs/ts_worker/domain/ta/indicators/RvaIndicator.ts"() {
       "use strict";
@@ -2046,57 +1730,72 @@
             this.mtf.getBuffer(this.getParameters().getTimeFrame()).getCapacity(),
             () => new RvaIndicatorOutput()
           );
+          this.pending = new RvaIndicatorOutput();
           this.mtf.getBuffer(this.getParameters().getTimeFrame()).stream((position, candle) => {
             const volume = candle.volume;
-            __privateMethod(this, _RvaIndicator_instances, computeCore_fn2).call(this, volume);
+            __privateMethod(this, _RvaIndicator_instances, computeCore_fn3).call(this, volume);
           });
         }
         isReady() {
           return this.history.getSize() > 0;
         }
-        computePending() {
-          if (!this.rolling.isReady()) {
-            return void 0;
-          }
-          if (this.parameters.getTimeFrame() === TimeFrame.ONE_MINUTE) {
-            return void 0;
-          }
-          let pendingVolume = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getPendingCandle().volume;
-          if (pendingVolume === void 0 || pendingVolume === null || pendingVolume === Infinity) {
-            return void 0;
-          }
-          const volumeSma = this.getValue().getVolumeSma();
-          if (volumeSma == null || volumeSma === 0) return void 0;
-          const relativeValue = pendingVolume / volumeSma;
-          return relativeValue;
-        }
         /** Call when a new candle is available */
         update() {
           const candle = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getCandle();
           const volume = candle.volume;
-          __privateMethod(this, _RvaIndicator_instances, computeCore_fn2).call(this, volume);
+          __privateMethod(this, _RvaIndicator_instances, computeCore_fn3).call(this, volume);
         }
         getValue(n = 0) {
           const value = this.history.get(n);
           if (!value) throw new RangeError("RVA value not available");
           return value;
         }
+        getPendingValue() {
+          if (!this.isReady()) {
+            throw new RangeError("RVA value is not ready.");
+          }
+          const pendingCandle = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getPendingCandle();
+          const pendingVolume = pendingCandle.volume;
+          if (!Number.isFinite(pendingVolume)) {
+            throw new RangeError("RVA value cannot be computed due to pending value issues.");
+          }
+          const closedVolumeSma = this.getValue().getVolumeSma();
+          if (!Number.isFinite(closedVolumeSma) || closedVolumeSma === 0) {
+            this.pending.update(0, 0);
+            return this.pending;
+          }
+          const relativeValue = pendingVolume / closedVolumeSma;
+          this.pending.update(closedVolumeSma, relativeValue);
+          return this.pending;
+        }
         getValuesCount() {
           return this.history.getSize();
         }
       };
       _RvaIndicator_instances = new WeakSet();
-      computeCore_fn2 = function(volume) {
+      computeCore_fn3 = function(volume) {
+        if (!Number.isFinite(volume)) {
+          throw new RangeError("Cannot push infinite values to RVA");
+        }
         const volumeSma = this.rolling.push(volume);
-        if (volumeSma === null) return;
-        const relativeValue = volumeSma !== 0 ? volume / volumeSma : 0;
-        this.history.push((sample) => sample.update(volumeSma, relativeValue));
+        if (volumeSma === null) {
+          return;
+        }
+        if (!Number.isFinite(volumeSma)) {
+          throw new Error("RVA infinite value detected.");
+        }
+        if (volumeSma !== 0) {
+          const relativeValue = volume / volumeSma;
+          this.history.push((sample) => sample.update(volumeSma, relativeValue));
+        } else {
+          this.history.push((sample) => sample.update(0, 0));
+        }
       };
     }
   });
 
   // ts_libs/ts_worker/domain/ta/indicators/SmaIndicator.ts
-  var _value3, SmaIndicatorOutput, SmaIndicatorParameters, _SmaIndicator_instances, computeCore_fn3, SmaIndicator;
+  var _value4, SmaIndicatorOutput, SmaIndicatorParameters, _SmaIndicator_instances, computeCore_fn4, SmaIndicator;
   var init_SmaIndicator = __esm({
     "ts_libs/ts_worker/domain/ta/indicators/SmaIndicator.ts"() {
       "use strict";
@@ -2111,17 +1810,17 @@
       SmaIndicatorOutput = class extends IndicatorOutput {
         constructor() {
           super();
-          __privateAdd(this, _value3);
-          __privateSet(this, _value3, new MutableFloat());
+          __privateAdd(this, _value4);
+          __privateSet(this, _value4, new MutableFloat());
         }
         update(argValue) {
-          __privateGet(this, _value3).update(argValue);
+          __privateGet(this, _value4).update(argValue);
         }
         getValue() {
-          return __privateGet(this, _value3).getValue();
+          return __privateGet(this, _value4).getValue();
         }
       };
-      _value3 = new WeakMap();
+      _value4 = new WeakMap();
       SmaIndicatorParameters = class _SmaIndicatorParameters extends IndicatorParameters {
         constructor(timeFrame, period, source) {
           super();
@@ -2169,7 +1868,7 @@
           );
           this.mtf.getBuffer(this.getParameters().getTimeFrame()).stream((position, candle) => {
             const extracted = this.getParameters().getSource().extract(candle);
-            __privateMethod(this, _SmaIndicator_instances, computeCore_fn3).call(this, extracted);
+            __privateMethod(this, _SmaIndicator_instances, computeCore_fn4).call(this, extracted);
           });
         }
         isReady() {
@@ -2178,7 +1877,7 @@
         update() {
           const candle = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getCandle();
           const extracted = this.getParameters().getSource().extract(candle);
-          __privateMethod(this, _SmaIndicator_instances, computeCore_fn3).call(this, extracted);
+          __privateMethod(this, _SmaIndicator_instances, computeCore_fn4).call(this, extracted);
         }
         getValue(n = 0) {
           const value = this.history.get(n);
@@ -2188,9 +1887,12 @@
         getValuesCount() {
           return this.history.getSize();
         }
+        getPendingValue() {
+          throw new Error("Method not implemented.");
+        }
       };
       _SmaIndicator_instances = new WeakSet();
-      computeCore_fn3 = function(value) {
+      computeCore_fn4 = function(value) {
         const computed = this.rolling.push(value);
         if (computed === null) return;
         this.history.push((sample) => sample.update(computed));
@@ -2198,170 +1900,24 @@
     }
   });
 
-  // ts_libs/ts_worker/domain/ta/core/PeriodPercentChange.ts
-  var PeriodPercentChange;
-  var init_PeriodPercentChange = __esm({
-    "ts_libs/ts_worker/domain/ta/core/PeriodPercentChange.ts"() {
+  // ts_libs/ts_worker/domain/ta/export/BasePlugin.ts
+  var BasePlugin;
+  var init_BasePlugin = __esm({
+    "ts_libs/ts_worker/domain/ta/export/BasePlugin.ts"() {
       "use strict";
-      init_RingBuffer();
-      init_MathContext();
-      init_MutableFloat();
-      init_Period();
-      PeriodPercentChange = class {
-        constructor(period) {
-          this.period = Period.fromUnknown(period);
-          this.buffer = new RingBuffer(this.period.getValue(), () => new MutableFloat(0));
-        }
-        /**
-             * Add a new value and compute 
-             * @param {number} value
-             * @returns {number | null} Current PCT_CHANGE or null if not ready or undefined on division by zero error
-             */
-        push(value) {
-          const periodValue = this.period.getValue();
-          this.buffer.push((s) => s.update(value));
-          if (this.buffer.getSize() < periodValue) {
-            return null;
-          }
-          const oldest = this.buffer.get(periodValue - 1).getValue();
-          const current = this.buffer.get().getValue();
-          if (oldest === 0) {
-            return void 0;
-          }
-          const pctChange = (current - oldest) / oldest * 100;
-          return MathContext.roundToScale(pctChange);
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/domain/ta/indicators/PctChangeIndicator.ts
-  var _value4, PctChangeIndicatorOutput, PctChangeIndicatorParameters, _PctChangeIndicator_instances, computeCore_fn4, PctChangeIndicator;
-  var init_PctChangeIndicator = __esm({
-    "ts_libs/ts_worker/domain/ta/indicators/PctChangeIndicator.ts"() {
-      "use strict";
-      init_RingBuffer();
-      init_MultiTimeframeOhlcv();
-      init_TimeFrame();
-      init_MutableFloat();
-      init_Period();
-      init_Source();
-      init_Indicator();
-      init_PeriodPercentChange();
-      PctChangeIndicatorOutput = class extends IndicatorOutput {
-        constructor() {
-          super();
-          __privateAdd(this, _value4);
-          __privateSet(this, _value4, new MutableFloat());
-        }
-        update(argValue) {
-          __privateGet(this, _value4).update(argValue);
-        }
-        getValue() {
-          return __privateGet(this, _value4).getValue();
-        }
-      };
-      _value4 = new WeakMap();
-      PctChangeIndicatorParameters = class _PctChangeIndicatorParameters extends IndicatorParameters {
-        constructor(timeFrame, period, source) {
-          super();
-          this.timeFrame = TimeFrame.fromUnknown(timeFrame);
-          this.period = Period.fromUnknown(period);
-          this.source = Source.fromUnknown(source);
-        }
-        getId() {
-          return `PCT_CHANGE (${this.period.getValue()}, ${this.source.label}, ${this.timeFrame.getLabel()})`;
-        }
-        getDescription() {
-          return `Percent change (${this.period.getValue()}, ${this.source.label}, ${this.timeFrame.getLabel()})`;
-        }
-        getPeriod() {
-          return this.period;
-        }
-        getTimeFrame() {
-          return this.timeFrame;
-        }
-        getSource() {
-          return this.source;
-        }
-        static fromUnknown(value) {
-          if (!(value instanceof _PctChangeIndicatorParameters)) {
-            throw new TypeError("Value is not a PctChangeIndicatorParameters instance");
-          }
-          if (value.getPeriod().getValue() < 2) {
-            throw new RangeError("PctChange period must be >= 2");
-          }
-          return value;
-        }
-        createUsing(buffer) {
-          return new PctChangeIndicator(this, buffer);
-        }
-      };
-      PctChangeIndicator = class extends Indicator {
-        constructor(parameters, mtf) {
-          super(PctChangeIndicatorParameters.fromUnknown(parameters));
-          __privateAdd(this, _PctChangeIndicator_instances);
-          this.mtf = MultiTimeframeOhlcv.fromUnknown(mtf);
-          this.history = new RingBuffer(
-            mtf.getBuffer(parameters.getTimeFrame()).getCapacity(),
-            () => new PctChangeIndicatorOutput()
-          );
-          this.impl = new PeriodPercentChange(this.getParameters().getPeriod());
-          this.mtf.getBuffer(parameters.getTimeFrame()).stream((position, candle) => {
-            const extracted = parameters.getSource().extract(candle);
-            __privateMethod(this, _PctChangeIndicator_instances, computeCore_fn4).call(this, extracted);
-          });
-        }
-        isReady() {
-          return this.history.getSize() > 0;
-        }
-        update() {
-          const candle = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getCandle();
-          const extracted = this.getParameters().getSource().extract(candle);
-          __privateMethod(this, _PctChangeIndicator_instances, computeCore_fn4).call(this, extracted);
-        }
-        getValue(n = 0) {
-          return this.history.get(n);
-        }
-        getValuesCount() {
-          return this.history.getSize();
-        }
-      };
-      _PctChangeIndicator_instances = new WeakSet();
-      computeCore_fn4 = function(value) {
-        let pctChange = this.impl.push(value);
-        if (pctChange === null) {
-          return;
-        }
-        if (pctChange === void 0) {
-          this.history.push((sample) => sample.update(0));
-        } else {
-          this.history.push((sample) => sample.update(pctChange));
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/domain/ta/evaluators/BaseEvaluator.ts
-  var BaseEvaluator;
-  var init_BaseEvaluator = __esm({
-    "ts_libs/ts_worker/domain/ta/evaluators/BaseEvaluator.ts"() {
-      "use strict";
+      init_PctChangeIndicator();
       init_RsiIndicator();
       init_RvaIndicator();
       init_SmaIndicator();
-      init_PctChangeIndicator();
-      BaseEvaluator = class {
+      BasePlugin = class {
         constructor() {
           this.indicatorParameters = [];
         }
-        ensureIndicatorsRegisteredNoThrow(mtf) {
-          if (mtf === null) {
-            return;
-          }
-          mtf.forEach((item) => {
-            this.indicatorParameters.forEach((indicator) => item.addIndicator(indicator));
-          });
+        transferContext(ctx) {
+          this.ctx = ctx;
+        }
+        getIndicatorParameters() {
+          return this.indicatorParameters;
         }
         addIndicatorParams(params) {
           let isRegistered = this.indicatorParameters.some((current) => current.equals(params));
@@ -2389,77 +1945,471 @@
           this.addIndicatorParams(params);
           return params;
         }
-        valuesCount(dataset, params) {
-          return dataset.findIndicator(params).getValuesCount();
+        getOhlcvData(tradingPair, source, timeframe, position) {
+          if (this.ctx === void 0) {
+            throw new Error("Context is not defined");
+          }
+          return this.ctx.getOhlcvData(tradingPair, source, timeframe, position);
+        }
+        getOhlcvPendingData(tradingPair, source, timeframe) {
+          if (this.ctx === void 0) {
+            throw new Error("Context is not defined");
+          }
+          return this.ctx.getOhlcvPendingData(tradingPair, source, timeframe);
+        }
+        getIndicatorValue(indicator, position) {
+          if (this.ctx === void 0) {
+            throw new Error("Context is not defined");
+          }
+          return this.ctx.getIndicatorValue(indicator, position);
+        }
+        getPendingIndicatorValue(indicator) {
+          if (this.ctx === void 0) {
+            throw new Error("Context is not defined");
+          }
+          return this.ctx.getPendingIndicatorValue(indicator);
+        }
+        getTradingPairs() {
+          throw new Error("Method not implemented.");
+        }
+        isIndicatorReady(indicator) {
+          if (this.ctx === void 0) {
+            throw new Error("Context is not defined");
+          }
+          return this.ctx.isIndicatorReady(indicator);
+        }
+        findIndicator(tradingPair, indicatorParameters) {
+          if (this.ctx === void 0) {
+            throw new Error("Context is not defined");
+          }
+          return this.ctx.findIndicator(tradingPair, indicatorParameters);
         }
       };
     }
   });
 
-  // ts_libs/ts_worker/application/mappers/BaseSortableAttributeExtractor.ts
+  // ts_libs/ts_worker/application/exports/NamedAttribute.ts
+  var NamedAttributeMetadata, NumericNamedAttribute, BooleanNamedAttribute, StringNamedAttribute, NamedAttributeFactory;
+  var init_NamedAttribute = __esm({
+    "ts_libs/ts_worker/application/exports/NamedAttribute.ts"() {
+      "use strict";
+      NamedAttributeMetadata = class {
+        constructor(key, label, type, precision) {
+          this.key = key;
+          this.label = label;
+          this.type = type;
+          this.precision = precision;
+        }
+      };
+      NumericNamedAttribute = class _NumericNamedAttribute {
+        constructor(key, label, value, precision) {
+          this.metadata = new NamedAttributeMetadata(key, label, "number", precision);
+          if (value !== void 0 && !Number.isFinite(value)) {
+            throw new Error("NumericNamedAttribute requires a finite number");
+          }
+          if (precision !== void 0 && (!Number.isInteger(precision) || precision < 0)) {
+            throw new Error("precision must be a non-negative integer");
+          }
+          this.value = value;
+        }
+        serialize() {
+          return {
+            metadata: {
+              key: this.metadata.key,
+              label: this.metadata.label,
+              type: this.metadata.type,
+              precision: this.metadata.precision
+            },
+            value: this.value
+          };
+        }
+        static fromMetadata(argMetadata, argValue) {
+          if (argMetadata.type !== "number") {
+            throw new Error("NumericNamedAttribute requires a valid metadata type");
+          }
+          return new _NumericNamedAttribute(argMetadata.key, argMetadata.label, argValue, argMetadata.precision);
+        }
+        compare(other) {
+          if (other.metadata.type !== this.metadata.type) {
+            throw new Error(
+              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
+            );
+          }
+          const a = this.value;
+          const b = other.value;
+          if (a === void 0 && b === void 0) return 0;
+          if (a === void 0) return -1;
+          if (b === void 0) return 1;
+          return a - b;
+        }
+        toString() {
+          if (this.value === void 0) return "";
+          return this.metadata.precision === void 0 ? this.value.toString() : this.value.toFixed(this.metadata.precision);
+        }
+      };
+      BooleanNamedAttribute = class _BooleanNamedAttribute {
+        constructor(key, label, value) {
+          this.metadata = new NamedAttributeMetadata(key, label, "boolean");
+          this.value = value;
+        }
+        serialize() {
+          return {
+            metadata: {
+              key: this.metadata.key,
+              label: this.metadata.label,
+              type: this.metadata.type
+            },
+            value: this.value
+          };
+        }
+        compare(other) {
+          if (other.metadata.type !== this.metadata.type) {
+            throw new Error(
+              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
+            );
+          }
+          const a = this.value;
+          const b = other.value;
+          if (a === void 0 && b === void 0) return 0;
+          if (a === void 0) return -1;
+          if (b === void 0) return 1;
+          return Number(a) - Number(b);
+        }
+        toString() {
+          return this.value === void 0 ? "" : this.value ? "true" : "false";
+        }
+        static fromMetadata(argMetadata, argValue) {
+          if (argMetadata.type !== "boolean") {
+            throw new Error("BooleanNamedAttribute requires a valid metadata type");
+          }
+          return new _BooleanNamedAttribute(argMetadata.key, argMetadata.label, argValue);
+        }
+      };
+      StringNamedAttribute = class _StringNamedAttribute {
+        constructor(key, label, value) {
+          this.metadata = new NamedAttributeMetadata(key, label, "string");
+          if (value !== void 0 && value.length === 0) {
+            throw new Error("StringNamedAttribute cannot be empty");
+          }
+          this.value = value;
+        }
+        serialize() {
+          return {
+            metadata: {
+              key: this.metadata.key,
+              label: this.metadata.label,
+              type: this.metadata.type
+            },
+            value: this.value
+          };
+        }
+        static fromMetadata(argMetadata, argValue) {
+          if (argMetadata.type !== "string") {
+            throw new Error("StringNamedAttribute requires a valid metadata type");
+          }
+          return new _StringNamedAttribute(
+            argMetadata.key,
+            argMetadata.label,
+            argValue
+          );
+        }
+        compare(other) {
+          if (other.metadata.type !== this.metadata.type) {
+            throw new Error(
+              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
+            );
+          }
+          const a = this.value;
+          const b = other.value;
+          if (a === void 0 && b === void 0) return 0;
+          if (a === void 0) return -1;
+          if (b === void 0) return 1;
+          return a.localeCompare(b);
+        }
+        toString() {
+          var _a;
+          return (_a = this.value) != null ? _a : "";
+        }
+      };
+      NamedAttributeFactory = class {
+        static deserialize(dto) {
+          const metadata = new NamedAttributeMetadata(
+            dto.metadata.key,
+            dto.metadata.label,
+            dto.metadata.type,
+            dto.metadata.precision
+          );
+          switch (metadata.type) {
+            case "number":
+              return NumericNamedAttribute.fromMetadata(
+                metadata,
+                dto.value === void 0 ? void 0 : this.asNumber(dto.value)
+              );
+            case "boolean":
+              return BooleanNamedAttribute.fromMetadata(
+                metadata,
+                dto.value === void 0 ? void 0 : this.asBoolean(dto.value)
+              );
+            case "string":
+              return StringNamedAttribute.fromMetadata(
+                metadata,
+                dto.value === void 0 ? void 0 : String(dto.value)
+              );
+            default:
+              throw new Error(`Unsupported named attribute type: ${metadata.type}`);
+          }
+        }
+        static asBoolean(value) {
+          if (value === void 0) return void 0;
+          if (typeof value !== "boolean") {
+            throw new Error("Boolean attribute value must be boolean");
+          }
+          return value;
+        }
+        static asNumber(value) {
+          if (value === void 0) return void 0;
+          if (typeof value !== "number" || !Number.isFinite(value)) {
+            throw new Error("Numeric attribute value must be finite number");
+          }
+          return value;
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/plugins/BaseFilterableAttributeExtractor.ts
+  var BaseFilterableAttributeExtractor;
+  var init_BaseFilterableAttributeExtractor = __esm({
+    "ts_libs/ts_worker/application/plugins/BaseFilterableAttributeExtractor.ts"() {
+      "use strict";
+      init_BasePlugin();
+      init_NamedAttribute();
+      BaseFilterableAttributeExtractor = class extends BasePlugin {
+        constructor() {
+          super(...arguments);
+          this.values = /* @__PURE__ */ new Map();
+        }
+        getNamedAttributeMetadata() {
+          return new NamedAttributeMetadata(this.getId(), this.getFriendlyDescription(), "boolean");
+        }
+        extractNamedAttributeFrom(tp) {
+          let extracted = this.getValue(tp);
+          return BooleanNamedAttribute.fromMetadata(this.getNamedAttributeMetadata(), extracted);
+        }
+        getValue(tp) {
+          return this.values.get(tp);
+        }
+        setValue(tp, val) {
+          this.values.set(tp, val);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/plugins/BaseSortableAttributeExtractor.ts
   var BaseSortableAttributeExtractor;
   var init_BaseSortableAttributeExtractor = __esm({
-    "ts_libs/ts_worker/application/mappers/BaseSortableAttributeExtractor.ts"() {
+    "ts_libs/ts_worker/application/plugins/BaseSortableAttributeExtractor.ts"() {
       "use strict";
-      init_BaseEvaluator();
-      BaseSortableAttributeExtractor = class extends BaseEvaluator {
+      init_BasePlugin();
+      init_NamedAttribute();
+      BaseSortableAttributeExtractor = class extends BasePlugin {
+        constructor() {
+          super(...arguments);
+          this.values = /* @__PURE__ */ new Map();
+        }
+        getNamedAttributeMetadata() {
+          return new NamedAttributeMetadata(this.getId(), this.getFriendlyDescription(), "number", this.getPrecision());
+        }
+        extractNamedAttributeFrom(tp) {
+          let extracted = this.getValue(tp);
+          return NumericNamedAttribute.fromMetadata(this.getNamedAttributeMetadata(), extracted);
+        }
+        getValue(tp) {
+          return this.values.get(tp);
+        }
+        setValue(tp, val) {
+          this.values.set(tp, val);
+        }
       };
     }
   });
 
-  // ts_libs/ts_worker/application/mappers/extractors/DailyPriceChangeExtractor.ts
-  var DailyPriceChangeExtractor;
-  var init_DailyPriceChangeExtractor = __esm({
-    "ts_libs/ts_worker/application/mappers/extractors/DailyPriceChangeExtractor.ts"() {
+  // ts_libs/ts_worker/application/plugins/boolean_extractors/RsiOverboughtFilter.ts
+  var RsiOverboughtFilter;
+  var init_RsiOverboughtFilter = __esm({
+    "ts_libs/ts_worker/application/plugins/boolean_extractors/RsiOverboughtFilter.ts"() {
       "use strict";
-      init_TimeFrame();
-      init_NamedAttribute();
-      init_TradingPairModel();
-      init_BaseSortableAttributeExtractor();
-      DailyPriceChangeExtractor = class _DailyPriceChangeExtractor extends BaseSortableAttributeExtractor {
-        constructor() {
+      init_Source();
+      init_BaseFilterableAttributeExtractor();
+      RsiOverboughtFilter = class extends BaseFilterableAttributeExtractor {
+        constructor(period, timeFrame, overboughtTreshold) {
           super();
-          this.metadata = TradingPairModel.dailyPercentChangeMetadata();
-        }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const dayBuffer = data.getBuffer(TimeFrame.ONE_DAY);
-          const minuteBuffer = data.getBuffer(TimeFrame.ONE_MINUTE);
-          const dayOpenPrice = dayBuffer.getPendingCandle().open;
-          const currentPrice = minuteBuffer.getClose();
-          const percentChange = (currentPrice - dayOpenPrice) / dayOpenPrice * 100;
-          return NumericNamedAttribute.fromMetadata(this.metadata, percentChange, 2);
+          this.overboughtTreshold = overboughtTreshold;
+          this.params = this.useRsiIndicator(timeFrame, period, Source.CLOSE);
         }
         getId() {
-          return _DailyPriceChangeExtractor.name;
+          return `rsi.oversold.filter.${this.params.getId()} > ${this.overboughtTreshold}`;
+        }
+        getFriendlyDescription() {
+          return `Overbought: ${this.params.getDescription()} > ${this.overboughtTreshold}`;
+        }
+        next(tradingPair, updatedTimeFrames) {
+          if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
+            return;
+          }
+          const indicator = this.findIndicator(tradingPair, this.params);
+          const indicatorReady = this.isIndicatorReady(indicator);
+          if (!indicatorReady) {
+            return;
+          }
+          const indicatorOutput = this.getIndicatorValue(indicator, 0);
+          const isOverbought = indicatorOutput.getValue() > this.overboughtTreshold;
+          this.setValue(tradingPair, isOverbought);
         }
       };
     }
   });
 
-  // ts_libs/ts_worker/application/mappers/extractors/CurrentPriceExtractor.ts
+  // ts_libs/ts_worker/application/plugins/boolean_extractors/RsiOversoldFilter.ts
+  var RsiOversoldFilter;
+  var init_RsiOversoldFilter = __esm({
+    "ts_libs/ts_worker/application/plugins/boolean_extractors/RsiOversoldFilter.ts"() {
+      "use strict";
+      init_Source();
+      init_BaseFilterableAttributeExtractor();
+      RsiOversoldFilter = class extends BaseFilterableAttributeExtractor {
+        constructor(period, timeFrame, oversoldTreshold) {
+          super();
+          this.oversoldTreshold = oversoldTreshold;
+          this.params = this.useRsiIndicator(timeFrame, period, Source.CLOSE);
+        }
+        getId() {
+          return `rsi.oversold.filter.${this.params.getId()} < ${this.oversoldTreshold}`;
+        }
+        getFriendlyDescription() {
+          return `Oversold: ${this.params.getDescription()} <= ${this.oversoldTreshold}`;
+        }
+        next(tradingPair, updatedTimeFrames) {
+          if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
+            return;
+          }
+          const indicator = this.findIndicator(tradingPair, this.params);
+          const indicatorReady = this.isIndicatorReady(indicator);
+          if (!indicatorReady) {
+            return;
+          }
+          const indicatorOutput = this.getIndicatorValue(indicator, 0);
+          const isOversold = indicatorOutput.getValue() < this.oversoldTreshold;
+          this.setValue(tradingPair, isOversold);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/plugins/boolean_extractors/SmaDowntrendFilter.ts
+  var SmaDowntrendFilter;
+  var init_SmaDowntrendFilter = __esm({
+    "ts_libs/ts_worker/application/plugins/boolean_extractors/SmaDowntrendFilter.ts"() {
+      "use strict";
+      init_Source();
+      init_BaseFilterableAttributeExtractor();
+      SmaDowntrendFilter = class extends BaseFilterableAttributeExtractor {
+        constructor(period, timeFrame) {
+          super();
+          this.smaParameters = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
+        }
+        getId() {
+          return `close.under.${this.smaParameters.getId()}`;
+        }
+        getFriendlyDescription() {
+          return `Downtrend: ${this.smaParameters.getDescription()} > Close`;
+        }
+        next(tradingPair, updatedTimeFrames) {
+          if (!updatedTimeFrames.get(this.smaParameters.getTimeFrame())) {
+            return;
+          }
+          const close = this.getOhlcvData(tradingPair, Source.CLOSE, this.smaParameters.getTimeFrame(), 0);
+          const smaIndicator = this.findIndicator(tradingPair, this.smaParameters);
+          const smaIndicatorReady = this.isIndicatorReady(smaIndicator);
+          if (!smaIndicatorReady) {
+            return;
+          }
+          const smaIndicatorOutput = this.getIndicatorValue(smaIndicator, 0);
+          if (close === void 0) {
+            return;
+          }
+          const isDowntrend = close < smaIndicatorOutput.getValue();
+          this.setValue(tradingPair, isDowntrend);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/plugins/boolean_extractors/SmaUptrendFilter.ts
+  var SmaUptrendFilter;
+  var init_SmaUptrendFilter = __esm({
+    "ts_libs/ts_worker/application/plugins/boolean_extractors/SmaUptrendFilter.ts"() {
+      "use strict";
+      init_Source();
+      init_BaseFilterableAttributeExtractor();
+      SmaUptrendFilter = class extends BaseFilterableAttributeExtractor {
+        constructor(period, timeFrame) {
+          super();
+          this.smaParameters = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
+        }
+        getId() {
+          return `close.above.${this.smaParameters.getId()}`;
+        }
+        getFriendlyDescription() {
+          return `Uptrend: ${this.smaParameters.getDescription()} < Close`;
+        }
+        next(tradingPair, updatedTimeFrames) {
+          if (!updatedTimeFrames.get(this.smaParameters.getTimeFrame())) {
+            return;
+          }
+          const close = this.getOhlcvData(tradingPair, Source.CLOSE, this.smaParameters.getTimeFrame(), 0);
+          const smaIndicator = this.findIndicator(tradingPair, this.smaParameters);
+          const smaIndicatorReady = this.isIndicatorReady(smaIndicator);
+          if (!smaIndicatorReady) {
+            return;
+          }
+          const smaIndicatorOutput = this.getIndicatorValue(smaIndicator, 0);
+          if (close === void 0) {
+            return;
+          }
+          const isUptrend = close > smaIndicatorOutput.getValue();
+          this.setValue(tradingPair, isUptrend);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/plugins/numeric_extractors/CurrentPriceExtractor.ts
   var CurrentPriceExtractor;
   var init_CurrentPriceExtractor = __esm({
-    "ts_libs/ts_worker/application/mappers/extractors/CurrentPriceExtractor.ts"() {
+    "ts_libs/ts_worker/application/plugins/numeric_extractors/CurrentPriceExtractor.ts"() {
       "use strict";
+      init_Source();
       init_TimeFrame();
-      init_NamedAttribute();
-      init_TradingPairModel();
       init_BaseSortableAttributeExtractor();
       CurrentPriceExtractor = class _CurrentPriceExtractor extends BaseSortableAttributeExtractor {
-        constructor() {
-          super();
-          this.metadata = TradingPairModel.currentPriceMetadata();
+        next(tradingPair, updatedTimeFrames) {
+          let hasOneMinuteData = updatedTimeFrames.get(TimeFrame.ONE_MINUTE) === true || void 0;
+          if (hasOneMinuteData === void 0) {
+            return;
+          }
+          let currentPrice = this.getOhlcvData(tradingPair, Source.CLOSE, TimeFrame.ONE_MINUTE, 0);
+          if (currentPrice === void 0) {
+            return;
+          }
+          this.setValue(tradingPair, currentPrice);
         }
-        getNamedAttributeMetadata() {
-          return this.metadata;
+        getPrecision() {
+          return void 0;
         }
-        extractNamedAttributeFrom(data) {
-          const minuteBuffer = data.getBuffer(TimeFrame.ONE_MINUTE);
-          const currentPrice = minuteBuffer.getClose();
-          return NumericNamedAttribute.fromMetadata(TradingPairModel.currentPriceMetadata(), currentPrice);
+        getFriendlyDescription() {
+          return "Price";
         }
         getId() {
           return _CurrentPriceExtractor.name;
@@ -2468,30 +2418,32 @@
     }
   });
 
-  // ts_libs/ts_worker/application/mappers/extractors/DailyPendingRvaExtractor.ts
+  // ts_libs/ts_worker/application/plugins/numeric_extractors/DailyPendingRvaExtractor.ts
   var DailyPendingRvaExtractor;
   var init_DailyPendingRvaExtractor = __esm({
-    "ts_libs/ts_worker/application/mappers/extractors/DailyPendingRvaExtractor.ts"() {
+    "ts_libs/ts_worker/application/plugins/numeric_extractors/DailyPendingRvaExtractor.ts"() {
       "use strict";
       init_Period();
       init_TimeFrame();
-      init_NamedAttribute();
       init_BaseSortableAttributeExtractor();
       DailyPendingRvaExtractor = class _DailyPendingRvaExtractor extends BaseSortableAttributeExtractor {
         constructor() {
           super();
-          this.rvaParams = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
-          this.metadata = new NamedAttributeMetadata(`pending.${this.rvaParams.getId()}`, `Pending ${this.rvaParams.getDescription()}`, "number");
+          this.params = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
         }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const rvaIndicator = data.findIndicator(this.rvaParams);
-          if (rvaIndicator.isReady()) {
-            return NumericNamedAttribute.fromMetadata(this.metadata, rvaIndicator.computePending(), 2);
+        next(tradingPair, updatedTimeFrames) {
+          const indicator = this.findIndicator(tradingPair, this.params);
+          if (false === indicator.isReady()) {
+            return;
           }
-          return NumericNamedAttribute.fromMetadata(this.metadata, void 0, void 0);
+          let pendingValue = indicator.getPendingValue().getRelativeValue();
+          this.setValue(tradingPair, pendingValue);
+        }
+        getPrecision() {
+          return 2;
+        }
+        getFriendlyDescription() {
+          return `Pending ${this.params.getDescription()}`;
         }
         getId() {
           return _DailyPendingRvaExtractor.name;
@@ -2500,55 +2452,492 @@
     }
   });
 
-  // ts_libs/ts_worker/application/mappers/ScreenerItemMapper.ts
-  var _exchangeMethodRegistry, ScreenerItemMapper;
-  var init_ScreenerItemMapper = __esm({
-    "ts_libs/ts_worker/application/mappers/ScreenerItemMapper.ts"() {
+  // ts_libs/ts_worker/application/plugins/numeric_extractors/DailyPriceChangeExtractor.ts
+  var DailyPriceChangeExtractor;
+  var init_DailyPriceChangeExtractor = __esm({
+    "ts_libs/ts_worker/application/plugins/numeric_extractors/DailyPriceChangeExtractor.ts"() {
       "use strict";
+      init_Source();
       init_TimeFrame();
-      init_TradingPairModel();
-      ScreenerItemMapper = class {
-        constructor(exchangeMethodRegistry) {
-          __privateAdd(this, _exchangeMethodRegistry);
-          __privateSet(this, _exchangeMethodRegistry, exchangeMethodRegistry);
-        }
-        /**
-         * Map an array of MultiTimeframeOhlcv to TradingPairModel[]
-         * @param buffers 
-         */
-        mapMultiple(sortableAttributeExtractors, filterableAttributeExtractors, buffers) {
-          return buffers.map((buffer) => this.mapSingle(sortableAttributeExtractors, filterableAttributeExtractors, buffer));
-        }
-        /**
-         * Map a single MultiTimeframeOhlcv to TradingPairModel
-         * @param buffer 
-         */
-        mapSingle(sortableAttributeExtractors, filterableAttributeExtractors, buffer) {
-          const minuteBuffer = buffer.getBuffer(TimeFrame.ONE_MINUTE);
-          const tradingPair = buffer.getTradingPair();
-          const exchange = tradingPair.getExchangeDescriptor();
-          const tradingPairUrl = __privateGet(this, _exchangeMethodRegistry).get(exchange).getTradingPairUrl(tradingPair);
-          const currentPrice = minuteBuffer.getClose();
-          var model = new TradingPairModel(
-            tradingPair.getBaseAsset().toString(),
-            tradingPair.getQuoteAsset().toString(),
-            exchange.getName(),
-            exchange.getId(),
-            currentPrice,
-            tradingPairUrl
-          );
-          for (let index = 0; index < sortableAttributeExtractors.length; index++) {
-            const extractor = sortableAttributeExtractors[index];
-            model.addAttr(extractor.extractNamedAttributeFrom(buffer));
+      init_BaseSortableAttributeExtractor();
+      DailyPriceChangeExtractor = class _DailyPriceChangeExtractor extends BaseSortableAttributeExtractor {
+        next(tradingPair, updatedTimeFrames) {
+          if (false === updatedTimeFrames.has(TimeFrame.ONE_MINUTE)) {
+            return;
           }
-          for (let index = 0; index < filterableAttributeExtractors.length; index++) {
-            const extractor = filterableAttributeExtractors[index];
-            model.addAttr(extractor.extractNamedAttributeFrom(buffer));
+          const dayOpenPrice = this.getOhlcvPendingData(tradingPair, Source.OPEN, TimeFrame.ONE_DAY);
+          const currentPrice = this.getOhlcvData(tradingPair, Source.CLOSE, TimeFrame.ONE_MINUTE, 0);
+          if (currentPrice === void 0) {
+            return;
           }
-          return model;
+          if (dayOpenPrice === void 0) {
+            return;
+          }
+          const percentChange = (currentPrice - dayOpenPrice) / dayOpenPrice * 100;
+          this.setValue(tradingPair, percentChange);
+        }
+        getPrecision() {
+          return 2;
+        }
+        getFriendlyDescription() {
+          return "Daily change %";
+        }
+        getId() {
+          return _DailyPriceChangeExtractor.name;
         }
       };
-      _exchangeMethodRegistry = new WeakMap();
+    }
+  });
+
+  // ts_libs/ts_worker/application/plugins/numeric_extractors/DailyRvaExtractor.ts
+  var DailyRvaExtractor;
+  var init_DailyRvaExtractor = __esm({
+    "ts_libs/ts_worker/application/plugins/numeric_extractors/DailyRvaExtractor.ts"() {
+      "use strict";
+      init_Period();
+      init_TimeFrame();
+      init_BaseSortableAttributeExtractor();
+      DailyRvaExtractor = class _DailyRvaExtractor extends BaseSortableAttributeExtractor {
+        constructor() {
+          super();
+          this.params = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
+        }
+        next(tradingPair, updatedTimeFrames) {
+          if (false === updatedTimeFrames.get(TimeFrame.ONE_DAY)) {
+            return;
+          }
+          const indicator = this.findIndicator(tradingPair, this.params);
+          if (false === indicator.isReady()) {
+            return;
+          }
+          let relativeValue = indicator.getValue().getRelativeValue();
+          this.setValue(tradingPair, relativeValue);
+        }
+        getPrecision() {
+          return 2;
+        }
+        getFriendlyDescription() {
+          return this.params.getDescription();
+        }
+        getId() {
+          return _DailyRvaExtractor.name;
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/plugins/numeric_extractors/ThirtyDayPercentChangeExtractor.ts
+  var ThirtyDayPercentChangeExtractor;
+  var init_ThirtyDayPercentChangeExtractor = __esm({
+    "ts_libs/ts_worker/application/plugins/numeric_extractors/ThirtyDayPercentChangeExtractor.ts"() {
+      "use strict";
+      init_Period();
+      init_Source();
+      init_TimeFrame();
+      init_BaseSortableAttributeExtractor();
+      ThirtyDayPercentChangeExtractor = class _ThirtyDayPercentChangeExtractor extends BaseSortableAttributeExtractor {
+        constructor() {
+          super();
+          this.params = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, new Period(30), Source.CLOSE);
+        }
+        next(tradingPair, updatedTimeFrames) {
+          if (false === updatedTimeFrames.get(TimeFrame.ONE_DAY)) {
+            return;
+          }
+          const indicator = this.findIndicator(tradingPair, this.params);
+          if (false === indicator.isReady()) {
+            return;
+          }
+          let pctChange = indicator.getValue().getValue();
+          this.setValue(tradingPair, pctChange);
+        }
+        getPrecision() {
+          return 2;
+        }
+        getFriendlyDescription() {
+          return "30 Days Change %";
+        }
+        getId() {
+          return _ThirtyDayPercentChangeExtractor.name;
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/settings/ExchangeInclusionCriteria.ts
+  var ExchangeInclusionCriteria;
+  var init_ExchangeInclusionCriteria = __esm({
+    "ts_libs/ts_worker/application/exports/settings/ExchangeInclusionCriteria.ts"() {
+      "use strict";
+      ExchangeInclusionCriteria = class _ExchangeInclusionCriteria {
+        constructor(name, id, include) {
+          this.name = name;
+          this.id = id;
+          this.include = include;
+        }
+        static fromJson(json) {
+          if (typeof json.name !== "string") {
+            throw new Error("Invalid name");
+          }
+          if (typeof json.id !== "number") {
+            throw new Error("Invalid id");
+          }
+          if (typeof json.include !== "boolean") {
+            throw new Error("Invalid include flag");
+          }
+          return new _ExchangeInclusionCriteria(json.name, json.id, json.include);
+        }
+        toJson() {
+          return {
+            name: this.name,
+            id: this.id,
+            include: this.include
+          };
+        }
+        deepEquals(other) {
+          if (!other) return false;
+          return this.name === other.name && this.id === other.id && this.include === other.include;
+        }
+        deepClone() {
+          return new _ExchangeInclusionCriteria(this.name, this.id, this.include);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/ScreenerSettings.ts
+  var _ScreenerSettings, ScreenerSettings;
+  var init_ScreenerSettings = __esm({
+    "ts_libs/ts_worker/application/exports/ScreenerSettings.ts"() {
+      "use strict";
+      init_Period();
+      init_TimeFrame();
+      init_BaseFilterableAttributeExtractor();
+      init_BaseSortableAttributeExtractor();
+      init_RsiOverboughtFilter();
+      init_RsiOversoldFilter();
+      init_SmaDowntrendFilter();
+      init_SmaUptrendFilter();
+      init_CurrentPriceExtractor();
+      init_DailyPendingRvaExtractor();
+      init_DailyPriceChangeExtractor();
+      init_DailyRvaExtractor();
+      init_ThirtyDayPercentChangeExtractor();
+      init_ExchangeInclusionCriteria();
+      _ScreenerSettings = class _ScreenerSettings {
+        constructor(exchangeInclusionCriterias) {
+          this._parallelRequestsCount = 5;
+          this._maximumPairsCountPerExchange = 1e3;
+          this._exchangeInclusionCriterias = _ScreenerSettings.validateExchangeInclusionCriterias(exchangeInclusionCriterias);
+          this._plugins = [..._ScreenerSettings.DefaultPlugins];
+          this._filterableAttributes = [];
+          this._sortableAttributes = [];
+          this._plugins.forEach((plugin) => {
+            if (plugin instanceof BaseFilterableAttributeExtractor) {
+              this._filterableAttributes.push(plugin.getNamedAttributeMetadata());
+            }
+            if (plugin instanceof BaseSortableAttributeExtractor) {
+              this._sortableAttributes.push(plugin.getNamedAttributeMetadata());
+            }
+          });
+        }
+        // =====================
+        // Getters / Setters
+        // =====================
+        get parallelRequestsCount() {
+          return this._parallelRequestsCount;
+        }
+        set parallelRequestsCount(value) {
+          if (typeof value !== "number" || value < 1 || value > 20) {
+            throw new Error("Invalid parallelRequestsCount");
+          }
+          this._parallelRequestsCount = value;
+        }
+        get maximumPairsCountPerExchange() {
+          return this._maximumPairsCountPerExchange;
+        }
+        set maximumPairsCountPerExchange(value) {
+          if (typeof value !== "number" || value < 1 || value > 1e4) {
+            throw new Error("Invalid maximumPairsCountPerExchange");
+          }
+          this._maximumPairsCountPerExchange = value;
+        }
+        get exchangeInclusionCriterias() {
+          return this._exchangeInclusionCriterias;
+        }
+        set exchangeInclusionCriterias(value) {
+          this._exchangeInclusionCriterias = _ScreenerSettings.validateExchangeInclusionCriterias(value);
+        }
+        get plugins() {
+          return this._plugins;
+        }
+        get sortableAttributes() {
+          return this._sortableAttributes;
+        }
+        get filterableAttributes() {
+          return this._filterableAttributes;
+        }
+        // =====================
+        // Factory
+        // =====================
+        static fromJson(json) {
+          if (!Array.isArray(json.exchangeInclusionCriterias)) {
+            throw new Error("exchangeInclusionCriterias must be an array");
+          }
+          const criterias = json.exchangeInclusionCriterias.map(
+            (c) => ExchangeInclusionCriteria.fromJson(c)
+          );
+          const settings = new _ScreenerSettings(criterias);
+          settings.parallelRequestsCount = json.parallelRequestsCount;
+          settings.maximumPairsCountPerExchange = json.maximumPairsCountPerExchange;
+          return settings;
+        }
+        // =====================
+        // Serialization
+        // =====================
+        toJson() {
+          return {
+            parallelRequestsCount: this.parallelRequestsCount,
+            maximumPairsCountPerExchange: this.maximumPairsCountPerExchange,
+            exchangeInclusionCriterias: this.exchangeInclusionCriterias.map((c) => ({
+              name: c.name,
+              id: c.id,
+              include: c.include
+            }))
+          };
+        }
+        // =====================
+        // Validation
+        // =====================
+        static validateExchangeInclusionCriterias(criterias) {
+          if (!criterias || !Array.isArray(criterias)) {
+            throw new Error("Exchange inclusion criterias cannot be null");
+          }
+          if (criterias.length === 0) {
+            throw new Error("At least one exchange must be configured");
+          }
+          const hasAtLeastOne = criterias.some((c) => c.include === true);
+          if (!hasAtLeastOne) {
+            throw new Error("At least one exchange must be selected");
+          }
+          return criterias;
+        }
+        // =====================
+        // Deep Clone & Compare
+        // =====================
+        deepClone() {
+          const clonedCriterias = this.exchangeInclusionCriterias.map((c) => c.deepClone());
+          const newSettings = new _ScreenerSettings(clonedCriterias);
+          newSettings.parallelRequestsCount = this.parallelRequestsCount;
+          newSettings.maximumPairsCountPerExchange = this.maximumPairsCountPerExchange;
+          return newSettings;
+        }
+        deepEquals(other) {
+          if (!other) return false;
+          if (this.parallelRequestsCount !== other.parallelRequestsCount || this.maximumPairsCountPerExchange !== other.maximumPairsCountPerExchange) {
+            return false;
+          }
+          if (this.exchangeInclusionCriterias.length !== other.exchangeInclusionCriterias.length) {
+            return false;
+          }
+          for (let i = 0; i < this.exchangeInclusionCriterias.length; i++) {
+            if (!this.exchangeInclusionCriterias[i].deepEquals(other.exchangeInclusionCriterias[i])) {
+              return false;
+            }
+          }
+          return true;
+        }
+        //=========================
+        //Utility methods
+        //=========================
+        getIncludedExchangeNames() {
+          let toReturn = [];
+          for (let index = 0; index < this.exchangeInclusionCriterias.length; index++) {
+            const element = this.exchangeInclusionCriterias[index];
+            if (element.include === true) {
+              toReturn.push(element.name);
+            }
+          }
+          return toReturn;
+        }
+      };
+      _ScreenerSettings.DailyPriceChangeExtractor = new DailyPriceChangeExtractor();
+      _ScreenerSettings.CurrentPriceExtractor = new CurrentPriceExtractor();
+      _ScreenerSettings.DefaultPlugins = [
+        _ScreenerSettings.CurrentPriceExtractor,
+        _ScreenerSettings.DailyPriceChangeExtractor,
+        new DailyRvaExtractor(),
+        new DailyPendingRvaExtractor(),
+        new ThirtyDayPercentChangeExtractor(),
+        new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY),
+        new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS),
+        new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR),
+        new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES),
+        new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIVE_MINUTES),
+        new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_MINUTE),
+        new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY),
+        new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS),
+        new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR),
+        new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES),
+        new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FIVE_MINUTES),
+        new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_MINUTE),
+        new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_DAY, 5),
+        new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FOUR_HOURS, 5),
+        new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_HOUR, 5),
+        new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 5),
+        new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 5),
+        new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 5),
+        new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_DAY, 95),
+        new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FOUR_HOURS, 95),
+        new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_HOUR, 95),
+        new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
+        new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
+        new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95)
+      ];
+      ScreenerSettings = _ScreenerSettings;
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/SignalModel.ts
+  var SignalModel;
+  var init_SignalModel = __esm({
+    "ts_libs/ts_worker/application/exports/SignalModel.ts"() {
+      "use strict";
+      SignalModel = class _SignalModel {
+        constructor(baseAsset, quoteAsset, exchangeId, exchangeUrl, title, subtitle, description, direction, timestamp) {
+          this.baseAsset = baseAsset;
+          this.quoteAsset = quoteAsset;
+          this.exchangeId = exchangeId;
+          this.exchangeUrl = exchangeUrl;
+          this.title = title;
+          this.subtitle = subtitle;
+          this.description = description;
+          this.direction = direction;
+          this.timestamp = timestamp;
+        }
+        serialize() {
+          return {
+            baseAsset: this.baseAsset,
+            quoteAsset: this.quoteAsset,
+            exchangeId: this.exchangeId,
+            exchangeUrl: this.exchangeUrl,
+            title: this.title,
+            subtitle: this.subtitle,
+            description: this.description,
+            direction: this.direction,
+            timestamp: this.timestamp
+          };
+        }
+        static deserialize(dto) {
+          return new _SignalModel(
+            dto.baseAsset,
+            dto.quoteAsset,
+            dto.exchangeId,
+            dto.exchangeUrl,
+            dto.title,
+            dto.subtitle,
+            dto.description,
+            dto.direction,
+            dto.timestamp
+          );
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/TradingPairModel.ts
+  var TradingPairModel;
+  var init_TradingPairModel = __esm({
+    "ts_libs/ts_worker/application/exports/TradingPairModel.ts"() {
+      "use strict";
+      init_NamedAttribute();
+      TradingPairModel = class _TradingPairModel {
+        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, exchangeUrl, attributes = []) {
+          this.baseAsset = baseAsset;
+          this.quoteAsset = quoteAsset;
+          this.exchangeName = exchangeName;
+          this.exchangeId = exchangeId;
+          this.exchangeUrl = exchangeUrl;
+          this.extended = [...attributes];
+        }
+        serialize() {
+          return {
+            baseAsset: this.baseAsset,
+            quoteAsset: this.quoteAsset,
+            exchangeName: this.exchangeName,
+            exchangeId: this.exchangeId,
+            exchangeUrl: this.exchangeUrl,
+            attributes: this.extended.map((attr) => attr.serialize())
+          };
+        }
+        static deserialize(tradingPairModelDto) {
+          const attributes = tradingPairModelDto.attributes.map(
+            (attr) => NamedAttributeFactory.deserialize(attr)
+          );
+          const model = new _TradingPairModel(
+            tradingPairModelDto.baseAsset,
+            tradingPairModelDto.quoteAsset,
+            tradingPairModelDto.exchangeName,
+            tradingPairModelDto.exchangeId,
+            tradingPairModelDto.exchangeUrl,
+            attributes
+          );
+          return model;
+        }
+        // ------------------------
+        // Typed attribute access
+        // ------------------------
+        addAttr(attr) {
+          this.extended.push(attr);
+        }
+        getAttr(key) {
+          return this.extended.find((a) => a.metadata.key === key);
+        }
+        getAttrValue(key, fallback) {
+          var _a, _b;
+          return (_b = (_a = this.getAttr(key)) == null ? void 0 : _a.value) != null ? _b : fallback;
+        }
+        hasAttr(key) {
+          return this.extended.some((a) => a.metadata.key === key);
+        }
+        getAttributes() {
+          return this.extended;
+        }
+        getNumericAttributes() {
+          return this.extended.filter((e) => e instanceof NumericNamedAttribute) || [];
+        }
+        getBooleanAttributes() {
+          return this.extended.filter((e) => e instanceof BooleanNamedAttribute) || [];
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/SynchronizationModel.ts
+  var SynchronizationModel;
+  var init_SynchronizationModel = __esm({
+    "ts_libs/ts_worker/application/exports/SynchronizationModel.ts"() {
+      "use strict";
+      init_SignalModel();
+      init_TradingPairModel();
+      SynchronizationModel = class _SynchronizationModel {
+        constructor(tradingPairs = [], signals = []) {
+          this.tradingPairs = tradingPairs;
+          this.signals = signals;
+        }
+        serialize() {
+          return {
+            tradingPairs: this.tradingPairs.map((tp) => tp.serialize()),
+            signals: this.signals.map((signal) => signal.serialize())
+          };
+        }
+        static deserialize(dto) {
+          return new _SynchronizationModel(
+            dto.tradingPairs.map((tp) => TradingPairModel.deserialize(tp)),
+            dto.signals.map((signal) => SignalModel.deserialize(signal))
+          );
+        }
+      };
     }
   });
 
@@ -2567,21 +2956,23 @@
   });
 
   // ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest.ts
-  var _tradingPairs, _candlesPerTimeFrame, _parallelRequestsCount, _utcNowMs, _progressCallback, FetchOhlcvDataRequest;
+  var _tradingPairs, _candlesPerTimeFrame, _parallelRequestsCount, _utcNowMs, _plugins, _progressCallback, FetchOhlcvDataRequest;
   var init_FetchOhlcvDataRequest = __esm({
     "ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest.ts"() {
       "use strict";
       FetchOhlcvDataRequest = class {
-        constructor(tradingPairs, candlesPerTimeFrame, parallelRequestsCount, utcNowMs, progressCallback) {
+        constructor(tradingPairs, candlesPerTimeFrame, parallelRequestsCount, utcNowMs, plugins, progressCallback) {
           __privateAdd(this, _tradingPairs);
           __privateAdd(this, _candlesPerTimeFrame);
           __privateAdd(this, _parallelRequestsCount);
           __privateAdd(this, _utcNowMs);
+          __privateAdd(this, _plugins);
           __privateAdd(this, _progressCallback);
           __privateSet(this, _tradingPairs, Object.freeze([...tradingPairs]));
           __privateSet(this, _candlesPerTimeFrame, candlesPerTimeFrame);
           __privateSet(this, _parallelRequestsCount, parallelRequestsCount);
           __privateSet(this, _utcNowMs, utcNowMs);
+          __privateSet(this, _plugins, plugins);
           __privateSet(this, _progressCallback, progressCallback);
           Object.freeze(this);
         }
@@ -2600,11 +2991,15 @@
         getParallelRequestsCount() {
           return __privateGet(this, _parallelRequestsCount);
         }
+        getPlugins() {
+          return __privateGet(this, _plugins);
+        }
       };
       _tradingPairs = new WeakMap();
       _candlesPerTimeFrame = new WeakMap();
       _parallelRequestsCount = new WeakMap();
       _utcNowMs = new WeakMap();
+      _plugins = new WeakMap();
       _progressCallback = new WeakMap();
     }
   });
@@ -2671,21 +3066,44 @@
     }
   });
 
+  // ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsRequest.ts
+  var _plugins2, _tradingPairs2, RegisterPluginsRequest;
+  var init_RegisterPluginsRequest = __esm({
+    "ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsRequest.ts"() {
+      "use strict";
+      RegisterPluginsRequest = class {
+        constructor(plugins, tradingPairs) {
+          __privateAdd(this, _plugins2);
+          __privateAdd(this, _tradingPairs2);
+          __privateSet(this, _plugins2, plugins);
+          __privateSet(this, _tradingPairs2, tradingPairs);
+          Object.freeze(this);
+        }
+        get plugins() {
+          return __privateGet(this, _plugins2);
+        }
+        get tradingPairs() {
+          return __privateGet(this, _tradingPairs2);
+        }
+      };
+      _plugins2 = new WeakMap();
+      _tradingPairs2 = new WeakMap();
+    }
+  });
+
   // ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest.ts
-  var _multiTimeFrameData, _paralelRequestsCount, _utcNowMs2, _progressCallback2, SyncOhlcvDataRequest;
+  var _paralelRequestsCount, _utcNowMs2, _progressCallback2, _plugins3, SyncOhlcvDataRequest;
   var init_SyncOhlcvDataRequest = __esm({
     "ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest.ts"() {
       "use strict";
-      init_MultiTimeframeOhlcv();
       SyncOhlcvDataRequest = class {
-        constructor(multiTimeFrameData, paralelRequestsCount, utcNowMs, progressCallback) {
-          __privateAdd(this, _multiTimeFrameData);
+        constructor(plugins, paralelRequestsCount, utcNowMs, progressCallback) {
           __privateAdd(this, _paralelRequestsCount);
           __privateAdd(this, _utcNowMs2);
           __privateAdd(this, _progressCallback2);
-          multiTimeFrameData.forEach((mtf) => MultiTimeframeOhlcv.fromUnknown(mtf));
+          __privateAdd(this, _plugins3);
           if (paralelRequestsCount <= 0) throw new RangeError("paralelRequestsCount must be > 0");
-          __privateSet(this, _multiTimeFrameData, multiTimeFrameData);
+          __privateSet(this, _plugins3, plugins);
           __privateSet(this, _paralelRequestsCount, paralelRequestsCount);
           __privateSet(this, _utcNowMs2, utcNowMs);
           __privateSet(this, _progressCallback2, progressCallback);
@@ -2697,17 +3115,17 @@
         getUtcNowMilliseconds() {
           return __privateGet(this, _utcNowMs2);
         }
-        getTradingPairBuffers() {
-          return __privateGet(this, _multiTimeFrameData);
-        }
         getParalelRequestsCount() {
           return __privateGet(this, _paralelRequestsCount);
         }
+        getPlugins() {
+          return __privateGet(this, _plugins3);
+        }
       };
-      _multiTimeFrameData = new WeakMap();
       _paralelRequestsCount = new WeakMap();
       _utcNowMs2 = new WeakMap();
       _progressCallback2 = new WeakMap();
+      _plugins3 = new WeakMap();
     }
   });
 
@@ -2886,6 +3304,116 @@
     }
   });
 
+  // ts_libs/ts_worker/domain/ta/TechnicalAnalisysRepository.ts
+  var TechnicalAnalisysRepository;
+  var init_TechnicalAnalisysRepository = __esm({
+    "ts_libs/ts_worker/domain/ta/TechnicalAnalisysRepository.ts"() {
+      "use strict";
+      TechnicalAnalisysRepository = class {
+        constructor() {
+          this.indicators = /* @__PURE__ */ new Map();
+          this.datasets = /* @__PURE__ */ new Map();
+          this.indicatorParameters = [];
+        }
+        pushUpdate(tradingPair, timeFrame, open, high, low, close, volume, startTime, endTime, isClosed) {
+          const dataset = this.getDataset(tradingPair);
+          return dataset.pushUpdate(
+            timeFrame,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            startTime,
+            endTime,
+            isClosed
+          );
+        }
+        addDataset(dataset) {
+          const tradingPair = dataset.getTradingPair();
+          if (this.datasets.has(tradingPair)) {
+            throw new Error(`TradingPair ${tradingPair} already added to repo.`);
+          }
+          this.datasets.set(tradingPair, dataset);
+        }
+        getDataset(tradingPair) {
+          const dataset = this.datasets.get(tradingPair);
+          if (!dataset) {
+            throw new Error(`No MTF dataset registered for ${tradingPair.symbol()}`);
+          }
+          return dataset;
+        }
+        getDatasets() {
+          return this.datasets;
+        }
+        getIndicators(tradingPair) {
+          const list = this.indicators.get(tradingPair);
+          if (!list) {
+            throw new Error(`No indicator found for: ${tradingPair.getId()}`);
+          }
+          return list;
+        }
+        initializeIndicatorsWithDatasets(tradingPair) {
+          const dataset = this.getDataset(tradingPair);
+          const created = this.indicatorParameters.map((indParam) => {
+            return indParam.createUsing(dataset);
+          });
+          this.indicators.set(tradingPair, created);
+        }
+        addIndicatorParameters(indicatorParams) {
+          const exists = this.indicatorParameters.some(
+            (ind) => ind.equals(indicatorParams)
+          );
+          if (exists) {
+            return false;
+          }
+          this.indicatorParameters.push(indicatorParams);
+          return true;
+        }
+        findIndicator(tradingPair, indicatorParams) {
+          const list = this.getIndicators(tradingPair);
+          const found = list.find(
+            (ind) => ind.getParameters().equals(indicatorParams)
+          );
+          if (!found) {
+            throw new Error(`Indicator ${indicatorParams.getId()} was not found for tp ${tradingPair.getId()}.`);
+          }
+          return found;
+        }
+        updateIndicators(tradingPair, timeFrame) {
+          const list = this.getIndicators(tradingPair);
+          list.forEach((ind) => {
+            if (ind.getParameters().getTimeFrame() === timeFrame) {
+              ind.update();
+            }
+          });
+        }
+        getTradingPairs() {
+          throw new Error("Method not implemented.");
+        }
+        getOhlcvData(tradingPair, source, timeframe, position) {
+          let dataset = this.getDataset(tradingPair);
+          let tfBuffer = dataset.getBuffer(timeframe);
+          return source.extract(tfBuffer.getCandle(position));
+        }
+        getOhlcvPendingData(tradingPair, source, timeframe) {
+          let dataset = this.getDataset(tradingPair);
+          let tfBuffer = dataset.getBuffer(timeframe);
+          return source.extract(tfBuffer.getPendingCandle());
+        }
+        getIndicatorValue(indicator, position) {
+          return indicator.getValue(position);
+        }
+        getPendingIndicatorValue(indicator) {
+          return indicator.getPendingValue();
+        }
+        isIndicatorReady(indicator) {
+          return indicator.isReady();
+        }
+      };
+    }
+  });
+
   // ts_libs/ts_worker/domain/exchange/ExchangeMethodsBase.ts
   var _ExchangeMethodsBase_static, getEntries_fn, _ExchangeMethodsBase, ExchangeMethodsBase;
   var init_ExchangeMethodsBase = __esm({
@@ -2929,7 +3457,7 @@
         /**
          * Sync a MultiTimeframeOhlcv with new data up to newEndTimeMillis
          */
-        syncMultiTimeFrameOhlcv(multiTimeframeOhlcv, newEndTimeMillis) {
+        syncOneMinuteTimeFrame(multiTimeframeOhlcv, newEndTimeMillis) {
           return __async(this, null, function* () {
             const timeFrame = TimeFrame.ONE_MINUTE;
             const buffer = OhlcvBuffer.fromUnknown(multiTimeframeOhlcv.getBuffer(timeFrame));
@@ -2938,27 +3466,14 @@
             }
             const relevantStartTimeStamp = buffer.getStartTime() + timeFrame.asMilliseconds();
             const relevantEndTimeStamp = newEndTimeMillis;
-            if (relevantEndTimeStamp <= relevantStartTimeStamp) return 0;
+            if (relevantEndTimeStamp <= relevantStartTimeStamp) return void 0;
             const data = yield this.fetchHistoricalCandles(
               multiTimeframeOhlcv.getTradingPair(),
               buffer.getBaseTimeFrame(),
               relevantStartTimeStamp,
               relevantEndTimeStamp
             );
-            for (const entry of data) {
-              multiTimeframeOhlcv.pushUpdate(
-                entry.timeFrame,
-                entry.open,
-                entry.high,
-                entry.low,
-                entry.close,
-                entry.volume,
-                entry.startTime,
-                entry.endTime,
-                entry.isClosed
-              );
-            }
-            return data.length;
+            return data;
           });
         }
         /**
@@ -3503,26 +4018,26 @@
   });
 
   // ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataResponse.ts
-  var _multiTimeFrameData2, FetchOhlcvDataResponse;
+  var _count, FetchOhlcvDataResponse;
   var init_FetchOhlcvDataResponse = __esm({
     "ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataResponse.ts"() {
       "use strict";
       FetchOhlcvDataResponse = class {
-        constructor(multiTimeFrameData) {
-          __privateAdd(this, _multiTimeFrameData2);
-          __privateSet(this, _multiTimeFrameData2, Object.freeze([...multiTimeFrameData]));
+        constructor(count) {
+          __privateAdd(this, _count);
+          __privateSet(this, _count, count);
           Object.freeze(this);
         }
-        getMultiTimeFrameData() {
-          return __privateGet(this, _multiTimeFrameData2);
+        getCount() {
+          return __privateGet(this, _count);
         }
       };
-      _multiTimeFrameData2 = new WeakMap();
+      _count = new WeakMap();
     }
   });
 
   // ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataUseCase.ts
-  var _exchangeMethodsRegistry, _FetchOhlcvDataUseCase_instances, fetchOne_fn, FetchOhlcvDataUseCase;
+  var _exchangeMethodsRegistry, _technicalAnalisysRepository, _FetchOhlcvDataUseCase_instances, fetchOne_fn, FetchOhlcvDataUseCase;
   var init_FetchOhlcvDataUseCase = __esm({
     "ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataUseCase.ts"() {
       "use strict";
@@ -3530,11 +4045,13 @@
       init_FetchOhlcvDataResponse();
       init_InsufficientOhlcvDataError();
       FetchOhlcvDataUseCase = class extends UseCaseBase {
-        constructor(exchangeMethodsRegistry) {
+        constructor(technicalAnalisysRepository, exchangeMethodsRegistry) {
           super();
           __privateAdd(this, _FetchOhlcvDataUseCase_instances);
           __privateAdd(this, _exchangeMethodsRegistry);
+          __privateAdd(this, _technicalAnalisysRepository);
           __privateSet(this, _exchangeMethodsRegistry, exchangeMethodsRegistry);
+          __privateSet(this, _technicalAnalisysRepository, technicalAnalisysRepository);
         }
         run(requestModel) {
           return __async(this, null, function* () {
@@ -3543,6 +4060,7 @@
             const utcNowMs = requestModel.getUtcNowMilliseconds();
             const parallelCount = requestModel.getParallelRequestsCount();
             const results = [];
+            const plugins = requestModel.getPlugins();
             for (let i = 0; i < tradingPairs.length; i += parallelCount) {
               const batchPairs = tradingPairs.slice(i, i + parallelCount);
               const batchResults = yield Promise.all(batchPairs.map((tp) => {
@@ -3560,11 +4078,17 @@
                 });
               }
             }
-            return new FetchOhlcvDataResponse(results);
+            plugins.forEach((plugin) => {
+              results.forEach((result) => {
+                plugin.next(result.getTradingPair(), result.getUpdatedTimeFrames());
+              });
+            });
+            return new FetchOhlcvDataResponse(results.length);
           });
         }
       };
       _exchangeMethodsRegistry = new WeakMap();
+      _technicalAnalisysRepository = new WeakMap();
       _FetchOhlcvDataUseCase_instances = new WeakSet();
       fetchOne_fn = function(tradingPair, utcNowMs, candlesPerTimeFrame) {
         return __async(this, null, function* () {
@@ -3572,11 +4096,14 @@
             const methods = __privateGet(this, _exchangeMethodsRegistry).get(
               tradingPair.getExchangeDescriptor()
             );
-            return yield methods.createMultiTimeframeOhlcv(
+            var toReturn = yield methods.createMultiTimeframeOhlcv(
               tradingPair,
               utcNowMs,
               candlesPerTimeFrame
             );
+            __privateGet(this, _technicalAnalisysRepository).addDataset(toReturn);
+            __privateGet(this, _technicalAnalisysRepository).initializeIndicatorsWithDatasets(tradingPair);
+            return toReturn;
           } catch (err) {
             if (InsufficientOhlcvDataError.isInstance(err)) {
               console.warn(err);
@@ -3590,24 +4117,24 @@
   });
 
   // ts_libs/ts_worker/application/usecases/FilterTradingPairs/FilterTradingPairsResponse.ts
-  var _tradingPairs2, FilterTradingPairsResponse;
+  var _tradingPairs3, FilterTradingPairsResponse;
   var init_FilterTradingPairsResponse = __esm({
     "ts_libs/ts_worker/application/usecases/FilterTradingPairs/FilterTradingPairsResponse.ts"() {
       "use strict";
       FilterTradingPairsResponse = class {
         constructor(tradingPairs) {
-          __privateAdd(this, _tradingPairs2);
-          __privateSet(this, _tradingPairs2, Object.freeze([...tradingPairs]));
+          __privateAdd(this, _tradingPairs3);
+          __privateSet(this, _tradingPairs3, Object.freeze([...tradingPairs]));
           Object.freeze(this);
         }
         /**
          * Returns filtered trading pairs
          */
         getTradingPairs() {
-          return [...__privateGet(this, _tradingPairs2)];
+          return [...__privateGet(this, _tradingPairs3)];
         }
       };
-      _tradingPairs2 = new WeakMap();
+      _tradingPairs3 = new WeakMap();
     }
   });
 
@@ -3689,51 +4216,104 @@
     }
   });
 
+  // ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsResponse.ts
+  var _plugins4, RegisterPluginsResponse;
+  var init_RegisterPluginsResponse = __esm({
+    "ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsResponse.ts"() {
+      "use strict";
+      RegisterPluginsResponse = class {
+        constructor(plugins) {
+          __privateAdd(this, _plugins4);
+          __privateSet(this, _plugins4, plugins);
+          Object.freeze(this);
+        }
+        get plugins() {
+          return __privateGet(this, _plugins4);
+        }
+      };
+      _plugins4 = new WeakMap();
+    }
+  });
+
+  // ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsUseCase.ts
+  var _repo, RegisterPluginsUseCase;
+  var init_RegisterPluginsUseCase = __esm({
+    "ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsUseCase.ts"() {
+      "use strict";
+      init_UseCaseBase();
+      init_RegisterPluginsResponse();
+      RegisterPluginsUseCase = class extends UseCaseBase {
+        constructor(repo) {
+          super();
+          __privateAdd(this, _repo);
+          __privateSet(this, _repo, repo);
+        }
+        run(requestModel) {
+          return __async(this, null, function* () {
+            let plugins = requestModel.plugins;
+            let pairs = requestModel.tradingPairs;
+            plugins.forEach((plugin) => {
+              plugin.transferContext(__privateGet(this, _repo));
+              plugin.getIndicatorParameters().forEach((indParam) => {
+                __privateGet(this, _repo).addIndicatorParameters(indParam);
+              });
+            });
+            return new RegisterPluginsResponse(plugins);
+          });
+        }
+      };
+      _repo = new WeakMap();
+    }
+  });
+
   // ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataResponse.ts
-  var _multiTimeFrameData3, _updatedEntriesCount, SyncOhlcvDataResponse;
+  var _updatedEntriesCount, _tradingPairModel, SyncOhlcvDataResponse;
   var init_SyncOhlcvDataResponse = __esm({
     "ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataResponse.ts"() {
       "use strict";
-      init_MultiTimeframeOhlcv();
       SyncOhlcvDataResponse = class {
-        constructor(multiTimeFrameData, updatedEntriesCount) {
-          __privateAdd(this, _multiTimeFrameData3);
+        constructor(updatedEntriesCount, tradingPairModel) {
           __privateAdd(this, _updatedEntriesCount);
-          multiTimeFrameData.forEach((mtf) => MultiTimeframeOhlcv.fromUnknown(mtf));
-          __privateSet(this, _multiTimeFrameData3, multiTimeFrameData);
+          __privateAdd(this, _tradingPairModel);
           __privateSet(this, _updatedEntriesCount, updatedEntriesCount);
+          __privateSet(this, _tradingPairModel, tradingPairModel);
           Object.freeze(this);
-        }
-        getMultiTimeFrameData() {
-          return __privateGet(this, _multiTimeFrameData3);
         }
         getUpdatedEntriesCount() {
           return __privateGet(this, _updatedEntriesCount);
         }
+        getTradingPairModel() {
+          return __privateGet(this, _tradingPairModel);
+        }
       };
-      _multiTimeFrameData3 = new WeakMap();
       _updatedEntriesCount = new WeakMap();
+      _tradingPairModel = new WeakMap();
     }
   });
 
   // ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataUseCase.ts
-  var _exchangeMethodsRegistry2, _SyncOhlcvDataUseCase_instances, syncOne_fn, SyncOhlcvDataUseCase;
+  var _exchangeMethodsRegistry2, _technicalAnalisysRepository2, _SyncOhlcvDataUseCase_instances, syncOne_fn, SyncOhlcvDataUseCase;
   var init_SyncOhlcvDataUseCase = __esm({
     "ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataUseCase.ts"() {
       "use strict";
       init_UseCaseBase();
       init_SyncOhlcvDataResponse();
       init_TimeFrame();
+      init_TradingPairModel();
+      init_BaseFilterableAttributeExtractor();
+      init_BaseSortableAttributeExtractor();
       SyncOhlcvDataUseCase = class extends UseCaseBase {
-        constructor(exchangeMethodsRegistry) {
+        constructor(technicalAnalisysRepository, exchangeMethodsRegistry) {
           super();
           __privateAdd(this, _SyncOhlcvDataUseCase_instances);
           __privateAdd(this, _exchangeMethodsRegistry2);
+          __privateAdd(this, _technicalAnalisysRepository2);
           __privateSet(this, _exchangeMethodsRegistry2, exchangeMethodsRegistry);
+          __privateSet(this, _technicalAnalisysRepository2, technicalAnalisysRepository);
         }
         run(requestModel) {
           return __async(this, null, function* () {
-            const buffers = requestModel.getTradingPairBuffers();
+            const buffers = Array.from(__privateGet(this, _technicalAnalisysRepository2).getDatasets().values());
             const parallelCount = requestModel.getParalelRequestsCount();
             const ts = requestModel.getUtcNowMilliseconds();
             const shouldSync = buffers.some((buffer) => {
@@ -3741,16 +4321,20 @@
               const gap = ts - nextStart;
               return gap > TimeFrame.ONE_MINUTE.asMilliseconds();
             });
+            let tradingPairModels = [];
             if (shouldSync === false) {
-              return new SyncOhlcvDataResponse(buffers, 0);
+              return new SyncOhlcvDataResponse(0, tradingPairModels);
             }
             for (let i = 0; i < buffers.length; i += parallelCount) {
               const batch = buffers.slice(i, i + parallelCount);
-              const results = yield Promise.all(batch.map((buffer) => __privateMethod(this, _SyncOhlcvDataUseCase_instances, syncOne_fn).call(this, buffer, ts)));
+              const results = yield Promise.all(batch.map((buffer) => __privateMethod(this, _SyncOhlcvDataUseCase_instances, syncOne_fn).call(this, requestModel, buffer, ts)));
               for (let j = 0; j < results.length; j++) {
                 const syncResult = results[j];
                 const tradingPair = syncResult.multiTimeframeBuffer.getTradingPair();
                 const tradingPairIndex = i + j + 1;
+                if (syncResult.mappedModel !== void 0) {
+                  tradingPairModels.push(syncResult.mappedModel);
+                }
                 yield requestModel.reportProgress({
                   currentTradingPair: tradingPair,
                   syncCount: syncResult.syncCount,
@@ -3759,24 +4343,79 @@
                 });
               }
             }
-            return new SyncOhlcvDataResponse(buffers, buffers.length);
+            return new SyncOhlcvDataResponse(buffers.length, tradingPairModels);
           });
+        }
+        mapUiData(mtfBuffer, plugins) {
+          const tradingPair = mtfBuffer.getTradingPair();
+          const exchange = tradingPair.getExchangeDescriptor();
+          const tradingPairUrl = __privateGet(this, _exchangeMethodsRegistry2).get(exchange).getTradingPairUrl(tradingPair);
+          var model = new TradingPairModel(
+            tradingPair.getBaseAsset().toString(),
+            tradingPair.getQuoteAsset().toString(),
+            exchange.getName(),
+            exchange.getId(),
+            tradingPairUrl
+          );
+          plugins.forEach((plugin) => {
+            if (plugin instanceof BaseFilterableAttributeExtractor) {
+              model.addAttr(plugin.extractNamedAttributeFrom(tradingPair));
+            }
+            if (plugin instanceof BaseSortableAttributeExtractor) {
+              model.addAttr(plugin.extractNamedAttributeFrom(tradingPair));
+            }
+          });
+          return model;
         }
       };
       _exchangeMethodsRegistry2 = new WeakMap();
+      _technicalAnalisysRepository2 = new WeakMap();
       _SyncOhlcvDataUseCase_instances = new WeakSet();
-      syncOne_fn = function(mtfBuffer, timeStamp) {
+      syncOne_fn = function(requestModel, mtfBuffer, timeStamp) {
         return __async(this, null, function* () {
           const tradingPair = mtfBuffer.getTradingPair();
           const exchangeDescriptor = tradingPair.getExchangeDescriptor();
           const methods = __privateGet(this, _exchangeMethodsRegistry2).get(exchangeDescriptor);
-          const count = yield methods.syncMultiTimeFrameOhlcv(
+          const plugins = requestModel.getPlugins();
+          const newEntries = yield methods.syncOneMinuteTimeFrame(
             mtfBuffer,
             timeStamp
           );
+          if (newEntries === void 0 || newEntries === null || newEntries.length === 0) {
+            return {
+              multiTimeframeBuffer: mtfBuffer,
+              mappedModel: void 0,
+              syncCount: 0
+            };
+          }
+          for (var entry of newEntries) {
+            var updatedTimeFrames = __privateGet(this, _technicalAnalisysRepository2).pushUpdate(
+              tradingPair,
+              entry.timeFrame,
+              entry.open,
+              entry.high,
+              entry.low,
+              entry.close,
+              entry.volume,
+              entry.startTime,
+              entry.endTime,
+              entry.isClosed
+            );
+            updatedTimeFrames.forEach((isUpdated, timeFrame) => {
+              if (!isUpdated) {
+                return;
+              }
+              __privateGet(this, _technicalAnalisysRepository2).updateIndicators(tradingPair, timeFrame);
+            });
+            plugins.forEach((plugin) => {
+              plugin.next(tradingPair, updatedTimeFrames);
+            });
+          }
+          let mappedModel = this.mapUiData(mtfBuffer, plugins);
           return {
             multiTimeframeBuffer: mtfBuffer,
-            syncCount: count
+            syncCount: newEntries.length,
+            mappedModel
           };
         });
       };
@@ -3793,12 +4432,16 @@
       init_ExchangeDescriptorRegistry();
       init_ExchangeMethodsRegistry();
       init_TradingPairsRepository();
+      init_TechnicalAnalisysRepository();
       init_ExchangeMethodsBinance();
       init_ExchangeMethodsBybit();
       init_TimeProvider();
+      init_ScreenerSettings();
+      init_ExchangeInclusionCriteria();
       init_EnumerateExchangesUseCase();
       init_FetchOhlcvDataUseCase();
       init_FilterTradingPairsUseCase();
+      init_RegisterPluginsUseCase();
       init_SyncOhlcvDataUseCase();
       UseCaseContainer = class _UseCaseContainer {
         constructor(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository) {
@@ -3806,10 +4449,12 @@
           this.exchangeDescriptorRegistry = exchangeDescriptorRegistry;
           this.exchangeMethodsRegistry = exchangeMethodsRegistry;
           this.tradingPairsRepository = tradingPairsRepository;
+          this.technicalAnalisysRepository = new TechnicalAnalisysRepository();
           this.enumerateExchangesUseCase = new EnumerateExchangesUseCase(exchangeDescriptorRegistry);
           this.filterTradingPairsUseCase = new FilterTradingPairsUseCase(tradingPairsRepository);
-          this.fetchOhlcvDataUseCase = new FetchOhlcvDataUseCase(exchangeMethodsRegistry);
-          this.syncOhlcvDataUseCase = new SyncOhlcvDataUseCase(exchangeMethodsRegistry);
+          this.registerPluginsUseCase = new RegisterPluginsUseCase(this.technicalAnalisysRepository);
+          this.fetchOhlcvDataUseCase = new FetchOhlcvDataUseCase(this.technicalAnalisysRepository, exchangeMethodsRegistry);
+          this.syncOhlcvDataUseCase = new SyncOhlcvDataUseCase(this.technicalAnalisysRepository, exchangeMethodsRegistry);
           Object.freeze(this);
         }
         /** Factory method to create a fully initialized UseCaseContainer */
@@ -3833,330 +4478,49 @@
             return new _UseCaseContainer(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository);
           });
         }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/mappers/extractors/DailyRvaExtractor.ts
-  var DailyRvaExtractor;
-  var init_DailyRvaExtractor = __esm({
-    "ts_libs/ts_worker/application/mappers/extractors/DailyRvaExtractor.ts"() {
-      "use strict";
-      init_Period();
-      init_TimeFrame();
-      init_NamedAttribute();
-      init_BaseSortableAttributeExtractor();
-      DailyRvaExtractor = class _DailyRvaExtractor extends BaseSortableAttributeExtractor {
-        constructor() {
-          super();
-          this.rvaParams = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
-          this.metadata = new NamedAttributeMetadata(this.rvaParams.getId(), this.rvaParams.getDescription(), "number");
-        }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const rvaIndicator = data.findIndicator(this.rvaParams);
-          if (rvaIndicator.isReady()) {
-            return NumericNamedAttribute.fromMetadata(this.metadata, rvaIndicator.getValue().getRelativeValue(), 2);
+        static CreateDefaultSettings(container) {
+          let exchangeInclusionCriterias = [];
+          let available = container.exchangeDescriptorRegistry.all();
+          for (let i = 0; i < available.length; i++) {
+            exchangeInclusionCriterias.push(new ExchangeInclusionCriteria(available[i].getName(), available[i].getId(), true));
           }
-          return NumericNamedAttribute.fromMetadata(this.metadata, void 0, void 0);
-        }
-        getId() {
-          return _DailyRvaExtractor.name;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/mappers/extractors/ThirtyDayPercentChangeExtractor.ts
-  var ThirtyDayPercentChangeExtractor;
-  var init_ThirtyDayPercentChangeExtractor = __esm({
-    "ts_libs/ts_worker/application/mappers/extractors/ThirtyDayPercentChangeExtractor.ts"() {
-      "use strict";
-      init_Period();
-      init_Source();
-      init_TimeFrame();
-      init_NamedAttribute();
-      init_BaseSortableAttributeExtractor();
-      ThirtyDayPercentChangeExtractor = class _ThirtyDayPercentChangeExtractor extends BaseSortableAttributeExtractor {
-        constructor() {
-          super();
-          this.params = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, new Period(30), Source.CLOSE);
-          this.metadata = new NamedAttributeMetadata(this.params.getId(), "30 Days Change %", "number");
-        }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const indicator = data.findIndicator(this.params);
-          if (indicator.isReady()) {
-            return NumericNamedAttribute.fromMetadata(this.metadata, indicator.getValue().getValue(), 2);
-          }
-          return NumericNamedAttribute.fromMetadata(this.metadata, void 0, void 0);
-        }
-        getId() {
-          return _ThirtyDayPercentChangeExtractor.name;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/mappers/BaseFilterableAttributeExtractor.ts
-  var BaseFilterableAttributeExtractor;
-  var init_BaseFilterableAttributeExtractor = __esm({
-    "ts_libs/ts_worker/application/mappers/BaseFilterableAttributeExtractor.ts"() {
-      "use strict";
-      init_BaseEvaluator();
-      BaseFilterableAttributeExtractor = class extends BaseEvaluator {
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/mappers/filters/SmaUptrendFilter.ts
-  var SmaUptrendFilter;
-  var init_SmaUptrendFilter = __esm({
-    "ts_libs/ts_worker/application/mappers/filters/SmaUptrendFilter.ts"() {
-      "use strict";
-      init_Source();
-      init_NamedAttribute();
-      init_BaseFilterableAttributeExtractor();
-      SmaUptrendFilter = class _SmaUptrendFilter extends BaseFilterableAttributeExtractor {
-        constructor(period, timeFrame) {
-          super();
-          this.params = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
-          this.metadata = new NamedAttributeMetadata(`close.above.${this.params.getId()}`, `Uptrend: ${this.params.getDescription()} < Close`, "boolean");
-        }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const indicator = data.findIndicator(this.params);
-          const close = data.getBuffer(this.params.timeFrame).getClose();
-          if (!indicator.isReady()) {
-            return BooleanNamedAttribute.fromMetadata(this.metadata);
-          }
-          const isUptrend = close > indicator.getValue().getValue();
-          return BooleanNamedAttribute.fromMetadata(this.metadata, isUptrend);
-        }
-        getId() {
-          return `${_SmaUptrendFilter.name}.${this.getNamedAttributeMetadata().key}`;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/mappers/filters/RsiOversoldFilter.ts
-  var RsiOversoldFilter;
-  var init_RsiOversoldFilter = __esm({
-    "ts_libs/ts_worker/application/mappers/filters/RsiOversoldFilter.ts"() {
-      "use strict";
-      init_Source();
-      init_NamedAttribute();
-      init_BaseFilterableAttributeExtractor();
-      RsiOversoldFilter = class _RsiOversoldFilter extends BaseFilterableAttributeExtractor {
-        constructor(period, timeFrame, oversoldTreshold) {
-          super();
-          this.oversoldTreshold = oversoldTreshold;
-          this.params = this.useRsiIndicator(timeFrame, period, Source.CLOSE);
-          this.metadata = new NamedAttributeMetadata(`rsi.oversold.filter.${this.params.getId()} < ${oversoldTreshold}`, `Oversold: ${this.params.getDescription()} <= ${oversoldTreshold}`, "boolean");
-        }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const indicator = data.findIndicator(this.params);
-          if (!indicator.isReady()) {
-            return BooleanNamedAttribute.fromMetadata(this.metadata);
-          }
-          const isOversold = this.oversoldTreshold > indicator.getValue().getValue();
-          return BooleanNamedAttribute.fromMetadata(this.metadata, isOversold);
-        }
-        getId() {
-          return `${_RsiOversoldFilter.name}.${this.getNamedAttributeMetadata().key}`;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/mappers/filters/SmaDowntrendFilter.ts
-  var SmaDowntrendFilter;
-  var init_SmaDowntrendFilter = __esm({
-    "ts_libs/ts_worker/application/mappers/filters/SmaDowntrendFilter.ts"() {
-      "use strict";
-      init_Source();
-      init_NamedAttribute();
-      init_BaseFilterableAttributeExtractor();
-      SmaDowntrendFilter = class _SmaDowntrendFilter extends BaseFilterableAttributeExtractor {
-        constructor(period, timeFrame) {
-          super();
-          this.params = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
-          this.metadata = new NamedAttributeMetadata(`close.below.${this.params.getId()}`, `Downtrend: ${this.params.getDescription()} > Close`, "boolean");
-        }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const indicator = data.findIndicator(this.params);
-          const close = data.getBuffer(this.params.timeFrame).getClose();
-          if (!indicator.isReady()) {
-            return BooleanNamedAttribute.fromMetadata(this.metadata);
-          }
-          const isDowntrend = close < indicator.getValue().getValue();
-          return BooleanNamedAttribute.fromMetadata(this.metadata, isDowntrend);
-        }
-        getId() {
-          return `${_SmaDowntrendFilter.name}.${this.getNamedAttributeMetadata().key}`;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/mappers/filters/RsiOverboughtFilter.ts
-  var RsiOverboughtFilter;
-  var init_RsiOverboughtFilter = __esm({
-    "ts_libs/ts_worker/application/mappers/filters/RsiOverboughtFilter.ts"() {
-      "use strict";
-      init_Source();
-      init_NamedAttribute();
-      init_BaseFilterableAttributeExtractor();
-      RsiOverboughtFilter = class _RsiOverboughtFilter extends BaseFilterableAttributeExtractor {
-        constructor(period, timeFrame, overboughtTreshold) {
-          super();
-          this.overboughtTreshold = overboughtTreshold;
-          this.params = this.useRsiIndicator(timeFrame, period, Source.CLOSE);
-          this.metadata = new NamedAttributeMetadata(`rsi.overbought.filter.${this.params.getId()} > ${overboughtTreshold}`, `Overbought: ${this.params.getDescription()} >= ${overboughtTreshold}`, "boolean");
-        }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const indicator = data.findIndicator(this.params);
-          if (!indicator.isReady()) {
-            return BooleanNamedAttribute.fromMetadata(this.metadata);
-          }
-          const isOverBought = this.overboughtTreshold < indicator.getValue().getValue();
-          return BooleanNamedAttribute.fromMetadata(this.metadata, isOverBought);
-        }
-        getId() {
-          return `${_RsiOverboughtFilter.name}.${this.getNamedAttributeMetadata().key}`;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/mappers/extractors/FifteenMinutesRvaExtractor.ts
-  var FifteenMinutesRvaExtractor;
-  var init_FifteenMinutesRvaExtractor = __esm({
-    "ts_libs/ts_worker/application/mappers/extractors/FifteenMinutesRvaExtractor.ts"() {
-      "use strict";
-      init_Period();
-      init_TimeFrame();
-      init_NamedAttribute();
-      init_BaseSortableAttributeExtractor();
-      FifteenMinutesRvaExtractor = class _FifteenMinutesRvaExtractor extends BaseSortableAttributeExtractor {
-        constructor() {
-          super();
-          this.rvaParams = this.useRvaIndicator(TimeFrame.FIFTEEN_MINUTES, new Period(14));
-          this.metadata = new NamedAttributeMetadata(`${this.rvaParams.getId()}`, `${this.rvaParams.getDescription()}`, "number");
-        }
-        getNamedAttributeMetadata() {
-          return this.metadata;
-        }
-        extractNamedAttributeFrom(data) {
-          const rvaIndicator = data.findIndicator(this.rvaParams);
-          if (rvaIndicator.isReady()) {
-            return NumericNamedAttribute.fromMetadata(this.metadata, rvaIndicator.getValue().getRelativeValue(), 2);
-          }
-          return NumericNamedAttribute.fromMetadata(this.metadata, void 0, void 0);
-        }
-        getId() {
-          return _FifteenMinutesRvaExtractor.name;
+          return new ScreenerSettings(exchangeInclusionCriterias);
         }
       };
     }
   });
 
   // ts_libs/ts_worker/worker/WorkerCoreImplementation.ts
-  var _container, _mapper, _timeProvider, _mtf, _candlesPerTimeFrame2, _sortableFieldsExtractors, _dailyPriceChangeExtractor, _currentPriceExtractor, _dailyPendingRvaExtractor, _dailyRvaExtractor, _fifteenMinutesRvaExtractor, _thirtyDaysPercentChangeExtractor, _filterableFieldsExtractors, _WorkerCoreImplementation, WorkerCoreImplementation;
+  var _container, _timeProvider, _candlesPerTimeFrame2, _settings, _WorkerCoreImplementation, WorkerCoreImplementation;
   var init_WorkerCoreImplementation = __esm({
     "ts_libs/ts_worker/worker/WorkerCoreImplementation.ts"() {
       "use strict";
       init_ScreenerSettings();
       init_ExchangeInclusionCriteria();
-      init_DailyPriceChangeExtractor();
-      init_CurrentPriceExtractor();
-      init_DailyPendingRvaExtractor();
-      init_ScreenerItemMapper();
+      init_SynchronizationModel();
       init_EnumerateExchangesRequest();
       init_FetchOhlcvDataRequest();
       init_FilterTradingPairsRequest();
+      init_RegisterPluginsRequest();
       init_SyncOhlcvDataRequest();
       init_UseCaseContainer();
       init_Asset();
       init_TimeProvider();
-      init_DailyRvaExtractor();
-      init_ThirtyDayPercentChangeExtractor();
-      init_SmaUptrendFilter();
-      init_TimeFrame();
-      init_Period();
-      init_RsiOversoldFilter();
-      init_SmaDowntrendFilter();
-      init_RsiOverboughtFilter();
-      init_FifteenMinutesRvaExtractor();
       _WorkerCoreImplementation = class _WorkerCoreImplementation {
         constructor(container) {
           __privateAdd(this, _container);
-          __privateAdd(this, _mapper);
           __privateAdd(this, _timeProvider);
-          __privateAdd(this, _mtf);
           __privateAdd(this, _candlesPerTimeFrame2);
-          __privateAdd(this, _sortableFieldsExtractors);
-          __privateAdd(this, _dailyPriceChangeExtractor);
-          __privateAdd(this, _currentPriceExtractor);
-          __privateAdd(this, _dailyPendingRvaExtractor);
-          __privateAdd(this, _dailyRvaExtractor);
-          __privateAdd(this, _fifteenMinutesRvaExtractor);
-          __privateAdd(this, _thirtyDaysPercentChangeExtractor);
-          __privateAdd(this, _filterableFieldsExtractors);
+          __privateAdd(this, _settings);
           __privateSet(this, _container, container);
           __privateSet(this, _timeProvider, new TimeProvider());
-          __privateSet(this, _mtf, null);
-          __privateSet(this, _mapper, new ScreenerItemMapper(container.exchangeMethodsRegistry));
           __privateSet(this, _candlesPerTimeFrame2, 400);
-          __privateSet(this, _dailyPriceChangeExtractor, new DailyPriceChangeExtractor());
-          __privateSet(this, _currentPriceExtractor, new CurrentPriceExtractor());
-          __privateSet(this, _dailyPendingRvaExtractor, new DailyPendingRvaExtractor());
-          __privateSet(this, _dailyRvaExtractor, new DailyRvaExtractor());
-          __privateSet(this, _thirtyDaysPercentChangeExtractor, new ThirtyDayPercentChangeExtractor());
-          __privateSet(this, _fifteenMinutesRvaExtractor, new FifteenMinutesRvaExtractor());
-          __privateSet(this, _sortableFieldsExtractors, [__privateGet(this, _currentPriceExtractor), __privateGet(this, _dailyPriceChangeExtractor), __privateGet(this, _dailyPendingRvaExtractor), __privateGet(this, _dailyRvaExtractor), __privateGet(this, _fifteenMinutesRvaExtractor), __privateGet(this, _thirtyDaysPercentChangeExtractor)]);
-          __privateSet(this, _filterableFieldsExtractors, []);
-          let tfs = TimeFrame.values();
-          tfs.forEach((aTf) => {
-            __privateGet(this, _filterableFieldsExtractors).push(new SmaUptrendFilter(Period.fromUnknown(200), aTf));
-          });
-          tfs.forEach((aTf) => {
-            __privateGet(this, _filterableFieldsExtractors).push(new SmaUptrendFilter(Period.fromUnknown(50), aTf));
-          });
-          tfs.forEach((aTf) => {
-            __privateGet(this, _filterableFieldsExtractors).push(new SmaUptrendFilter(Period.fromUnknown(20), aTf));
-          });
-          tfs.forEach((aTf) => {
-            __privateGet(this, _filterableFieldsExtractors).push(new SmaDowntrendFilter(Period.fromUnknown(200), aTf));
-          });
-          tfs.forEach((aTf) => {
-            __privateGet(this, _filterableFieldsExtractors).push(new SmaDowntrendFilter(Period.fromUnknown(50), aTf));
-          });
-          tfs.forEach((aTf) => {
-            __privateGet(this, _filterableFieldsExtractors).push(new SmaDowntrendFilter(Period.fromUnknown(20), aTf));
-          });
-          tfs.forEach((aTf) => {
-            __privateGet(this, _filterableFieldsExtractors).push(new RsiOversoldFilter(Period.fromUnknown(2), aTf, 5));
-          });
-          tfs.forEach((aTf) => {
-            __privateGet(this, _filterableFieldsExtractors).push(new RsiOverboughtFilter(Period.fromUnknown(2), aTf, 95));
-          });
+          let exchangeInclusionCriterias = [];
+          let available = __privateGet(this, _container).exchangeDescriptorRegistry.all();
+          for (let i = 0; i < available.length; i++) {
+            exchangeInclusionCriterias.push(new ExchangeInclusionCriteria(available[i].getName(), available[i].getId(), true));
+          }
+          __privateSet(this, _settings, new ScreenerSettings(exchangeInclusionCriterias));
         }
         static Create() {
           return __async(this, null, function* () {
@@ -4168,14 +4532,9 @@
         /**
          * Initialize settings for the screener, including exchange inclusion criteria
          */
-        createDefaultSettings() {
+        getDefaultSettings() {
           return __async(this, null, function* () {
-            let exchangeInclusionCriterias = [];
-            let available = __privateGet(this, _container).exchangeDescriptorRegistry.all();
-            for (let i = 0; i < available.length; i++) {
-              exchangeInclusionCriterias.push(new ExchangeInclusionCriteria(available[i].getName(), available[i].getId(), true));
-            }
-            return new ScreenerSettings(exchangeInclusionCriterias);
+            return __privateGet(this, _settings);
           });
         }
         /**
@@ -4183,6 +4542,7 @@
          */
         fetch(screenerSettings, progressCallback) {
           return __async(this, null, function* () {
+            __privateSet(this, _settings, screenerSettings);
             const exchangesResponse = yield __privateGet(this, _container).enumerateExchangesUseCase.execute(new EnumerateExchangesRequest(screenerSettings.getIncludedExchangeNames()));
             const tradingPairsResponse = yield __privateGet(this, _container).filterTradingPairsUseCase.execute(
               new FilterTradingPairsRequest(
@@ -4190,17 +4550,21 @@
                 [Asset.fromUnknown("usdc")],
                 [Asset.fromUnknown("usdc"), Asset.fromUnknown("usdt")],
                 [Asset.fromUnknown("aedz"), Asset.fromUnknown("xaut"), Asset.fromUnknown("usd1"), Asset.fromUnknown("bfusd"), Asset.fromUnknown("usde"), Asset.fromUnknown("fdusd"), Asset.fromUnknown("euri"), Asset.fromUnknown("eur")],
-                screenerSettings.maximumPairsCountPerExchange
+                __privateGet(this, _settings).maximumPairsCountPerExchange
               )
             );
             const tradingPairs = tradingPairsResponse.getTradingPairs();
             const sixHours = 216e5;
             const nowMs = (yield __privateGet(this, _timeProvider).getUtcNowMilliseconds(true)) - sixHours;
+            const registerPluginsRequest = new RegisterPluginsRequest(__privateGet(this, _settings).plugins, tradingPairs);
+            const registerPluginsResponse = yield __privateGet(this, _container).registerPluginsUseCase.execute(registerPluginsRequest);
+            const plugins = registerPluginsResponse.plugins;
             const fetchRequest = new FetchOhlcvDataRequest(
               tradingPairs,
               __privateGet(this, _candlesPerTimeFrame2),
-              screenerSettings.parallelRequestsCount,
+              __privateGet(this, _settings).parallelRequestsCount,
               nowMs,
+              __privateGet(this, _settings).plugins,
               (progress) => __async(this, null, function* () {
                 let percent = 0.7 * (progress.currentPairIndex * 100) / progress.totalPairsCount;
                 var message = `${progress.currentPairIndex} / ${progress.totalPairsCount} - Fetched ${progress.currentTradingPair.symbol()} initial data from ${progress.currentTradingPair.getExchangeDescriptor().getName()} ...`;
@@ -4208,13 +4572,13 @@
               })
             );
             const fetchResponse = yield __privateGet(this, _container).fetchOhlcvDataUseCase.execute(fetchRequest);
-            __privateSet(this, _mtf, fetchResponse.getMultiTimeFrameData());
-            __privateGet(this, _sortableFieldsExtractors).forEach((sfe) => sfe.ensureIndicatorsRegisteredNoThrow(__privateGet(this, _mtf)));
-            __privateGet(this, _filterableFieldsExtractors).forEach((sfe) => sfe.ensureIndicatorsRegisteredNoThrow(__privateGet(this, _mtf)));
+            if (fetchResponse.getCount() === 0) {
+              throw new Error("No data was fetched.");
+            }
             const syncMs = yield __privateGet(this, _timeProvider).getUtcNowMilliseconds(true);
             const syncRequest = new SyncOhlcvDataRequest(
-              __privateGet(this, _mtf),
-              screenerSettings.parallelRequestsCount,
+              __privateGet(this, _settings).plugins,
+              __privateGet(this, _settings).parallelRequestsCount,
               syncMs,
               (progress) => __async(this, null, function* () {
                 let percent = 70 + 0.3 * (progress.currentPairIndex * 100) / progress.totalPairsCount;
@@ -4223,21 +4587,19 @@
               })
             );
             const syncResponse = yield __privateGet(this, _container).syncOhlcvDataUseCase.execute(syncRequest);
-            const mapped = __privateGet(this, _mapper).mapMultiple(__privateGet(this, _sortableFieldsExtractors), __privateGet(this, _filterableFieldsExtractors), syncResponse.getMultiTimeFrameData());
-            return mapped;
+            var synchronizationModel = new SynchronizationModel(
+              syncResponse.getTradingPairModel(),
+              []
+            );
+            return synchronizationModel;
           });
         }
-        sync(screenerSettings, progressCallback) {
+        synchronize(progressCallback) {
           return __async(this, null, function* () {
-            if (__privateGet(this, _mtf) === null) {
-              throw new Error(`Synchronization is not possible`);
-            }
-            __privateGet(this, _sortableFieldsExtractors).forEach((sfe) => sfe.ensureIndicatorsRegisteredNoThrow(__privateGet(this, _mtf)));
-            __privateGet(this, _filterableFieldsExtractors).forEach((sfe) => sfe.ensureIndicatorsRegisteredNoThrow(__privateGet(this, _mtf)));
             const syncMs = yield __privateGet(this, _timeProvider).getUtcNowMilliseconds(true);
             const syncRequest = new SyncOhlcvDataRequest(
-              __privateGet(this, _mtf),
-              screenerSettings.parallelRequestsCount,
+              __privateGet(this, _settings).plugins,
+              __privateGet(this, _settings).parallelRequestsCount,
               syncMs,
               (progress) => __async(this, null, function* () {
                 let percent = progress.currentPairIndex * 100 / progress.totalPairsCount;
@@ -4246,24 +4608,18 @@
               })
             );
             const syncResponse = yield __privateGet(this, _container).syncOhlcvDataUseCase.execute(syncRequest);
-            const mapped = __privateGet(this, _mapper).mapMultiple(__privateGet(this, _sortableFieldsExtractors), __privateGet(this, _filterableFieldsExtractors), syncResponse.getMultiTimeFrameData());
-            return mapped;
+            var synchronizationModel = new SynchronizationModel(
+              syncResponse.getTradingPairModel(),
+              []
+            );
+            return synchronizationModel;
           });
         }
       };
       _container = new WeakMap();
-      _mapper = new WeakMap();
       _timeProvider = new WeakMap();
-      _mtf = new WeakMap();
       _candlesPerTimeFrame2 = new WeakMap();
-      _sortableFieldsExtractors = new WeakMap();
-      _dailyPriceChangeExtractor = new WeakMap();
-      _currentPriceExtractor = new WeakMap();
-      _dailyPendingRvaExtractor = new WeakMap();
-      _dailyRvaExtractor = new WeakMap();
-      _fifteenMinutesRvaExtractor = new WeakMap();
-      _thirtyDaysPercentChangeExtractor = new WeakMap();
-      _filterableFieldsExtractors = new WeakMap();
+      _settings = new WeakMap();
       WorkerCoreImplementation = _WorkerCoreImplementation;
     }
   });
@@ -4272,13 +4628,12 @@
   var require_index = __commonJS({
     "ts_libs/ts_worker/index.ts"() {
       init_ScreenerSettings();
-      init_TradingPairsCodec();
       init_WorkerCoreImplementation();
       function initCall(id) {
         return __async(this, null, function* () {
           try {
             var controller = yield getController();
-            var data = yield controller.createDefaultSettings();
+            var data = yield controller.getDefaultSettings();
             var jsonData = data.toJson();
             _workerPostResolve(id, jsonData);
           } catch (err) {
@@ -4292,8 +4647,7 @@
             var controller = yield getController();
             var settings = ScreenerSettings.fromJson(payload);
             var data = yield controller.fetch(settings, (progress, message) => _workerPostEvent(id, progressEventName, { progress, message }));
-            var dataForWorker = TradingPairsCodec.toJsonString(data);
-            _workerPostResolve(id, dataForWorker);
+            _workerPostResolve(id, data.serialize());
           } catch (err) {
             _workerPostReject(id, err);
           }
@@ -4303,10 +4657,8 @@
         return __async(this, null, function* () {
           try {
             var controller = yield getController();
-            var settings = ScreenerSettings.fromJson(payload);
-            var data = yield controller.sync(settings, (progress, message) => _workerPostEvent(id, progressEventName, { progress, message }));
-            var dataForWorker = TradingPairsCodec.toJsonString(data);
-            _workerPostResolve(id, dataForWorker);
+            var data = yield controller.synchronize((progress, message) => _workerPostEvent(id, progressEventName, { progress, message }));
+            _workerPostResolve(id, data.serialize());
           } catch (err) {
             _workerPostReject(id, err);
           }

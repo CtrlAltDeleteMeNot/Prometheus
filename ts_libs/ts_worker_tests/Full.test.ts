@@ -7,13 +7,9 @@ import { FilterTradingPairsRequest } from "../ts_worker/application/usecases/Fil
 import { FetchOhlcvDataRequest } from "../ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest";
 import { TimeFrame } from "../ts_worker/domain/values/TimeFrame";
 import { SyncOhlcvDataRequest } from "../ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest";
-import { ExchangeMethodsBybit } from "../ts_worker/infrastructure/exchanges/ExchangeMethodsBybit";
-import { TradingPair } from "../ts_worker/domain/entities/TradingPair";
-import { ExchangeDescriptor } from "../ts_worker/domain/exchange/ExchangeDescriptor";
-import { ExchangeDescriptorRegistry } from "../ts_worker/domain/exchange/ExchangeDescriptorRegistry";
+import { RegisterPluginsRequest } from "../ts_worker/application/usecases/RegisterPlugins/RegisterPluginsRequest";
 
-const delay = (ms: number) =>
-    new Promise(resolve => setTimeout(resolve, ms));
+
 
 describe("TimeProvider", () => {
     test("returns valid UTC milliseconds", async () => {
@@ -28,11 +24,13 @@ describe("Container", () => {
     test("can be used", async () => {
         const container = await UseCaseContainer.Create();
         expect(container).toBeDefined();
+        const settings = UseCaseContainer.CreateDefaultSettings(container);
+        
         // -------------------------
         // Test 1: Enumerate Exchanges
         // -------------------------
         console.log("Enumerating exchanges...");
-        const exchangesResponse = await container.enumerateExchangesUseCase.execute(new EnumerateExchangesRequest());
+        const exchangesResponse = await container.enumerateExchangesUseCase.execute(new EnumerateExchangesRequest(settings.getIncludedExchangeNames()));
         console.log("Exchanges:", exchangesResponse.descriptors);
         expect(exchangesResponse.descriptors.length).toEqual(2);
 
@@ -47,15 +45,23 @@ describe("Container", () => {
             [usdc],
             [usdc, usdt],
             undefined,
-            5000
+            5
         );
         const tradingPairsResponse = await container.filterTradingPairsUseCase.execute(tradingPairsRequest);
         const tradingPairs = tradingPairsResponse.getTradingPairs();
         expect(tradingPairs.length).toBeGreaterThanOrEqual(10);
 
         // -------------------------
-        // Test 3: Fetch OHLCV Data
+        // Test 3: Init plugins
         // -------------------------
+        const registerPluginsRequest = new RegisterPluginsRequest(settings.plugins, tradingPairs);
+        const registerPluginsResponse = await container.registerPluginsUseCase.execute(registerPluginsRequest);
+        const plugins = registerPluginsResponse.plugins;
+
+        // -------------------------
+        // Test 4: Fetch OHLCV Data
+        // -------------------------
+        
         console.log("Fetching OHLCV data...");
         const candlesPerTimeFrame = 400;
         const paralelRequestsCount = 10;
@@ -67,17 +73,17 @@ describe("Container", () => {
             candlesPerTimeFrame,
             paralelRequestsCount,
             initMs,
+            plugins,
             async (progressData) => {
-                await delay(5);
                 const exchangeName = progressData.currentTradingPair.getExchangeDescriptor().getName();
                 const pairSymbol = progressData.currentTradingPair.symbol();
                 console.log(`Fetched OHLCV from ${exchangeName} for ${pairSymbol} [${progressData.currentPairIndex} / ${progressData.totalPairsCount}]`);
             }
         );
         const fetchOhlcvResponse = await container.fetchOhlcvDataUseCase.execute(fetchOhlcvRequest);
-        const initMtf = fetchOhlcvResponse.getMultiTimeFrameData();
-        expect(initMtf.length).toStrictEqual(tradingPairs.length);
-        initMtf.forEach(element => {
+        const datasets = container.technicalAnalisysRepository.getDatasets();
+        expect(tradingPairs.length).toStrictEqual(fetchOhlcvResponse.getCount());
+        datasets.forEach(element => {
             expect(element.getBuffer(TimeFrame.ONE_MINUTE).size()).toStrictEqual(candlesPerTimeFrame);
         });
 
@@ -88,11 +94,10 @@ describe("Container", () => {
         console.log("Syncing OHLCV data...");
 
         const syncOhlcvDataRequest = new SyncOhlcvDataRequest(
-            initMtf,
+            plugins,
             paralelRequestsCount,
             timeNowMs,
             async (progressData) => {
-                await delay(5);
                 const exchangeName = progressData.currentTradingPair.getExchangeDescriptor().getName();
                 const pairSymbol = progressData.currentTradingPair.symbol();
                 console.log(`Synced ${progressData.syncCount} OHLCV from ${exchangeName} for ${pairSymbol} [${progressData.currentPairIndex} / ${progressData.totalPairsCount}]`);
@@ -100,13 +105,8 @@ describe("Container", () => {
         );
 
         const syncOhlcvDataResponse = await container.syncOhlcvDataUseCase.execute(syncOhlcvDataRequest);
-        const syncMtf = syncOhlcvDataResponse.getMultiTimeFrameData();
-        expect(syncMtf.length).toStrictEqual(initMtf.length);
-        expect(syncMtf).toStrictEqual(initMtf);
-        expect(syncOhlcvDataResponse.getUpdatedEntriesCount()).toStrictEqual(initMtf.length);
-        syncMtf.forEach(element => {
-            expect(element.getBuffer(TimeFrame.ONE_MINUTE).size()).toStrictEqual(candlesPerTimeFrame);
-        });
+        expect(syncOhlcvDataResponse.getUpdatedEntriesCount()).toStrictEqual(tradingPairs.length);
+        
 
         const syncOhlcvDataWithEmptyResponse = await container.syncOhlcvDataUseCase.execute(syncOhlcvDataRequest);
         expect(syncOhlcvDataWithEmptyResponse.getUpdatedEntriesCount()).toStrictEqual(0);

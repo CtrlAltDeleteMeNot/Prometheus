@@ -1,4 +1,3 @@
-import { CLSMonitor } from './controllers/ClsMonitor';
 import { ThinController } from './controllers/ThinController';
 import { ServiceWorkerController } from './controllers/ServiceWorkerController';
 
@@ -35,10 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (sw) {
-        //During startup: update may reload the app.
-        //After startup: no update listener remains, so users are not interrupted.
         await sw.forceUpdateCheck();
-        
     }
 });
 

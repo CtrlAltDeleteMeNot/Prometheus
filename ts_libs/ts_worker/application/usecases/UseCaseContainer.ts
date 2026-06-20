@@ -3,13 +3,17 @@ import { ExchangeDescriptor } from "../../domain/exchange/ExchangeDescriptor";
 import { ExchangeDescriptorRegistry } from "../../domain/exchange/ExchangeDescriptorRegistry";
 import { ExchangeMethodsRegistry } from "../../domain/exchange/ExchangeMethodsRegistry";
 import { TradingPairsRepository } from "../../domain/repositories/TradingPairsRepository";
+import { TechnicalAnalisysRepository } from "../../domain/ta/TechnicalAnalisysRepository";
 import { Asset } from "../../domain/values/Asset";
 import { ExchangeMethodsBinance } from "../../infrastructure/exchanges/ExchangeMethodsBinance";
 import { ExchangeMethodsBybit } from "../../infrastructure/exchanges/ExchangeMethodsBybit";
 import { TimeProvider } from "../../infrastructure/time/TimeProvider";
+import { ScreenerSettings } from "../exports/ScreenerSettings";
+import { ExchangeInclusionCriteria } from "../exports/settings/ExchangeInclusionCriteria";
 import { EnumerateExchangesUseCase } from "./EnumerateExchanges/EnumerateExchangesUseCase";
 import { FetchOhlcvDataUseCase } from "./FetchOhlcvData/FetchOhlcvDataUseCase";
 import { FilterTradingPairsUseCase } from "./FilterTradingPairs/FilterTradingPairsUseCase";
+import { RegisterPluginsUseCase } from "./RegisterPlugins/RegisterPluginsUseCase";
 import { SyncOhlcvDataUseCase } from "./SyncOhlcvData/SyncOhlcvDataUseCase";
 
 
@@ -20,8 +24,10 @@ export class UseCaseContainer {
     public readonly tradingPairsRepository: TradingPairsRepository;
     public readonly enumerateExchangesUseCase: EnumerateExchangesUseCase;
     public readonly filterTradingPairsUseCase: FilterTradingPairsUseCase;
+    public readonly registerPluginsUseCase: RegisterPluginsUseCase;
     public readonly fetchOhlcvDataUseCase: FetchOhlcvDataUseCase;
     public readonly syncOhlcvDataUseCase: SyncOhlcvDataUseCase;
+    public readonly technicalAnalisysRepository: TechnicalAnalisysRepository;
 
     constructor(
         exchangeDescriptorRegistry: ExchangeDescriptorRegistry,
@@ -32,11 +38,12 @@ export class UseCaseContainer {
         this.exchangeDescriptorRegistry = exchangeDescriptorRegistry;
         this.exchangeMethodsRegistry = exchangeMethodsRegistry;
         this.tradingPairsRepository = tradingPairsRepository;
+        this.technicalAnalisysRepository = new TechnicalAnalisysRepository();
         this.enumerateExchangesUseCase = new EnumerateExchangesUseCase(exchangeDescriptorRegistry);
         this.filterTradingPairsUseCase = new FilterTradingPairsUseCase(tradingPairsRepository);
-        this.fetchOhlcvDataUseCase = new FetchOhlcvDataUseCase(exchangeMethodsRegistry);
-        this.syncOhlcvDataUseCase = new SyncOhlcvDataUseCase(exchangeMethodsRegistry);
-
+        this.registerPluginsUseCase = new RegisterPluginsUseCase(this.technicalAnalisysRepository);
+        this.fetchOhlcvDataUseCase = new FetchOhlcvDataUseCase(this.technicalAnalisysRepository, exchangeMethodsRegistry);
+        this.syncOhlcvDataUseCase = new SyncOhlcvDataUseCase(this.technicalAnalisysRepository, exchangeMethodsRegistry);
         Object.freeze(this);
     }
 
@@ -66,5 +73,14 @@ export class UseCaseContainer {
         }
 
         return new UseCaseContainer(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository);
+    }
+
+    static CreateDefaultSettings(container: UseCaseContainer) {
+        let exchangeInclusionCriterias: ExchangeInclusionCriteria[] = [];
+        let available = container.exchangeDescriptorRegistry.all();
+        for (let i = 0; i < available.length; i++) {
+            exchangeInclusionCriterias.push(new ExchangeInclusionCriteria(available[i].getName(), available[i].getId(), true));
+        }
+        return new ScreenerSettings(exchangeInclusionCriterias);
     }
 }

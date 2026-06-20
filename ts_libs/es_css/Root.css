@@ -285,3 +285,12 @@ textarea {
   height: 100vh;
   height: 100svh;
 }
+
+/*footer sections*/
+.footer-section {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+

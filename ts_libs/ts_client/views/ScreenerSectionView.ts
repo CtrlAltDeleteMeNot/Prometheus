@@ -13,9 +13,15 @@ export class ScreenerSectionView implements ISection {
     #pageSize = 30;
     title: string;
     id: string;
-    // Optional "Load More" button
+
     #loadMoreBtn: HTMLButtonElement;
     #cards: HTMLDivElement[] = [];
+    #footer: HTMLElement;
+
+    //actions
+    #syncAction: HTMLButtonElement;
+    #sortAction: HTMLButtonElement;
+    #filterAction: HTMLButtonElement;
 
     constructor() {
         this.title = "Screener";
@@ -24,7 +30,15 @@ export class ScreenerSectionView implements ISection {
         this.#root = ViewHelper.getHtmlElementOrThrow(this.id);
         this.#screenerGrid = ViewHelper.getHtmlElementOrThrow('screener-grid');
         this.#loadMoreBtn = ViewHelper.getButtonOrThrow('screener-load-more');
+        this.#footer = ViewHelper.getHtmlElementOrThrow('footer-screener');
         this.#loadMoreBtn.onclick = () => this.loadNextPage();
+        this.#syncAction = ViewHelper.getButtonOrThrow('nav-footer-sync');
+        this.#sortAction = ViewHelper.getButtonOrThrow('nav-footer-sort');
+        this.#filterAction = ViewHelper.getButtonOrThrow('nav-footer-filter');
+
+        this.#sortAction.onclick = () => console.log(`Sort action clicked`);
+        this.#syncAction.onclick = () => console.log(`Sync action clicked`);
+        this.#filterAction.onclick = () => console.log(`Filter action clicked`);
     }
 
     hasExternalActions(): boolean {
@@ -42,7 +56,7 @@ export class ScreenerSectionView implements ISection {
 
     private renderCards() {
         // Clear existing cards
-        this.#cards.forEach(el=>el.remove());
+        this.#cards.forEach(el => el.remove());
         this.#cards = [];
 
         const start = 0;
@@ -163,9 +177,32 @@ export class ScreenerSectionView implements ISection {
 
     public show() {
         ViewHelper.toggleVisibility(this.#root, true);
+        ViewHelper.toggleVisibility(this.#footer, true);
     }
 
     public hide() {
         ViewHelper.toggleVisibility(this.#root, false);
+        ViewHelper.toggleVisibility(this.#footer, false);
+    }
+
+     /**
+    * Bind a callback to the sort button
+    */
+    bindSortButton(callback: () => void | Promise<void>): void {
+        this.#sortAction.onclick = callback;
+    }
+
+    /**
+    * Bind a callback to the sync button
+    */
+    bindSyncButton(callback: () => void | Promise<void>): void {
+        this.#syncAction.onclick = callback;
+    }
+
+    /**
+    * Bind a callback to the filter button
+    */
+    bindFilterButton(callback: () => void | Promise<void>): void {
+        this.#filterAction.onclick = callback;
     }
 }

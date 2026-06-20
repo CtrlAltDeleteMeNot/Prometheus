@@ -1,5 +1,5 @@
-import { MultiTimeframeOhlcv } from "../../../domain/values/MultiTimeframeOhlcv";
 import { TradingPair } from "../../../domain/entities/TradingPair";
+import { BasePlugin } from "../../../domain/ta/export/BasePlugin";
 
 export interface SyncOhlcvProgress {
     currentTradingPair: TradingPair;
@@ -11,22 +11,21 @@ export type SyncOhlcvProgressCallback =
     (progress: SyncOhlcvProgress) => Promise<void>;
 
 export class SyncOhlcvDataRequest {
-    #multiTimeFrameData: readonly MultiTimeframeOhlcv[];
     #paralelRequestsCount: number;
     #utcNowMs: number;
     #progressCallback: SyncOhlcvProgressCallback;
+    #plugins: readonly BasePlugin[];
 
     constructor(
-        multiTimeFrameData: readonly MultiTimeframeOhlcv[],
+        plugins: readonly BasePlugin[],
         paralelRequestsCount: number,
         utcNowMs: number,
         progressCallback: SyncOhlcvProgressCallback
     ) {
         // Validate input types
-        multiTimeFrameData.forEach(mtf => MultiTimeframeOhlcv.fromUnknown(mtf));
         if (paralelRequestsCount <= 0) throw new RangeError("paralelRequestsCount must be > 0");
 
-        this.#multiTimeFrameData = multiTimeFrameData;
+        this.#plugins = plugins;
         this.#paralelRequestsCount = paralelRequestsCount;
         this.#utcNowMs = utcNowMs;
         this.#progressCallback = progressCallback;
@@ -42,11 +41,11 @@ export class SyncOhlcvDataRequest {
         return this.#utcNowMs;
     }
 
-    getTradingPairBuffers(): readonly MultiTimeframeOhlcv[] {
-        return this.#multiTimeFrameData;
-    }
-
     getParalelRequestsCount(): number {
         return this.#paralelRequestsCount;
+    }
+
+    getPlugins(): readonly BasePlugin[] {
+        return this.#plugins;
     }
 }

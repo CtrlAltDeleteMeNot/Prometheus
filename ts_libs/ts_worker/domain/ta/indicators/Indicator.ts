@@ -63,5 +63,6 @@ export abstract class Indicator<T extends IndicatorOutput> {
     abstract isReady(): boolean;
     abstract update(): void;
     abstract getValue(n?: number): T;
+    abstract getPendingValue(): T;
     abstract getValuesCount(): number;
 }

@@ -1,11 +1,10 @@
 import { ScreenerSettings } from "./application/exports/ScreenerSettings";
-import { TradingPairsCodec } from "./application/exports/TradingPairsCodec";
 import { WorkerCoreImplementation } from "./worker/WorkerCoreImplementation";
 
-async function initCall(id:number): Promise<void> {
+async function initCall(id: number): Promise<void> {
     try {
         var controller = await getController();
-        var data = await controller.createDefaultSettings();
+        var data = await controller.getDefaultSettings();
         var jsonData = data.toJson();
         _workerPostResolve(id, jsonData);
     } catch (err: any) {
@@ -17,9 +16,9 @@ async function fetchCall(id: number, progressEventName: string, payload: any): P
     try {
         var controller = await getController();
         var settings = ScreenerSettings.fromJson(payload);
-        var data = await controller.fetch(settings, (progress, message) => _workerPostEvent(id, progressEventName, {progress, message}));
-        var dataForWorker = TradingPairsCodec.toJsonString(data);
-        _workerPostResolve(id, dataForWorker);
+        var data = await controller.fetch(settings, (progress, message) => _workerPostEvent(id, progressEventName, { progress, message }));
+        
+        _workerPostResolve(id, data.serialize());
     } catch (err: any) {
         _workerPostReject(id, err);
     }
@@ -28,10 +27,8 @@ async function fetchCall(id: number, progressEventName: string, payload: any): P
 async function synchronizeCall(id: number, progressEventName: string, payload: any): Promise<void> {
     try {
         var controller = await getController();
-        var settings = ScreenerSettings.fromJson(payload);
-        var data = await controller.sync(settings, (progress, message) => _workerPostEvent(id, progressEventName, {progress, message}));
-        var dataForWorker = TradingPairsCodec.toJsonString(data);
-        _workerPostResolve(id, dataForWorker);
+        var data = await controller.synchronize((progress, message) => _workerPostEvent(id, progressEventName, { progress, message }));
+        _workerPostResolve(id, data.serialize());
     } catch (err: any) {
         _workerPostReject(id, err);
     }

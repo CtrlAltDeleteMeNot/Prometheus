@@ -10,12 +10,12 @@ export class NavigationView {
     #footer: HTMLElement;
     #expandAction: HTMLButtonElement;
     #collapseAction: HTMLButtonElement;
-    #syncAction: HTMLButtonElement;
-    #sortAction: HTMLButtonElement;
-    #filterAction: HTMLButtonElement;
+    
     #sortActionMainText: HTMLSpanElement;
     #sortActionSubText: HTMLSpanElement;
     #sortActionImage: HTMLElement;
+
+    #showPageSignalsAction: HTMLAnchorElement;
     #showPageScreenerAction: HTMLAnchorElement;
     #showPageAboutAction: HTMLAnchorElement;
 
@@ -24,23 +24,23 @@ export class NavigationView {
         this.#header = ViewHelper.getHtmlElementOrThrow('nav-header');
         this.#headerSectionName = ViewHelper.getHtmlElementOrThrow('current-section');
         this.#footer = ViewHelper.getHtmlElementOrThrow('nav-footer');
-        this.#syncAction = ViewHelper.getButtonOrThrow('nav-footer-sync');
-        this.#sortAction = ViewHelper.getButtonOrThrow('nav-footer-sort');
-        this.#filterAction = ViewHelper.getButtonOrThrow('nav-footer-filter');
+       
         this.#expandAction = ViewHelper.getButtonOrThrow('menu-open');
         this.#collapseAction = ViewHelper.getButtonOrThrow('menu-close');
         this.#sortActionMainText = ViewHelper.getSpanOrThrow('nav-footer-sort-main-text');
         this.#sortActionSubText = ViewHelper.getSpanOrThrow('nav-footer-sort-sub-text');
         this.#sortActionImage = ViewHelper.getSpanOrThrow('nav-footer-sort-svg');
         this.#showPageAboutAction = ViewHelper.getAnchorOrThrow('nav-menu-about');
+        this.#showPageSignalsAction = ViewHelper.getAnchorOrThrow('nav-menu-signals');
         this.#showPageScreenerAction = ViewHelper.getAnchorOrThrow('nav-menu-screener');
-        this.#sortAction.onclick = () => console.log(`Sort action clicked`);
-        this.#syncAction.onclick = () => console.log(`Sync action clicked`);
-        this.#filterAction.onclick = () => console.log(`Filter action clicked`);
+       
         this.#expandAction.onclick = () => this.showSideMenu();
         this.#collapseAction.onclick = () => this.closeSideMenu();
+
         this.#showPageAboutAction.onclick = () => console.log(`Show about page clicked`);
         this.#showPageScreenerAction.onclick = () => console.log(`Show screener page clicked`);
+        this.#showPageSignalsAction.onclick = () => console.log(`Show signals page clicked`);
+        
     }
 
     showSideMenu() {
@@ -51,29 +51,10 @@ export class NavigationView {
         this.#sidebar.classList.remove('open');
     }
 
-    /**
-    * Bind a callback to the sort button
-    */
-    bindSortButton(callback: () => void | Promise<void>): void {
-        this.#sortAction.onclick = callback;
-    }
-
-    /**
-    * Bind a callback to the sync button
-    */
-    bindSyncButton(callback: () => void | Promise<void>): void {
-        this.#syncAction.onclick = callback;
-    }
-
-    /**
-    * Bind a callback to the filter button
-    */
-    bindFilterButton(callback: () => void | Promise<void>): void {
-        this.#filterAction.onclick = callback;
-    }
+   
 
     getShowPageActions(): HTMLAnchorElement[] {
-        return [this.#showPageAboutAction, this.#showPageScreenerAction];
+        return [this.#showPageAboutAction, this.#showPageScreenerAction, this.#showPageSignalsAction];
     }
 
     bindShowSectionAction(callback: (pageId: string) => ISection): void {

@@ -6,6 +6,7 @@ import { NavigationView } from './NavigationView';
 import { ProgressModalView } from './ProgressModalView';
 import { ScreenerSectionView } from './ScreenerSectionView';
 import { SettingsModalView } from './SettingsModalView';
+import { SignalSectionView } from './SignalsSectionView';
 import { SortModalView } from './SortModalView';
 import { StartSectionView } from './StartSectionView';
 
@@ -14,6 +15,7 @@ export class MainView {
     startSection: StartSectionView;
     screenerSection: ScreenerSectionView;
     aboutSection: AboutSectionView;
+    signalsSection: SignalSectionView;
     navigation: NavigationView;
     sortModalView: SortModalView;
     filterModalView: FilterModalView;
@@ -31,6 +33,7 @@ export class MainView {
         this.aboutSection = new AboutSectionView();
         this.settingsModalView = new SettingsModalView();
         this.filterModalView = new FilterModalView();
+        this.signalsSection = new SignalSectionView();
         this.screenerSection.hide();
         this.navigation.hide();
         this.sortModalView.hide();
@@ -38,8 +41,9 @@ export class MainView {
         this.progressModalView.hide();
         this.filterModalView.hide();
         this.aboutSection.hide();
+        this.signalsSection.hide();
         this.startSection.show();
-        this.sections = [this.startSection, this.screenerSection, this.aboutSection];
+        this.sections = [this.startSection, this.screenerSection, this.signalsSection, this.aboutSection];
     }
 
 

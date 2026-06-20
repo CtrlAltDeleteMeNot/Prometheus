@@ -88,6 +88,7 @@ export class RsiIndicatorParameters extends IndicatorParameters<RsiIndicatorOutp
 
 
 export class RsiIndicator extends Indicator<RsiIndicatorOutput> {
+    
     private readonly mtf: MultiTimeframeOhlcv;
     private readonly rolling: RelativeStrengthIndex;
     private readonly history: RingBuffer<RsiIndicatorOutput>;
@@ -141,5 +142,9 @@ export class RsiIndicator extends Indicator<RsiIndicatorOutput> {
 
     getValuesCount(): number {
         return this.history.getSize();
+    }
+
+    getPendingValue(): RsiIndicatorOutput {
+        throw new Error("Method not implemented.");
     }
 }

@@ -1,6 +1,5 @@
 import { TradingPair } from "../entities/TradingPair";
 import { InsufficientOhlcvDataError } from "../errors/InsufficientOhlcvDataError";
-import { Indicator, IndicatorParameters } from "../ta/indicators/Indicator";
 import { OhlcvBuffer } from "./OhlcvBuffer";
 import { OhlcvEntry } from "./OhlcvEntry";
 import { TimeFrame } from "./TimeFrame";
@@ -16,17 +15,8 @@ export class MultiTimeframeOhlcv {
     ] as const;
 
     private readonly tradingPair: TradingPair;
-
-    private readonly indicators: Map<TimeFrame, Indicator<any>[]> = new Map([
-        [TimeFrame.ONE_DAY, []],
-        [TimeFrame.FOUR_HOURS, []],
-        [TimeFrame.ONE_HOUR, []],
-        [TimeFrame.FIFTEEN_MINUTES, []],
-        [TimeFrame.FIVE_MINUTES, []],
-        [TimeFrame.ONE_MINUTE, []]
-    ]);
-
     private readonly buffers: Map<TimeFrame, OhlcvBuffer>;
+    private readonly updatedTimeFrames: Map<TimeFrame, boolean>;
 
     constructor(
         tradingPair: TradingPair,
@@ -38,7 +28,6 @@ export class MultiTimeframeOhlcv {
         oneMinute: OhlcvBuffer
     ) {
         this.tradingPair = TradingPair.fromUnknown(tradingPair);
-
         this.buffers = new Map<TimeFrame, OhlcvBuffer>([
             [TimeFrame.ONE_DAY, OhlcvBuffer.fromUnknown(oneDay)],
             [TimeFrame.FOUR_HOURS, OhlcvBuffer.fromUnknown(fourHours)],
@@ -46,6 +35,15 @@ export class MultiTimeframeOhlcv {
             [TimeFrame.FIFTEEN_MINUTES, OhlcvBuffer.fromUnknown(fifteenMinutes)],
             [TimeFrame.FIVE_MINUTES, OhlcvBuffer.fromUnknown(fiveMinutes)],
             [TimeFrame.ONE_MINUTE, OhlcvBuffer.fromUnknown(oneMinute)]
+        ]);
+        
+        this.updatedTimeFrames = new Map<TimeFrame, boolean>([
+            [TimeFrame.ONE_DAY, true],
+            [TimeFrame.FOUR_HOURS, true],
+            [TimeFrame.ONE_HOUR, true],
+            [TimeFrame.FIFTEEN_MINUTES, true],
+            [TimeFrame.FIVE_MINUTES, true],
+            [TimeFrame.ONE_MINUTE, true]
         ]);
 
         // Validate that all higher timeframes have data
@@ -97,6 +95,24 @@ export class MultiTimeframeOhlcv {
         }
     }
 
+    private markUpdated(timeFrame: TimeFrame): void {
+        const tf = TimeFrame.fromUnknown(timeFrame);
+
+        if (!this.updatedTimeFrames.has(tf)) {
+            throw new Error(`Unsupported timeframe: ${tf.getLabel()}`);
+        }
+
+        this.updatedTimeFrames.set(tf, true);
+    }
+
+    private clearUpdatedTimeFrames(): void {
+        this.updatedTimeFrames.forEach((_value, timeFrame) => {
+            this.updatedTimeFrames.set(timeFrame, false);
+        });
+    }
+
+
+
     pushUpdate(
         timeFrame: TimeFrame,
         open: number,
@@ -107,11 +123,11 @@ export class MultiTimeframeOhlcv {
         startTime: number,
         endTime: number,
         isClosed: boolean
-    ): void {
+    ): ReadonlyMap<TimeFrame, boolean> {
+        this.clearUpdatedTimeFrames();
         if (!TimeFrame.ONE_MINUTE.equals(timeFrame)) {
             throw new Error(`Cannot push updates for the ${timeFrame.getLabel()} timeframe`);
         }
-
         const mainBuffer = this.getBuffer(timeFrame);
         const updatedMain = mainBuffer.push(
             timeFrame,
@@ -126,7 +142,7 @@ export class MultiTimeframeOhlcv {
         );
 
         if (updatedMain) {
-            this.updateIndicators(mainBuffer.getBaseTimeFrame());
+            this.markUpdated(mainBuffer.getBaseTimeFrame());
         }
 
         for (let i = 1; i < MultiTimeframeOhlcv.TimeframeHierarchy.length; i++) {
@@ -146,81 +162,32 @@ export class MultiTimeframeOhlcv {
             );
 
             if (updated) {
-                this.updateIndicators(buffer.getBaseTimeFrame());
+                this.markUpdated(buffer.getBaseTimeFrame());
             }
         }
 
         this.ensureBuffersAreFullyAligned();
+        return this.updatedTimeFrames;
     }
+
+    public forEachUpdatedTimeFrame(callback: (timeFrame: TimeFrame) => void): void {
+        this.updatedTimeFrames.forEach((updated, timeFrame) => {
+            if (!updated) {
+                return;
+            }
+            callback(timeFrame);
+        });
+    }
+
+    public getUpdatedTimeFrames():ReadonlyMap<TimeFrame, boolean>{
+        return this.updatedTimeFrames;
+    }
+
 
     getBuffer(timeFrame: TimeFrame): OhlcvBuffer {
         const tf = TimeFrame.fromUnknown(timeFrame);
         const buffer = this.buffers.get(tf);
         return OhlcvBuffer.fromUnknown(buffer);
-    }
-
-    getIndicators(timeFrame: TimeFrame): Indicator<any>[] {
-        const tf = TimeFrame.fromUnknown(timeFrame);
-        const list = this.indicators.get(tf);
-
-        if (!list) {
-            throw new Error(`Unsupported timeframe: ${tf.getLabel()}`);
-        }
-        return list;
-    }
-
-    addIndicator(indicatorParams: IndicatorParameters<any>): boolean {
-        const tf = indicatorParams.getTimeFrame();
-        const list = this.getIndicators(tf);
-
-        const exists = list.some(ind =>
-            ind.getParameters().equals(indicatorParams)
-        );
-
-        if (exists) {
-            return false;
-        }
-
-        const indicator = indicatorParams.createUsing(this);
-        list.push(indicator);
-        return true;
-    }
-
-    findIndicator(indicatorParams: IndicatorParameters<any>): Indicator<any> {
-        const tf = indicatorParams.getTimeFrame();
-        const list = this.getIndicators(tf);
-
-        const found = list.find(ind =>
-            ind.getParameters().equals(indicatorParams)
-        );
-
-        if (!found) {
-            throw new Error(`Indicator ${indicatorParams.getId()} was not found.`);
-        }
-
-        return found;
-    }
-
-    removeIndicator(indicatorParams: IndicatorParameters<any>): boolean {
-        const tf = indicatorParams.getTimeFrame();
-        const list = this.getIndicators(tf);
-
-        const index = list.findIndex(ind =>
-            ind.getParameters().equals(indicatorParams)
-        );
-
-        if (index === -1) {
-            return false;
-        }
-
-        list.splice(index, 1);
-        return true;
-    }
-
-    private updateIndicators(timeFrame: TimeFrame): void {
-        const tf = TimeFrame.fromUnknown(timeFrame);
-        const list = this.getIndicators(tf);
-        list.forEach(ind => ind.update());
     }
 
     public getTradingPair(): TradingPair {

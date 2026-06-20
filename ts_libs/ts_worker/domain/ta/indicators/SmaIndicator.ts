@@ -75,6 +75,7 @@ export class SmaIndicatorParameters extends IndicatorParameters<SmaIndicatorOutp
 
 /** SMA indicator */
 export class SmaIndicator extends Indicator<SmaIndicatorOutput> {
+
     private readonly mtf: MultiTimeframeOhlcv;
     private readonly rolling: RollingSimpleMovingAverage;
     private readonly history: RingBuffer<SmaIndicatorOutput>;
@@ -124,5 +125,9 @@ export class SmaIndicator extends Indicator<SmaIndicatorOutput> {
 
     getValuesCount(): number {
         return this.history.getSize();
+    }
+
+    getPendingValue(): SmaIndicatorOutput {
+        throw new Error("Method not implemented.");
     }
 }

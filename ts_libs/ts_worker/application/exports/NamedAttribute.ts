@@ -1,16 +1,26 @@
-export class NamedAttributeMetadata {
-    readonly key: string;          // stable identifier (used for lookup)
-    readonly label: string;        // UI-facing name (datatable column title)
-    readonly type: string;
+import { ISerializable } from "./ISerializable";
 
-    constructor(key: string, label: string, type: string) {
-        this.key = key;
-        this.label = label;
-        this.type = type;
-    }
+export type NamedAttributeType = "number" | "boolean" | "string";
+export type NamedAttributeDto = {
+    metadata: {
+        key: string;
+        label: string;
+        type: NamedAttributeType;
+        precision?: number;
+    };
+    value?: unknown;
+};
+
+export class NamedAttributeMetadata {
+    public constructor(
+        public readonly key: string,
+        public readonly label: string,
+        public readonly type: NamedAttributeType,
+        public readonly precision?: number
+    ) { }
 }
 
-export interface NamedAttribute<T = unknown> {
+export interface NamedAttribute<T = unknown> extends ISerializable<NamedAttributeDto> {
     readonly metadata: NamedAttributeMetadata;
     readonly value?: T;
     toString(): string;
@@ -21,31 +31,43 @@ export interface NamedAttribute<T = unknown> {
 
 export class NumericNamedAttribute implements NamedAttribute<number> {
     readonly metadata: NamedAttributeMetadata;
+    readonly value?: number | undefined;
     constructor(
-        public readonly key: string,
-        public readonly label: string,
-        public readonly value?: number,
-        private readonly precision?: number
+        key: string,
+        label: string,
+        value?: number,
+        precision?: number
     ) {
-        this.metadata = new NamedAttributeMetadata(key, label, "number");
+        this.metadata = new NamedAttributeMetadata(key, label, "number", precision);
         if (value !== undefined && !Number.isFinite(value)) {
             throw new Error("NumericNamedAttribute requires a finite number");
         }
         if (precision !== undefined && (!Number.isInteger(precision) || precision < 0)) {
             throw new Error("precision must be a non-negative integer");
         }
+        this.value = value;
+    }
+    serialize(): NamedAttributeDto {
+        return {
+            metadata: {
+                key: this.metadata.key,
+                label: this.metadata.label,
+                type: this.metadata.type,
+                precision: this.metadata.precision
+            },
+            value: this.value
+        };
     }
 
     static fromMetadata(
         argMetadata: NamedAttributeMetadata,
-        argValue?: number,
-        argPrecision?: number
+        argValue?: number
     ): NumericNamedAttribute {
 
         if (argMetadata.type !== 'number') {
             throw new Error("NumericNamedAttribute requires a valid metadata type");
         }
-        return new NumericNamedAttribute(argMetadata.key, argMetadata.label, argValue, argPrecision);
+        return new NumericNamedAttribute(argMetadata.key, argMetadata.label, argValue, argMetadata.precision);
     }
 
     compare(other: NamedAttribute<any>): number {
@@ -67,21 +89,32 @@ export class NumericNamedAttribute implements NamedAttribute<number> {
 
     toString(): string {
         if (this.value === undefined) return '';
-        return this.precision === undefined
+        return this.metadata.precision === undefined
             ? this.value.toString()
-            : this.value.toFixed(this.precision);
+            : this.value.toFixed(this.metadata.precision);
     }
 }
 
 export class BooleanNamedAttribute implements NamedAttribute<boolean> {
     readonly metadata: NamedAttributeMetadata;
-
+    readonly value?: boolean | undefined;
     constructor(
-        public readonly key: string,
-        public readonly label: string,
-        public readonly value?: boolean
+        key: string,
+        label: string,
+        value?: boolean
     ) {
         this.metadata = new NamedAttributeMetadata(key, label, "boolean");
+        this.value = value;
+    }
+    serialize(): NamedAttributeDto {
+        return {
+            metadata: {
+                key: this.metadata.key,
+                label: this.metadata.label,
+                type: this.metadata.type
+            },
+            value: this.value
+        };
     }
 
     compare(other: NamedAttribute<boolean>): number {
@@ -119,16 +152,42 @@ export class BooleanNamedAttribute implements NamedAttribute<boolean> {
 
 export class StringNamedAttribute implements NamedAttribute<string> {
     readonly metadata: NamedAttributeMetadata;
-
+    readonly value?: string | undefined;
     constructor(
-        public readonly key: string,
-        public readonly label: string,
-        public readonly value?: string
+        key: string,
+        label: string,
+        value?: string
     ) {
         this.metadata = new NamedAttributeMetadata(key, label, "string");
         if (value !== undefined && value.length === 0) {
             throw new Error("StringNamedAttribute cannot be empty");
         }
+        this.value = value;
+    }
+    serialize(): NamedAttributeDto {
+        return {
+            metadata: {
+                key: this.metadata.key,
+                label: this.metadata.label,
+                type: this.metadata.type
+            },
+            value: this.value
+        };
+    }
+
+    static fromMetadata(
+        argMetadata: NamedAttributeMetadata,
+        argValue?: string
+    ): StringNamedAttribute {
+        if (argMetadata.type !== "string") {
+            throw new Error("StringNamedAttribute requires a valid metadata type");
+        }
+
+        return new StringNamedAttribute(
+            argMetadata.key,
+            argMetadata.label,
+            argValue
+        );
     }
 
     compare(other: NamedAttribute<any>): number {
@@ -150,5 +209,55 @@ export class StringNamedAttribute implements NamedAttribute<string> {
 
     toString(): string {
         return this.value ?? '';
+    }
+}
+
+export class NamedAttributeFactory {
+    public static deserialize(dto: NamedAttributeDto): NamedAttribute<unknown> {
+        const metadata = new NamedAttributeMetadata(
+            dto.metadata.key,
+            dto.metadata.label,
+            dto.metadata.type,
+            dto.metadata.precision
+        );
+
+        switch (metadata.type) {
+            case "number":
+                return NumericNamedAttribute.fromMetadata(
+                    metadata,
+                    dto.value === undefined ? undefined : this.asNumber(dto.value)
+                );
+
+            case "boolean":
+                return BooleanNamedAttribute.fromMetadata(
+                    metadata,
+                    dto.value === undefined ? undefined : this.asBoolean(dto.value)
+                );
+
+            case "string":
+                return StringNamedAttribute.fromMetadata(
+                    metadata,
+                    dto.value === undefined ? undefined : String(dto.value)
+                );
+
+            default:
+                throw new Error(`Unsupported named attribute type: ${metadata.type}`);
+        }
+    }
+
+    private static asBoolean(value: unknown): boolean | undefined {
+        if (value === undefined) return undefined;
+        if (typeof value !== "boolean") {
+            throw new Error("Boolean attribute value must be boolean");
+        }
+        return value;
+    }
+
+    private static asNumber(value: unknown): number | undefined {
+        if (value === undefined) return undefined;
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+            throw new Error("Numeric attribute value must be finite number");
+        }
+        return value;
     }
 }

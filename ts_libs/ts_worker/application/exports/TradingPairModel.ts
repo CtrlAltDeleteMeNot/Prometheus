@@ -1,14 +1,21 @@
-import { BooleanNamedAttribute, NamedAttribute, NamedAttributeMetadata, NumericNamedAttribute } from "./NamedAttribute";
+import { ISerializable } from "./ISerializable";
+import { BooleanNamedAttribute, NamedAttribute, NamedAttributeDto, NamedAttributeFactory, NamedAttributeMetadata, NumericNamedAttribute } from "./NamedAttribute";
 
+export type TradingPairModelDto = {
+    baseAsset: string;
+    quoteAsset: string;
+    exchangeName: string;
+    exchangeId: number;
+    exchangeUrl: string;
+    attributes: NamedAttributeDto[];
+};
 
-export class TradingPairModel {
+export class TradingPairModel implements ISerializable<TradingPairModelDto> {
     public readonly baseAsset: string;
     public readonly quoteAsset: string;
     public readonly exchangeName: string;
     public readonly exchangeId: number;
-    public readonly price: number;
     public readonly exchangeUrl: string;
-
     private readonly extended: NamedAttribute<unknown>[];
 
     constructor(
@@ -16,18 +23,41 @@ export class TradingPairModel {
         quoteAsset: string,
         exchangeName: string,
         exchangeId: number,
-        price: number, 
-        exchangeUrl: string
+        exchangeUrl: string,
+        attributes: readonly NamedAttribute<unknown>[] = []
     ) {
         this.baseAsset = baseAsset;
         this.quoteAsset = quoteAsset;
         this.exchangeName = exchangeName;
         this.exchangeId = exchangeId;
-        this.price = price;
         this.exchangeUrl = exchangeUrl;
-        this.extended = [];
+        this.extended = [...attributes];
+    }
 
-        Object.freeze(this);
+    serialize(): TradingPairModelDto {
+        return {
+            baseAsset: this.baseAsset,
+            quoteAsset: this.quoteAsset,
+            exchangeName: this.exchangeName,
+            exchangeId: this.exchangeId,
+            exchangeUrl: this.exchangeUrl,
+            attributes: this.extended.map(attr => attr.serialize())
+        };
+    }
+
+    public static deserialize(tradingPairModelDto: TradingPairModelDto): TradingPairModel {
+        const attributes = tradingPairModelDto.attributes.map(attr =>
+            NamedAttributeFactory.deserialize(attr)
+        );
+        const model = new TradingPairModel(
+            tradingPairModelDto.baseAsset,
+            tradingPairModelDto.quoteAsset,
+            tradingPairModelDto.exchangeName,
+            tradingPairModelDto.exchangeId,
+            tradingPairModelDto.exchangeUrl,
+            attributes
+        );
+        return model;
     }
 
     // ------------------------
@@ -55,18 +85,12 @@ export class TradingPairModel {
     }
 
     getNumericAttributes(): readonly NumericNamedAttribute[] {
-        return this.extended.filter(e=>e instanceof NumericNamedAttribute) || [];
+        return this.extended.filter(e => e instanceof NumericNamedAttribute) || [];
     }
 
     getBooleanAttributes(): readonly BooleanNamedAttribute[] {
-        return this.extended.filter(e=>e instanceof BooleanNamedAttribute) || [];
+        return this.extended.filter(e => e instanceof BooleanNamedAttribute) || [];
     }
 
-    static dailyPercentChangeMetadata(): NamedAttributeMetadata {
-        return new NamedAttributeMetadata('daily_percent_change', "Daily change %", 'number');
-    }
 
-    static currentPriceMetadata(): NamedAttributeMetadata {
-        return new NamedAttributeMetadata('price', "Price", 'number');
-    }
 }

@@ -298,6 +298,12 @@ textarea {
   height: 100vh;
   height: 100svh;
 }
+.footer-section {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
 /* ts_libs/es_css/Button.css */
 .btn {
@@ -832,8 +838,8 @@ textarea {
 #about p:first-of-type {
   margin-top: 0;
 }
-#about a {
-  color: var(--text);
+#footer-about {
+  flex-direction: row-reverse;
 }
 
 /* ts_libs/es_css/Checkbox.css */
@@ -881,6 +887,17 @@ textarea {
 }
 .checkbox-text {
   color: var(--text-primary);
+}
+
+/* ts_libs/es_css/SectionSignals.css */
+#signals {
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  padding-bottom: var(--safe-bottom);
+}
+#signals p:first-of-type {
+  margin-top: 0;
 }
 
 /* ts_libs/es_css/index.css */

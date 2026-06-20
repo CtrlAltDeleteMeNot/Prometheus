@@ -1,11 +1,11 @@
 import { MainView } from '../views/MainView';
 import { MainModel } from '../models/MainModel';
-import { TradingPairsCodec } from '../../ts_worker/application/exports/TradingPairsCodec';
 import { SortDirection } from '../../ts_worker/application/exports/SortDirection';
 import { TradingPairModel } from '../../ts_worker/application/exports/TradingPairModel';
 import { ScreenerSettings } from '../../ts_worker/application/exports/ScreenerSettings';
 import { ISection } from '../views/ISection';
 import { NamedAttributeMetadata } from '../../ts_worker/application/exports/NamedAttribute';
+import { SynchronizationModel, SynchronizationModelDto } from '../../ts_worker/application/exports/SynchronizationModel';
 
 type Pending = {
     resolve: (value: any) => void;
@@ -39,9 +39,9 @@ export class ThinController {
         this.#mainView.startSection.bindStartAction(async () => await this.fetch());
         this.#mainView.startSection.bindSettingsAction(() => this.showSettingsModal());
         this.#mainView.startSection.disableActions(true);
-        this.#mainView.navigation.bindSyncButton(async () => await this.synchronize());
-        this.#mainView.navigation.bindSortButton(() => this.showSortModal());
-        this.#mainView.navigation.bindFilterButton(() => this.showFilterModal());
+        this.#mainView.screenerSection.bindSyncButton(async () => await this.synchronize());
+        this.#mainView.screenerSection.bindSortButton(() => this.showSortModal());
+        this.#mainView.screenerSection.bindFilterButton(() => this.showFilterModal());
         this.#mainView.navigation.bindShowSectionAction((aPageName) => this.showSection(aPageName));
         this.#mainView.sortModalView.bindSortingRulesChanged((direction, sortKey) => this.doSort(direction, sortKey));
         this.#mainView.filterModalView.bindFilteringRulesChanged((rules) => this.doFilter(rules));
@@ -150,19 +150,18 @@ export class ThinController {
     }
 
     async fetch(): Promise<void> {
+        const settings = this.#mainModel.getScreenerSettings()!;
         this.#mainView.progressModalView.show('Fetching market data ...');
         const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
         this.on("fetch:progress", handler);
-        const rawResponse = await this.callWorker('fetch', this.#mainModel.getScreenerSettings()?.toJson()) as string;
+        const response = await this.callWorker('fetch', settings.toJson()) as SynchronizationModelDto;
         this.off("fetch:progress", handler);
-        const mappedResponse = TradingPairsCodec.fromJsonString(rawResponse);
-        const sortableAttributes = TradingPairsCodec.extractUniqueSortableAttributes(mappedResponse);
-        const filterableAttributes = TradingPairsCodec.extractUniqueFilterableAttributes(mappedResponse);
+        const responseModel = SynchronizationModel.deserialize(response);
         const sortDirection = SortDirection.Descending;
-        const sortFieldMetadata = TradingPairModel.dailyPercentChangeMetadata();
-        const sorted = ThinController.doFilteringAndSortingCore(mappedResponse, sortDirection, sortFieldMetadata.key,this.#mainModel.getActiveFilterableAttributes());
-        this.#mainModel.setSortableAttributes(sortableAttributes);
-        this.#mainModel.setFilterableAttributes(filterableAttributes);
+        const sortFieldMetadata = settings.sortableAttributes[1];
+        const sorted = ThinController.doFilteringAndSortingCore(responseModel.tradingPairs, sortDirection, sortFieldMetadata.key,this.#mainModel.getActiveFilterableAttributes());
+        this.#mainModel.setSortableAttributes(settings.sortableAttributes);
+        this.#mainModel.setFilterableAttributes(settings.filterableAttributes);
         this.#mainModel.setMultiTimeFrameSnapshot(sorted);
         this.#mainModel.setSortDirection(sortDirection);
         this.#mainModel.setSortNamedAttributeMetadata(sortFieldMetadata);
@@ -179,12 +178,14 @@ export class ThinController {
         this.#mainView.progressModalView.show('Synchronizing market data ...');
         const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
         this.on("synchronize:progress", handler);
-        const rawResponse = await this.callWorker('synchronize', this.#mainModel.getScreenerSettings()?.toJson()) as string;
+        const rawResponse = await this.callWorker('synchronize', this.#mainModel.getScreenerSettings()?.toJson()) as SynchronizationModelDto;
         this.off("synchronize:progress", handler);
-        const mappedResponse = TradingPairsCodec.fromJsonString(rawResponse);
-        const sorted = ThinController.doFilteringAndSortingCore(mappedResponse, this.#mainModel.getSortDirection(), this.#mainModel.getSortNamedAttributeMetadata().key, this.#mainModel.getActiveFilterableAttributes());
-        this.#mainModel.setMultiTimeFrameSnapshot(mappedResponse);
-        this.#mainView.screenerSection.setData(sorted);
+        const synchronizationModel = SynchronizationModel.deserialize(rawResponse);
+        if(synchronizationModel.tradingPairs.length > 0){
+            const sorted = ThinController.doFilteringAndSortingCore(synchronizationModel.tradingPairs, this.#mainModel.getSortDirection(), this.#mainModel.getSortNamedAttributeMetadata().key, this.#mainModel.getActiveFilterableAttributes());
+            this.#mainModel.setMultiTimeFrameSnapshot(synchronizationModel.tradingPairs);
+            this.#mainView.screenerSection.setData(sorted);
+        }
         this.#mainView.progressModalView.hide();
     }
 

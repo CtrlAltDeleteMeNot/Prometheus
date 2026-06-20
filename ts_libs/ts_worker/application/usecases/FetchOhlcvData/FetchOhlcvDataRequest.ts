@@ -1,4 +1,5 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
+import { BasePlugin } from "../../../domain/ta/export/BasePlugin";
 
 export interface FetchOhlcvProgress {
     currentTradingPair: TradingPair;
@@ -14,19 +15,21 @@ export class FetchOhlcvDataRequest {
     readonly #candlesPerTimeFrame: number;
     readonly #parallelRequestsCount: number;
     readonly #utcNowMs: number;
+    readonly #plugins: readonly BasePlugin[];
     readonly #progressCallback: FetchOhlcvProgressCallback;
-
     constructor(
         tradingPairs: TradingPair[],
         candlesPerTimeFrame: number,
         parallelRequestsCount: number,
         utcNowMs: number,
+        plugins: readonly BasePlugin[],
         progressCallback: FetchOhlcvProgressCallback
     ) {
         this.#tradingPairs = Object.freeze([...tradingPairs]);
         this.#candlesPerTimeFrame = candlesPerTimeFrame;
         this.#parallelRequestsCount = parallelRequestsCount;
         this.#utcNowMs = utcNowMs;
+        this.#plugins = plugins;
         this.#progressCallback = progressCallback;
 
         Object.freeze(this);
@@ -50,5 +53,9 @@ export class FetchOhlcvDataRequest {
 
     getParallelRequestsCount(): number {
         return this.#parallelRequestsCount;
+    }
+
+    getPlugins() {
+        return this.#plugins;
     }
 }

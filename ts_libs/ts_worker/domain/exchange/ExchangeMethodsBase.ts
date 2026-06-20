@@ -4,7 +4,6 @@ import { OhlcvEntry } from '../values/OhlcvEntry';
 import { OhlcvBuffer } from '../values/OhlcvBuffer';
 import { MultiTimeframeOhlcv } from '../values/MultiTimeframeOhlcv';
 import { Asset } from '../values/Asset';
-import { timeStamp } from 'console';
 
 export abstract class ExchangeMethodsBase {
 
@@ -81,10 +80,10 @@ export abstract class ExchangeMethodsBase {
     /**
      * Sync a MultiTimeframeOhlcv with new data up to newEndTimeMillis
      */
-    async syncMultiTimeFrameOhlcv(
+    async syncOneMinuteTimeFrame(
         multiTimeframeOhlcv: MultiTimeframeOhlcv,
         newEndTimeMillis: number
-    ): Promise<number> {
+    ): Promise<OhlcvEntry[]|undefined> {
         const timeFrame = TimeFrame.ONE_MINUTE;
         const buffer = OhlcvBuffer.fromUnknown(multiTimeframeOhlcv.getBuffer(timeFrame));
 
@@ -96,7 +95,7 @@ export abstract class ExchangeMethodsBase {
         const relevantStartTimeStamp = buffer.getStartTime() + timeFrame.asMilliseconds();
         const relevantEndTimeStamp = newEndTimeMillis;
 
-        if (relevantEndTimeStamp <= relevantStartTimeStamp) return 0;
+        if (relevantEndTimeStamp <= relevantStartTimeStamp) return undefined;
 
         const data = await this.fetchHistoricalCandles(
             multiTimeframeOhlcv.getTradingPair(),
@@ -104,9 +103,9 @@ export abstract class ExchangeMethodsBase {
             relevantStartTimeStamp,
             relevantEndTimeStamp
         );
+        return data;
 
-
-        for (const entry of data) {
+        /*for (const entry of data) {
             multiTimeframeOhlcv.pushUpdate(
                 entry.timeFrame,
                 entry.open,
@@ -120,7 +119,7 @@ export abstract class ExchangeMethodsBase {
             );
         }
 
-        return data.length;
+        return data.length;*/
     }
 
     /**

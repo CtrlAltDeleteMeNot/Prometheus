@@ -1,15 +1,77 @@
+import { Period } from "../../domain/ta/core/Period";
+import { BasePlugin } from "../../domain/ta/export/BasePlugin";
+import { TimeFrame } from "../../domain/values/TimeFrame";
+import { BaseFilterableAttributeExtractor } from "../plugins/BaseFilterableAttributeExtractor";
+import { BaseSortableAttributeExtractor } from "../plugins/BaseSortableAttributeExtractor";
+import { RsiOverboughtFilter } from "../plugins/boolean_extractors/RsiOverboughtFilter";
+import { RsiOversoldFilter } from "../plugins/boolean_extractors/RsiOversoldFilter";
+import { SmaDowntrendFilter } from "../plugins/boolean_extractors/SmaDowntrendFilter";
+import { SmaUptrendFilter } from "../plugins/boolean_extractors/SmaUptrendFilter";
+import { CurrentPriceExtractor } from "../plugins/numeric_extractors/CurrentPriceExtractor";
+import { DailyPendingRvaExtractor } from "../plugins/numeric_extractors/DailyPendingRvaExtractor";
+import { DailyPriceChangeExtractor } from "../plugins/numeric_extractors/DailyPriceChangeExtractor";
+import { DailyRvaExtractor } from "../plugins/numeric_extractors/DailyRvaExtractor";
+import { ThirtyDayPercentChangeExtractor } from "../plugins/numeric_extractors/ThirtyDayPercentChangeExtractor";
+import { NamedAttributeMetadata } from "./NamedAttribute";
 import { ExchangeInclusionCriteria } from "./settings/ExchangeInclusionCriteria";
 
 export class ScreenerSettings {
   private _parallelRequestsCount: number;
   private _maximumPairsCountPerExchange: number;
   private _exchangeInclusionCriterias: ExchangeInclusionCriteria[];
+  private _plugins: readonly BasePlugin[];
+  private _sortableAttributes: NamedAttributeMetadata[];
+  private _filterableAttributes: NamedAttributeMetadata[];
 
   constructor(exchangeInclusionCriterias: ExchangeInclusionCriteria[]) {
     this._parallelRequestsCount = 5;
     this._maximumPairsCountPerExchange = 1000;
     this._exchangeInclusionCriterias = ScreenerSettings.validateExchangeInclusionCriterias(exchangeInclusionCriterias);
+    this._plugins = [...ScreenerSettings.DefaultPlugins];
+    this._filterableAttributes = [];
+    this._sortableAttributes = [];
+    this._plugins.forEach(plugin => {
+      if (plugin instanceof BaseFilterableAttributeExtractor) {
+        this._filterableAttributes.push(plugin.getNamedAttributeMetadata());
+      }
+      if (plugin instanceof BaseSortableAttributeExtractor) {
+        this._sortableAttributes.push(plugin.getNamedAttributeMetadata());
+      }
+    });
   }
+  public static readonly DailyPriceChangeExtractor: DailyPriceChangeExtractor = new DailyPriceChangeExtractor();
+  public static readonly CurrentPriceExtractor: CurrentPriceExtractor = new CurrentPriceExtractor();
+  public static readonly DefaultPlugins: readonly BasePlugin[] = [
+    ScreenerSettings.CurrentPriceExtractor,
+    ScreenerSettings.DailyPriceChangeExtractor,
+    new DailyRvaExtractor(),
+    new DailyPendingRvaExtractor(),
+    new ThirtyDayPercentChangeExtractor(),
+    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY),
+    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS),
+    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR),
+    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES),
+    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIVE_MINUTES),
+    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_MINUTE),
+    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY),
+    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS),
+    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR),
+    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES),
+    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FIVE_MINUTES),
+    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_MINUTE),
+    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_DAY, 5),
+    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FOUR_HOURS, 5),
+    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_HOUR, 5),
+    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 5),
+    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 5),
+    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 5),
+    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_DAY, 95),
+    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FOUR_HOURS, 95),
+    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_HOUR, 95),
+    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
+    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
+    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95)
+  ];
 
   // =====================
   // Getters / Setters
@@ -45,6 +107,18 @@ export class ScreenerSettings {
   set exchangeInclusionCriterias(value: ExchangeInclusionCriteria[]) {
     this._exchangeInclusionCriterias =
       ScreenerSettings.validateExchangeInclusionCriterias(value);
+  }
+
+  get plugins(): readonly BasePlugin[] {
+    return this._plugins;
+  }
+
+  get sortableAttributes(): readonly NamedAttributeMetadata[] {
+    return this._sortableAttributes;
+  }
+
+  get filterableAttributes(): readonly NamedAttributeMetadata[] {
+    return this._filterableAttributes;
   }
 
   // =====================
@@ -150,7 +224,7 @@ export class ScreenerSettings {
     let toReturn: string[] = [];
     for (let index = 0; index < this.exchangeInclusionCriterias.length; index++) {
       const element = this.exchangeInclusionCriterias[index];
-      if(element.include === true){
+      if (element.include === true) {
         toReturn.push(element.name);
       }
     }

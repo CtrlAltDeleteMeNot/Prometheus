@@ -1,7 +1,8 @@
 
 import { OhlcvEntry } from '../../values/OhlcvEntry';
+import { PendingOhlcvEntry } from '../../values/PendingOhlcvEntry';
 
-type OhlcvExtractor = (entry: OhlcvEntry) => number;
+type OhlcvExtractor = (entry: OhlcvEntry | PendingOhlcvEntry) => number;
 
 export class Source {
     // Private map of all source instances

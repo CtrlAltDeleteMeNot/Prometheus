@@ -83,6 +83,7 @@ export class PctChangeIndicatorParameters extends IndicatorParameters<PctChangeI
 
 
 export class PctChangeIndicator extends Indicator<PctChangeIndicatorOutput> {
+    
     private readonly mtf: MultiTimeframeOhlcv;
     private readonly history: RingBuffer<PctChangeIndicatorOutput>;
     private readonly impl: PeriodPercentChange;
@@ -136,5 +137,9 @@ export class PctChangeIndicator extends Indicator<PctChangeIndicatorOutput> {
 
     getValuesCount(): number {
         return this.history.getSize();
+    }
+
+    getPendingValue(): PctChangeIndicatorOutput {
+        throw new Error("Method not implemented.");
     }
 }

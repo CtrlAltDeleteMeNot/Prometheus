@@ -9,6 +9,6 @@
   margin-top: 0;
 }
 
-#about a {
-  color: var(--text);
+#footer-about{
+  flex-direction: row-reverse;
 }

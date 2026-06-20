@@ -1,14 +1,13 @@
-import { MultiTimeframeOhlcv } from "../../../domain/values/MultiTimeframeOhlcv";
 
 export class FetchOhlcvDataResponse {
-    readonly #multiTimeFrameData: readonly MultiTimeframeOhlcv[];
+    readonly #count: number;
 
-    constructor(multiTimeFrameData: MultiTimeframeOhlcv[]) {
-        this.#multiTimeFrameData = Object.freeze([...multiTimeFrameData]);
+    constructor(count: number) {
+        this.#count = count;
         Object.freeze(this);
     }
 
-    getMultiTimeFrameData(): readonly MultiTimeframeOhlcv[] {
-        return this.#multiTimeFrameData;
+    getCount(): number {
+        return this.#count;
     }
 }
