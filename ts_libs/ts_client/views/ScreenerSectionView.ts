@@ -79,6 +79,8 @@ export class ScreenerSectionView implements ISection {
         }
     }
 
+    
+
 
     private generateCardInner(tp: TradingPairModel): HTMLDivElement {
         const wrapper = document.createElement('div');
@@ -127,7 +129,7 @@ export class ScreenerSectionView implements ISection {
             window.open(tp.exchangeUrl, '_blank', 'noopener,noreferrer');
         });
 
-        //const arrowRightSvg = this.#domParser.parseFromString(getActionIconId('arrow-right'),"image/svg+xml");
+        
         const btnSvg = getActionIconSVGElement('arrow-right');
         btnSvg.classList.add('icon');
         btnSvg.setAttribute('role', 'img');
@@ -165,6 +167,8 @@ export class ScreenerSectionView implements ISection {
 
         return wrapper;
     }
+
+
 
     public setData(data: readonly TradingPairModel[]) {
         this.#allData = data;

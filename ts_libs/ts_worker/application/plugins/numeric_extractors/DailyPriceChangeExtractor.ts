@@ -4,7 +4,7 @@ import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseSortableAttributeExtractor } from "../BaseSortableAttributeExtractor";
 
 export class DailyPriceChangeExtractor extends BaseSortableAttributeExtractor {
-    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>): void {
+    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>,  ts:number): void {
         if(false === updatedTimeFrames.has(TimeFrame.ONE_MINUTE)){
             return;
         }

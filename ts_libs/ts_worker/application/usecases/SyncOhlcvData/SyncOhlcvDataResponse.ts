@@ -1,11 +1,14 @@
+import { SignalModel } from "../../exports/SignalModel";
 import { TradingPairModel } from "../../exports/TradingPairModel";
 
 export class SyncOhlcvDataResponse {
     #updatedEntriesCount: number;
-    #tradingPairModel: readonly TradingPairModel[];
-    constructor(updatedEntriesCount: number, tradingPairModel: readonly TradingPairModel[]) {
+    #tradingPairModels: readonly TradingPairModel[];
+    #signalModels: readonly SignalModel[];
+    constructor(updatedEntriesCount: number, tradingPairModels: readonly TradingPairModel[], signalModels: readonly SignalModel[]) {
         this.#updatedEntriesCount = updatedEntriesCount;
-        this.#tradingPairModel = tradingPairModel;
+        this.#tradingPairModels = tradingPairModels;
+        this.#signalModels = signalModels;
         Object.freeze(this);
     }
 
@@ -13,7 +16,11 @@ export class SyncOhlcvDataResponse {
         return this.#updatedEntriesCount;
     }
 
-    getTradingPairModel(): readonly TradingPairModel[] {
-        return this.#tradingPairModel;
+    getTradingPairModels(): readonly TradingPairModel[] {
+        return this.#tradingPairModels;
+    }
+
+    getSignalModels(): readonly SignalModel[] {
+        return this.#signalModels;
     }
 }

@@ -1,4 +1,12 @@
-export class ExchangeInclusionCriteria {
+import { ISerializable } from "../ISerializable";
+
+export type ExchangeInclusionCriteriaDto = {
+    name: string;
+    id: number;
+    include: boolean;
+}
+
+export class ExchangeInclusionCriteria implements ISerializable<ExchangeInclusionCriteriaDto> {
     name: string;
     id: number;
     include: boolean;
@@ -9,27 +17,32 @@ export class ExchangeInclusionCriteria {
         this.include = include;
     }
 
-    static fromJson(json: any): ExchangeInclusionCriteria {
-        if (typeof json.name !== 'string') {
-            throw new Error('Invalid name');
-        }
-        if (typeof json.id !== 'number') {
-            throw new Error('Invalid id');
-        }
-        if (typeof json.include !== 'boolean') {
-            throw new Error('Invalid include flag');
-        }
-
-        return new ExchangeInclusionCriteria(json.name, json.id, json.include);
-    }
-
-    toJson(): any {
+    serialize(): ExchangeInclusionCriteriaDto {
         return {
             name: this.name,
             id: this.id,
             include: this.include
         }
     }
+
+    public static deserialize(dto: ExchangeInclusionCriteriaDto): ExchangeInclusionCriteria {
+        if (typeof dto.name !== 'string') {
+            throw new Error('Invalid name');
+        }
+        if (typeof dto.id !== 'number') {
+            throw new Error('Invalid id');
+        }
+        if (typeof dto.include !== 'boolean') {
+            throw new Error('Invalid include flag');
+        }
+        return new ExchangeInclusionCriteria(
+            dto.name,
+            dto.id,
+            dto.include
+        );
+
+    }
+
 
     deepEquals(other: ExchangeInclusionCriteria): boolean {
         if (!other) return false;

@@ -1,4 +1,5 @@
 import { TradingPair } from "../entities/TradingPair";
+import { ExchangeMethodsRegistry } from "../exchange/ExchangeMethodsRegistry";
 import { MultiTimeframeOhlcv } from "../values/MultiTimeframeOhlcv";
 import { TimeFrame } from "../values/TimeFrame";
 import { Source } from "./core/Source";

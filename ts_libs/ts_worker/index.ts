@@ -4,8 +4,8 @@ import { WorkerCoreImplementation } from "./worker/WorkerCoreImplementation";
 async function initCall(id: number): Promise<void> {
     try {
         var controller = await getController();
-        var data = await controller.getDefaultSettings();
-        var jsonData = data.toJson();
+        var data = controller.getDefaultSettings();
+        var jsonData = data.serialize();
         _workerPostResolve(id, jsonData);
     } catch (err: any) {
         _workerPostReject(id, err);
@@ -15,9 +15,9 @@ async function initCall(id: number): Promise<void> {
 async function fetchCall(id: number, progressEventName: string, payload: any): Promise<void> {
     try {
         var controller = await getController();
-        var settings = ScreenerSettings.fromJson(payload);
+        var settings = ScreenerSettings.deserialize(payload);
         var data = await controller.fetch(settings, (progress, message) => _workerPostEvent(id, progressEventName, { progress, message }));
-        
+
         _workerPostResolve(id, data.serialize());
     } catch (err: any) {
         _workerPostReject(id, err);
@@ -57,7 +57,7 @@ async function getController(): Promise<WorkerCoreImplementation> {
 
 
 self.onmessage = (event: MessageEvent) => {
-    console.log(`${WorkerCoreImplementation.name}::onmessage, ${JSON.stringify(event.data)}`);
+    //console.log(`${WorkerCoreImplementation.name}::onmessage, ${JSON.stringify(event.data)}`);
     _workerHandleCalls(event);
 }
 

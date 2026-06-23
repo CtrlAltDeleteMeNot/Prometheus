@@ -17,7 +17,7 @@ export class SmaUptrendFilter extends BaseFilterableAttributeExtractor {
     public getFriendlyDescription(): string {
         return `Uptrend: ${this.smaParameters.getDescription()} < Close`;
     }
-    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>): void {
+    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>, ts:number): void {
         if (!updatedTimeFrames.get(this.smaParameters.getTimeFrame())) {
             return;
         }

@@ -11,8 +11,8 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0b0f1a">
     <meta name="color-scheme" content="only dark" />
-    <link rel="stylesheet" href="css/client/bundle.css?v=1781944939399">
-    <script src="js/client/bundle.js?v=1781944939399"></script>
+    <link rel="stylesheet" href="css/client/bundle.css?v=1782250910051">
+    <script src="js/client/bundle.js?v=1782250910051"></script>
     <link rel="manifest" href="manifest.json">
     <title>Prometheus</title>
     <!--ALWAYS FRESH DATA
@@ -81,7 +81,16 @@
                 </div>
             </section>
             <section id="signals" class="d-none">
-                <p>Work in progress</p>
+                <div id="signals-body">
+                    <div id="signals-scroll">
+                        <div id="signals-grid"></div>
+                        <div id="signals-footer">
+                            <button id="signals-load-more" class="btn">
+                                Load more
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </section>
             <section id="about" class="d-none">
                 <p>Prometheus is a crypto market screener built for traders who focus on USDC trading pairs across
@@ -299,7 +308,7 @@
 
                     <div class="field-wrapper">
                         <p>Version info</p>
-                        <span class="field-description">Last updated @ 20 Jun 2026, 08:42:19 UTC</span>
+                        <span class="field-description">Last updated @ 23 Jun 2026, 21:41:50 UTC</span>
                     </div>
                 </div>
                 <div class="modal-footer">

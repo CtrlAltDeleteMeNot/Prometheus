@@ -1,7 +1,8 @@
 import { ScreenerSettings } from "../../ts_worker/application/exports/ScreenerSettings";
-import { ExchangeInclusionCriteria } from "../../ts_worker/application/exports/settings/ExchangeInclusionCriteria";
 import { MainModel } from "../models/MainModel";
 import { ViewHelper } from "./ViewHelper";
+
+
 
 export class SettingsModalView {
     #root: HTMLElement;
@@ -28,25 +29,31 @@ export class SettingsModalView {
         this.#dismiss.onclick = () => this.hide();
         this.#cancel.onclick = () => this.hide();
         this.#apply.onclick = () => {
-            const settingsFromView = this.tryGetSettingsFromView();
-            if (this.#settings && !settingsFromView.deepEquals(this.#settings)) {
-                if (this.#onSettingsChanged) {
-                    this.#onSettingsChanged(settingsFromView);
-                }
+            const settingsFromView = this.tryGetUpdatedSettingsFromView();
+            if (settingsFromView) {
+                this.#onSettingsChanged?.(settingsFromView);
             }
             this.hide();
         };
     }
 
-    private tryGetSettingsFromView(): ScreenerSettings {
-        const criterias = this.tryGetExchangeInclusionCriterias();
-        const settings = new ScreenerSettings(criterias);
-        settings.maximumPairsCountPerExchange = this.tryGetMaxPairsCount();
-        settings.parallelRequestsCount = this.tryGetParallelRequestCount();
-        return settings;
+    private tryGetUpdatedSettingsFromView(): ScreenerSettings | undefined {
+        if (!this.#settings) {
+            throw new Error("Screener settings are undefined");
+        }
+
+        const updated = this.#settings.deepClone();
+        updated.maximumPairsCountPerExchange = this.tryGetMaxPairsCount();
+        updated.parallelRequestsCount = this.tryGetParallelRequestCount();
+        const selectedExchanges = new Set(this.tryGetSelectedExchanges());
+        updated.exchangeInclusionCriterias.forEach(criteria => {
+            criteria.include = selectedExchanges.has(criteria.name);
+        });
+        if (updated.deepEquals(this.#settings)) {
+            return undefined;
+        }
+        return updated;
     }
-
-
 
     private tryGetMaxPairsCount(): number {
         const maxPairsCount = Number.parseInt(this.#maxPairsCount.value);
@@ -58,21 +65,20 @@ export class SettingsModalView {
         return parallelRequestsCount;
     }
 
-    private tryGetExchangeInclusionCriterias(): ExchangeInclusionCriteria[] {
+    private tryGetSelectedExchanges(): string[] {
         if (!this.#exchangeInclusions) {
             throw new Error(`exchangeInclusions is not defined`);
         }
-        if (!this.#settings) {
-            throw new Error(`settings is not defined`);
-        }
-        var clonedCriterias = this.#settings.exchangeInclusionCriterias.map(e => e.deepClone());
-        clonedCriterias.forEach(c => {
-            var found = this.#exchangeInclusions?.find(e => c.name === e.getAttribute("data-exchange-name"));
-            if (found) {
-                c.include = found.checked;
+        let names: string[] = [];
+        this.#exchangeInclusions.forEach(elem => {
+            if (true === elem.checked) {
+                const name = elem.getAttribute("data-exchange-name");
+                if (name !== null) {
+                    names.push(name);
+                }
             }
         });
-        return clonedCriterias;
+        return names;
     }
 
     public bindSettingsChanged(callback: (settings: ScreenerSettings) => void): void {
@@ -92,11 +98,7 @@ export class SettingsModalView {
 
 
     public update(model: MainModel): void {
-        this.#settings = model.getScreenerSettings()?.deepClone();
-
-        if (undefined === this.#settings) {
-            throw new Error("MainModel does not have ScreenerSettings");
-        }
+        this.#settings = model.getScreenerSettingsOrThrow().deepClone();
         this.#parallelRequestsCount.value = this.#settings.parallelRequestsCount.toString();
         this.#maxPairsCount.value = this.#settings.maximumPairsCountPerExchange.toString();
         this.#includeExchangesArea.innerHTML = "";

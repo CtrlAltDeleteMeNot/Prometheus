@@ -10,11 +10,13 @@ import { TradingPairModel } from "../../exports/TradingPairModel";
 import { BasePlugin } from "../../../domain/ta/export/BasePlugin";
 import { BaseFilterableAttributeExtractor } from "../../plugins/BaseFilterableAttributeExtractor";
 import { BaseSortableAttributeExtractor } from "../../plugins/BaseSortableAttributeExtractor";
+import { SignalModel } from "../../exports/SignalModel";
+import { BaseSignalGenerator, SignalData } from "../../plugins/BaseSignalGenerator";
 
 interface TradingPairSyncResult {
-    multiTimeframeBuffer: MultiTimeframeOhlcv;
+    tradingPair: TradingPair;
     syncCount: number;
-    mappedModel: TradingPairModel | undefined;
+    tradingPairModel: TradingPairModel | undefined;
 }
 
 export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, SyncOhlcvDataResponse> {
@@ -37,8 +39,9 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
             return gap > TimeFrame.ONE_MINUTE.asMilliseconds();
         });
         let tradingPairModels: TradingPairModel[] = [];
+        let signalModels: SignalModel[] = [];
         if (shouldSync === false) {
-            return new SyncOhlcvDataResponse(0, tradingPairModels);
+            return new SyncOhlcvDataResponse(0, tradingPairModels, signalModels);
         }
 
         for (let i = 0; i < buffers.length; i += parallelCount) {
@@ -47,10 +50,10 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
 
             for (let j = 0; j < results.length; j++) {
                 const syncResult = results[j];
-                const tradingPair = syncResult.multiTimeframeBuffer.getTradingPair();
+                const tradingPair = syncResult.tradingPair;
                 const tradingPairIndex = i + j + 1;
-                if (syncResult.mappedModel !== undefined) {
-                    tradingPairModels.push(syncResult.mappedModel);
+                if (syncResult.tradingPairModel !== undefined) {
+                    tradingPairModels.push(syncResult.tradingPairModel);
                 }
                 await requestModel.reportProgress({
                     currentTradingPair: tradingPair,
@@ -60,7 +63,40 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
                 });
             }
         }
-        return new SyncOhlcvDataResponse(buffers.length, tradingPairModels);
+        this.drainSignals(signalModels, requestModel);
+        return new SyncOhlcvDataResponse(buffers.length, tradingPairModels, signalModels);
+    }
+
+    private drainSignals(signalModels: SignalModel[], requestModel: SyncOhlcvDataRequest) {
+        const plugins = requestModel.getPlugins();
+        plugins.forEach(plugin => {
+            if (plugin instanceof BaseSignalGenerator) {
+                if (plugin.getSignalsCount() > 0) {
+                    let drained = plugin.drain();
+                    let mapped = drained.map(s => this.createSingleSignalModel(s, plugin));
+                    mapped.forEach((m) => signalModels.push(m));
+                }
+            }
+        });
+        signalModels.sort((first,second)=>first.timestamp - second.timestamp);
+    }
+
+    createSingleSignalModel(s: SignalData, plugin: BaseSignalGenerator): SignalModel {
+        const tradingPair = s.tradingPair;
+        const exchange = tradingPair.getExchangeDescriptor();
+        const tradingPairUrl = this.#exchangeMethodsRegistry.get(exchange).getTradingPairUrl(tradingPair);
+        var model = new SignalModel(
+            tradingPair.getBaseAsset().toString(),
+            tradingPair.getQuoteAsset().toString(),
+            exchange.getName(),
+            exchange.getId(),
+            tradingPairUrl,
+            plugin.getFriendlyDescription(),
+            s.signalDirection,
+            s.timeStamp
+        );
+        console.info(JSON.stringify(model.serialize()));
+        return model;
     }
 
 
@@ -76,8 +112,8 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
         );
         if (newEntries === undefined || newEntries === null || newEntries.length === 0) {
             return {
-                multiTimeframeBuffer: mtfBuffer,
-                mappedModel: undefined,
+                tradingPair: tradingPair,
+                tradingPairModel: undefined,
                 syncCount: 0
             };
         }
@@ -94,34 +130,32 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
                 entry.endTime,
                 entry.isClosed
             );
-            
-            updatedTimeFrames.forEach((isUpdated,timeFrame) => {
-                if(!isUpdated){
+
+            updatedTimeFrames.forEach((isUpdated, timeFrame) => {
+                if (!isUpdated) {
                     return;
                 }
                 this.#technicalAnalisysRepository.updateIndicators(tradingPair, timeFrame);
             });
-            
+
             plugins.forEach(plugin => {
-                plugin.next(tradingPair, updatedTimeFrames);
+                plugin.next(tradingPair, updatedTimeFrames, entry.endTime);
             });
         }
 
-        let mappedModel: TradingPairModel = this.mapUiData(mtfBuffer, plugins);
+        let tradingPairModel: TradingPairModel = this.createSingleTradingPairModel(tradingPair, plugins);
 
         return {
-            multiTimeframeBuffer: mtfBuffer,
+            tradingPair: tradingPair,
             syncCount: newEntries.length,
-            mappedModel: mappedModel
+            tradingPairModel: tradingPairModel
         };
     }
 
-    mapUiData(mtfBuffer: MultiTimeframeOhlcv, plugins: readonly BasePlugin[]): TradingPairModel {
-       
-        const tradingPair = mtfBuffer.getTradingPair();
+    createSingleTradingPairModel(tradingPair: TradingPair, plugins: readonly BasePlugin[]): TradingPairModel {
         const exchange = tradingPair.getExchangeDescriptor();
         const tradingPairUrl = this.#exchangeMethodsRegistry.get(exchange).getTradingPairUrl(tradingPair);
-       
+
         var model = new TradingPairModel(
             tradingPair.getBaseAsset().toString(),
             tradingPair.getQuoteAsset().toString(),
@@ -140,6 +174,8 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
         });
         return model;
     }
+
+
 
 
 }

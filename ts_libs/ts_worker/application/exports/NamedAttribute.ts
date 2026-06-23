@@ -1,23 +1,43 @@
 import { ISerializable } from "./ISerializable";
 
 export type NamedAttributeType = "number" | "boolean" | "string";
+export type NamedAttributeMetadataDto = {
+    key: string;
+    label: string;
+    type: NamedAttributeType;
+    precision?: number;
+};
+
 export type NamedAttributeDto = {
-    metadata: {
-        key: string;
-        label: string;
-        type: NamedAttributeType;
-        precision?: number;
-    };
+    metadata: NamedAttributeMetadataDto;
     value?: unknown;
 };
 
-export class NamedAttributeMetadata {
+export class NamedAttributeMetadata implements ISerializable<NamedAttributeMetadataDto> {
     public constructor(
         public readonly key: string,
         public readonly label: string,
         public readonly type: NamedAttributeType,
         public readonly precision?: number
     ) { }
+    public serialize(): NamedAttributeMetadataDto {
+        return {
+            key: this.key,
+            label: this.label,
+            type: this.type,
+            precision: this.precision
+        };
+    }
+
+    public static deserialize(dto: NamedAttributeMetadataDto): NamedAttributeMetadata{
+        return new NamedAttributeMetadata(
+            dto.key,
+            dto.label,
+            dto.type,
+            dto.precision
+        );
+    }
+
 }
 
 export interface NamedAttribute<T = unknown> extends ISerializable<NamedAttributeDto> {
@@ -214,12 +234,7 @@ export class StringNamedAttribute implements NamedAttribute<string> {
 
 export class NamedAttributeFactory {
     public static deserialize(dto: NamedAttributeDto): NamedAttribute<unknown> {
-        const metadata = new NamedAttributeMetadata(
-            dto.metadata.key,
-            dto.metadata.label,
-            dto.metadata.type,
-            dto.metadata.precision
-        );
+        const metadata = NamedAttributeMetadata.deserialize(dto.metadata);
 
         switch (metadata.type) {
             case "number":

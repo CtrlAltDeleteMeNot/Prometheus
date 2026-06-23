@@ -1,28 +1,30 @@
 
 import { NamedAttributeMetadata } from "../../ts_worker/application/exports/NamedAttribute";
 import { ScreenerSettings } from "../../ts_worker/application/exports/ScreenerSettings";
+import { SignalModel } from "../../ts_worker/application/exports/SignalModel";
 import { SortDirection } from "../../ts_worker/application/exports/SortDirection";
 import { TradingPairModel } from "../../ts_worker/application/exports/TradingPairModel";
 
 
 export class MainModel {
     private multiTimeFrameSnapshot: readonly TradingPairModel[];
-    //sortables
+    //screener sortables
     private sortableAttributes: readonly NamedAttributeMetadata[];
     private sortDirection: SortDirection;
-    private sortNamedAttributeMetadata: NamedAttributeMetadata;
-    //filterables
+    private sortNamedAttributeMetadata: NamedAttributeMetadata | undefined;
+    //screener filterables
     private filterableAttributes: readonly NamedAttributeMetadata[];
     private activeFilterableAttributes: NamedAttributeMetadata[] | undefined;
     private screenerSettings: ScreenerSettings | undefined;
-
+    //signals
+    private signals: SignalModel[];
 
     constructor() {
         this.multiTimeFrameSnapshot = [];
         this.sortableAttributes = [];
         this.filterableAttributes = [];
+        this.signals = [];
         this.sortDirection = SortDirection.Descending;
-        this.sortNamedAttributeMetadata = ScreenerSettings.DailyPriceChangeExtractor.getNamedAttributeMetadata();
     }
 
     setSortableAttributes(namedAttributes: readonly NamedAttributeMetadata[]) {
@@ -53,6 +55,10 @@ export class MainModel {
         this.multiTimeFrameSnapshot = snapshot;
     }
 
+    appendSignals(signalModels: readonly SignalModel[]) {
+        signalModels.forEach(s=>this.signals.push(s));
+    }
+
     getMultiTimeFrameSnapshot(): readonly TradingPairModel[] {
         return this.multiTimeFrameSnapshot;
     }
@@ -62,6 +68,9 @@ export class MainModel {
     }
 
     getSortNamedAttributeMetadata(): NamedAttributeMetadata {
+        if (this.sortNamedAttributeMetadata === undefined) {
+            throw new Error('sortNamedAttributeMetadata not set');
+        }
         return this.sortNamedAttributeMetadata;
     }
 
@@ -79,5 +88,16 @@ export class MainModel {
 
     getScreenerSettings(): ScreenerSettings | undefined {
         return this.screenerSettings;
+    }
+
+    getScreenerSettingsOrThrow(): ScreenerSettings {
+        if (this.screenerSettings === undefined) {
+            throw new Error('ScreenerSettings not defined');
+        }
+        return this.screenerSettings;
+    }
+
+    getSignals(): readonly SignalModel[] {
+        return this.signals;
     }
 }

@@ -1,77 +1,66 @@
-import { Period } from "../../domain/ta/core/Period";
-import { BasePlugin } from "../../domain/ta/export/BasePlugin";
-import { TimeFrame } from "../../domain/values/TimeFrame";
-import { BaseFilterableAttributeExtractor } from "../plugins/BaseFilterableAttributeExtractor";
-import { BaseSortableAttributeExtractor } from "../plugins/BaseSortableAttributeExtractor";
-import { RsiOverboughtFilter } from "../plugins/boolean_extractors/RsiOverboughtFilter";
-import { RsiOversoldFilter } from "../plugins/boolean_extractors/RsiOversoldFilter";
-import { SmaDowntrendFilter } from "../plugins/boolean_extractors/SmaDowntrendFilter";
-import { SmaUptrendFilter } from "../plugins/boolean_extractors/SmaUptrendFilter";
-import { CurrentPriceExtractor } from "../plugins/numeric_extractors/CurrentPriceExtractor";
-import { DailyPendingRvaExtractor } from "../plugins/numeric_extractors/DailyPendingRvaExtractor";
-import { DailyPriceChangeExtractor } from "../plugins/numeric_extractors/DailyPriceChangeExtractor";
-import { DailyRvaExtractor } from "../plugins/numeric_extractors/DailyRvaExtractor";
-import { ThirtyDayPercentChangeExtractor } from "../plugins/numeric_extractors/ThirtyDayPercentChangeExtractor";
-import { NamedAttributeMetadata } from "./NamedAttribute";
-import { ExchangeInclusionCriteria } from "./settings/ExchangeInclusionCriteria";
+import { ISerializable } from "./ISerializable";
+import { NamedAttributeMetadata, NamedAttributeMetadataDto } from "./NamedAttribute";
+import { ExchangeInclusionCriteria, ExchangeInclusionCriteriaDto } from "./settings/ExchangeInclusionCriteria";
+export type ScreenerSettingsDto = {
+  parallelRequestsCount: number;
+  maximumPairsCountPerExchange: number;
+  exchangeInclusionCriterias: ExchangeInclusionCriteriaDto[];
+  sortableAttributes: NamedAttributeMetadataDto[];
+  filterableAttributes: NamedAttributeMetadataDto[];
+}
 
-export class ScreenerSettings {
+export class ScreenerSettings implements ISerializable<ScreenerSettingsDto> {
   private _parallelRequestsCount: number;
   private _maximumPairsCountPerExchange: number;
   private _exchangeInclusionCriterias: ExchangeInclusionCriteria[];
-  private _plugins: readonly BasePlugin[];
-  private _sortableAttributes: NamedAttributeMetadata[];
-  private _filterableAttributes: NamedAttributeMetadata[];
+  private _sortableAttributes: readonly NamedAttributeMetadata[];
+  private _filterableAttributes: readonly NamedAttributeMetadata[];
 
-  constructor(exchangeInclusionCriterias: ExchangeInclusionCriteria[]) {
+  constructor(
+    exchangeInclusionCriterias: ExchangeInclusionCriteria[],
+    sortableAttributes: readonly NamedAttributeMetadata[],
+    filterableAttributes: readonly NamedAttributeMetadata[]) {
     this._parallelRequestsCount = 5;
     this._maximumPairsCountPerExchange = 1000;
     this._exchangeInclusionCriterias = ScreenerSettings.validateExchangeInclusionCriterias(exchangeInclusionCriterias);
-    this._plugins = [...ScreenerSettings.DefaultPlugins];
-    this._filterableAttributes = [];
-    this._sortableAttributes = [];
-    this._plugins.forEach(plugin => {
-      if (plugin instanceof BaseFilterableAttributeExtractor) {
-        this._filterableAttributes.push(plugin.getNamedAttributeMetadata());
-      }
-      if (plugin instanceof BaseSortableAttributeExtractor) {
-        this._sortableAttributes.push(plugin.getNamedAttributeMetadata());
-      }
-    });
+    this._sortableAttributes = sortableAttributes;
+    this._filterableAttributes = filterableAttributes;
   }
-  public static readonly DailyPriceChangeExtractor: DailyPriceChangeExtractor = new DailyPriceChangeExtractor();
-  public static readonly CurrentPriceExtractor: CurrentPriceExtractor = new CurrentPriceExtractor();
-  public static readonly DefaultPlugins: readonly BasePlugin[] = [
-    ScreenerSettings.CurrentPriceExtractor,
-    ScreenerSettings.DailyPriceChangeExtractor,
-    new DailyRvaExtractor(),
-    new DailyPendingRvaExtractor(),
-    new ThirtyDayPercentChangeExtractor(),
-    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY),
-    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS),
-    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR),
-    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES),
-    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.FIVE_MINUTES),
-    new SmaUptrendFilter(Period.fromUnknown(200), TimeFrame.ONE_MINUTE),
-    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_DAY),
-    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FOUR_HOURS),
-    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_HOUR),
-    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FIFTEEN_MINUTES),
-    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.FIVE_MINUTES),
-    new SmaDowntrendFilter(Period.fromUnknown(200), TimeFrame.ONE_MINUTE),
-    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_DAY, 5),
-    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FOUR_HOURS, 5),
-    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_HOUR, 5),
-    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 5),
-    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 5),
-    new RsiOversoldFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 5),
-    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_DAY, 95),
-    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FOUR_HOURS, 95),
-    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_HOUR, 95),
-    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
-    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
-    new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95)
-  ];
+
+  serialize(): ScreenerSettingsDto {
+    return {
+      parallelRequestsCount: this.parallelRequestsCount,
+      sortableAttributes: this.sortableAttributes.map(s => s.serialize()),
+      filterableAttributes: this.filterableAttributes.map(s => s.serialize()),
+      exchangeInclusionCriterias: this._exchangeInclusionCriterias.map(s => s.serialize()),
+      maximumPairsCountPerExchange: this.maximumPairsCountPerExchange
+    };
+  }
+
+  public static deserialize(dto: ScreenerSettingsDto): ScreenerSettings {
+    const criterias = dto.exchangeInclusionCriterias.map(c =>
+      ExchangeInclusionCriteria.deserialize(c)
+    );
+
+    const sortableAttributes = dto.sortableAttributes.map(a =>
+      NamedAttributeMetadata.deserialize(a)
+    );
+
+    const filterableAttributes = dto.filterableAttributes.map(a =>
+      NamedAttributeMetadata.deserialize(a)
+    );
+
+    const settings = new ScreenerSettings(
+      criterias,
+      sortableAttributes,
+      filterableAttributes
+    );
+
+    settings.parallelRequestsCount = dto.parallelRequestsCount;
+    settings.maximumPairsCountPerExchange = dto.maximumPairsCountPerExchange;
+
+    return settings;
+  }
 
   // =====================
   // Getters / Setters
@@ -82,7 +71,7 @@ export class ScreenerSettings {
   }
 
   set parallelRequestsCount(value: number) {
-    if (typeof value !== 'number' || value < 1 || value > 20) {
+    if (!Number.isInteger(value) || value < 1 || value > 20) {
       throw new Error('Invalid parallelRequestsCount');
     }
     this._parallelRequestsCount = value;
@@ -93,7 +82,7 @@ export class ScreenerSettings {
   }
 
   set maximumPairsCountPerExchange(value: number) {
-    if (typeof value !== 'number' || value < 1 || value > 10000) {
+    if (!Number.isInteger(value) || value < 1 || value > 2000) {
       throw new Error('Invalid maximumPairsCountPerExchange');
     }
     this._maximumPairsCountPerExchange = value;
@@ -109,53 +98,12 @@ export class ScreenerSettings {
       ScreenerSettings.validateExchangeInclusionCriterias(value);
   }
 
-  get plugins(): readonly BasePlugin[] {
-    return this._plugins;
-  }
-
   get sortableAttributes(): readonly NamedAttributeMetadata[] {
     return this._sortableAttributes;
   }
 
   get filterableAttributes(): readonly NamedAttributeMetadata[] {
     return this._filterableAttributes;
-  }
-
-  // =====================
-  // Factory
-  // =====================
-
-  static fromJson(json: any): ScreenerSettings {
-    if (!Array.isArray(json.exchangeInclusionCriterias)) {
-      throw new Error('exchangeInclusionCriterias must be an array');
-    }
-
-    const criterias = json.exchangeInclusionCriterias.map((c: any) =>
-      ExchangeInclusionCriteria.fromJson(c)
-    );
-
-    const settings = new ScreenerSettings(criterias);
-
-    settings.parallelRequestsCount = json.parallelRequestsCount;
-    settings.maximumPairsCountPerExchange = json.maximumPairsCountPerExchange;
-
-    return settings;
-  }
-
-  // =====================
-  // Serialization
-  // =====================
-
-  toJson(): any {
-    return {
-      parallelRequestsCount: this.parallelRequestsCount,
-      maximumPairsCountPerExchange: this.maximumPairsCountPerExchange,
-      exchangeInclusionCriterias: this.exchangeInclusionCriterias.map(c => ({
-        name: c.name,
-        id: c.id,
-        include: c.include
-      }))
-    };
   }
 
   // =====================
@@ -185,15 +133,8 @@ export class ScreenerSettings {
   // =====================
   // Deep Clone & Compare
   // =====================
-
   deepClone(): ScreenerSettings {
-    const clonedCriterias = this.exchangeInclusionCriterias.map(c => c.deepClone());
-    const newSettings = new ScreenerSettings(clonedCriterias);
-
-    newSettings.parallelRequestsCount = this.parallelRequestsCount;
-    newSettings.maximumPairsCountPerExchange = this.maximumPairsCountPerExchange;
-
-    return newSettings;
+    return ScreenerSettings.deserialize(this.serialize());
   }
 
   deepEquals(other: ScreenerSettings | undefined): boolean {
@@ -229,5 +170,60 @@ export class ScreenerSettings {
       }
     }
     return toReturn;
+  }
+
+  //==========================
+  //Persistence methods
+  //==========================
+  private static MAX_PARALLEL_REQUESTS_COUNT_KEY = "v1.parallel.request.count";
+  private static MAX_PAIRS_PER_EXCHANGE_KEY = "v1.max.pairs.per.exchange"
+  private static INCLUDE_EXCHANGE_KEY = "v1.include.exchange"
+  public persist() {
+    this.exchangeInclusionCriterias.forEach(element => {
+      localStorage.setItem(`${ScreenerSettings.INCLUDE_EXCHANGE_KEY}.${element.id}`, element.include.toString());
+    });
+    localStorage.setItem(ScreenerSettings.MAX_PARALLEL_REQUESTS_COUNT_KEY, this.parallelRequestsCount.toString());
+    localStorage.setItem(ScreenerSettings.MAX_PAIRS_PER_EXCHANGE_KEY, this.maximumPairsCountPerExchange.toString());
+  }
+
+  public reconcile() {
+    this.exchangeInclusionCriterias.forEach(element => {
+      const includeStr = localStorage.getItem(`${ScreenerSettings.INCLUDE_EXCHANGE_KEY}.${element.id}`);
+      element.include = includeStr !== "false"; //only if explicitly denied by user
+    });
+    this.parallelRequestsCount = ScreenerSettings.readIntFromLocalStorage(
+      ScreenerSettings.MAX_PARALLEL_REQUESTS_COUNT_KEY,
+      5,
+      1,
+      20
+    );
+
+    this.maximumPairsCountPerExchange = ScreenerSettings.readIntFromLocalStorage(
+      ScreenerSettings.MAX_PAIRS_PER_EXCHANGE_KEY,
+      1000,
+      1,
+      2000
+    );
+  }
+
+  private static readIntFromLocalStorage(
+    key: string,
+    fallback: number,
+    min: number,
+    max: number
+  ): number {
+    const raw = localStorage.getItem(key);
+
+    if (raw === null) {
+      return fallback;
+    }
+
+    const parsed = Number.parseInt(raw, 10);
+
+    if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
+      return fallback;
+    }
+
+    return parsed;
   }
 }

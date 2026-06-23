@@ -12,7 +12,7 @@ export class ThirtyDayPercentChangeExtractor extends BaseSortableAttributeExtrac
         this.params = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, new Period(30), Source.CLOSE);
     }
 
-    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>): void {
+    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>, ts: number): void {
         if (false === updatedTimeFrames.get(TimeFrame.ONE_DAY)) {
             return;
         }

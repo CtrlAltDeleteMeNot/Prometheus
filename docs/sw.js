@@ -1,5 +1,5 @@
-const VERSION = "1781944939399";
-const BUILD_TIME = "20 Jun 2026, 08:42:19";
+const VERSION = "1782250910051";
+const BUILD_TIME = "23 Jun 2026, 21:41:50";
 self.addEventListener('install', event => {
     self.skipWaiting();
 });

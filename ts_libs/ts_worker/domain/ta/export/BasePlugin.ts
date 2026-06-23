@@ -29,12 +29,13 @@ export interface IPluginContext {
 
 export abstract class BasePlugin implements IPluginContext {
 
+
     private ctx: IPluginContext | undefined;
     private readonly indicatorParameters: IndicatorParameters<any>[] = [];
 
     public abstract getId(): string;
     public abstract getFriendlyDescription(): string;
-    public abstract next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>): void;
+    public abstract next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, nowTs: number): void;
     public transferContext(ctx: IPluginContext): void {
         this.ctx = ctx;
     }

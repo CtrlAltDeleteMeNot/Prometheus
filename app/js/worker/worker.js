@@ -36,49 +36,1187 @@
     });
   };
 
-  // ts_libs/ts_worker/domain/ta/core/Period.ts
-  var Period;
-  var init_Period = __esm({
-    "ts_libs/ts_worker/domain/ta/core/Period.ts"() {
+  // ts_libs/ts_worker/application/exports/NamedAttribute.ts
+  var NamedAttributeMetadata, NumericNamedAttribute, BooleanNamedAttribute, StringNamedAttribute, NamedAttributeFactory;
+  var init_NamedAttribute = __esm({
+    "ts_libs/ts_worker/application/exports/NamedAttribute.ts"() {
       "use strict";
-      Period = class _Period {
-        /**
-         * @param aValue Must be a positive integer ≥ 2
-         */
-        constructor(aValue) {
-          if (!Number.isInteger(aValue)) {
-            throw new TypeError(
-              `Period value must be an integer, got ${aValue}`
+      NamedAttributeMetadata = class _NamedAttributeMetadata {
+        constructor(key, label, type, precision) {
+          this.key = key;
+          this.label = label;
+          this.type = type;
+          this.precision = precision;
+        }
+        serialize() {
+          return {
+            key: this.key,
+            label: this.label,
+            type: this.type,
+            precision: this.precision
+          };
+        }
+        static deserialize(dto) {
+          return new _NamedAttributeMetadata(
+            dto.key,
+            dto.label,
+            dto.type,
+            dto.precision
+          );
+        }
+      };
+      NumericNamedAttribute = class _NumericNamedAttribute {
+        constructor(key, label, value, precision) {
+          this.metadata = new NamedAttributeMetadata(key, label, "number", precision);
+          if (value !== void 0 && !Number.isFinite(value)) {
+            throw new Error("NumericNamedAttribute requires a finite number");
+          }
+          if (precision !== void 0 && (!Number.isInteger(precision) || precision < 0)) {
+            throw new Error("precision must be a non-negative integer");
+          }
+          this.value = value;
+        }
+        serialize() {
+          return {
+            metadata: {
+              key: this.metadata.key,
+              label: this.metadata.label,
+              type: this.metadata.type,
+              precision: this.metadata.precision
+            },
+            value: this.value
+          };
+        }
+        static fromMetadata(argMetadata, argValue) {
+          if (argMetadata.type !== "number") {
+            throw new Error("NumericNamedAttribute requires a valid metadata type");
+          }
+          return new _NumericNamedAttribute(argMetadata.key, argMetadata.label, argValue, argMetadata.precision);
+        }
+        compare(other) {
+          if (other.metadata.type !== this.metadata.type) {
+            throw new Error(
+              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
             );
           }
-          if (aValue < 2) {
-            throw new RangeError(
-              `Period value must be at least 2, got ${aValue}`
+          const a = this.value;
+          const b = other.value;
+          if (a === void 0 && b === void 0) return 0;
+          if (a === void 0) return -1;
+          if (b === void 0) return 1;
+          return a - b;
+        }
+        toString() {
+          if (this.value === void 0) return "";
+          return this.metadata.precision === void 0 ? this.value.toString() : this.value.toFixed(this.metadata.precision);
+        }
+      };
+      BooleanNamedAttribute = class _BooleanNamedAttribute {
+        constructor(key, label, value) {
+          this.metadata = new NamedAttributeMetadata(key, label, "boolean");
+          this.value = value;
+        }
+        serialize() {
+          return {
+            metadata: {
+              key: this.metadata.key,
+              label: this.metadata.label,
+              type: this.metadata.type
+            },
+            value: this.value
+          };
+        }
+        compare(other) {
+          if (other.metadata.type !== this.metadata.type) {
+            throw new Error(
+              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
             );
           }
-          this.value = aValue;
+          const a = this.value;
+          const b = other.value;
+          if (a === void 0 && b === void 0) return 0;
+          if (a === void 0) return -1;
+          if (b === void 0) return 1;
+          return Number(a) - Number(b);
+        }
+        toString() {
+          return this.value === void 0 ? "" : this.value ? "true" : "false";
+        }
+        static fromMetadata(argMetadata, argValue) {
+          if (argMetadata.type !== "boolean") {
+            throw new Error("BooleanNamedAttribute requires a valid metadata type");
+          }
+          return new _BooleanNamedAttribute(argMetadata.key, argMetadata.label, argValue);
+        }
+      };
+      StringNamedAttribute = class _StringNamedAttribute {
+        constructor(key, label, value) {
+          this.metadata = new NamedAttributeMetadata(key, label, "string");
+          if (value !== void 0 && value.length === 0) {
+            throw new Error("StringNamedAttribute cannot be empty");
+          }
+          this.value = value;
+        }
+        serialize() {
+          return {
+            metadata: {
+              key: this.metadata.key,
+              label: this.metadata.label,
+              type: this.metadata.type
+            },
+            value: this.value
+          };
+        }
+        static fromMetadata(argMetadata, argValue) {
+          if (argMetadata.type !== "string") {
+            throw new Error("StringNamedAttribute requires a valid metadata type");
+          }
+          return new _StringNamedAttribute(
+            argMetadata.key,
+            argMetadata.label,
+            argValue
+          );
+        }
+        compare(other) {
+          if (other.metadata.type !== this.metadata.type) {
+            throw new Error(
+              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
+            );
+          }
+          const a = this.value;
+          const b = other.value;
+          if (a === void 0 && b === void 0) return 0;
+          if (a === void 0) return -1;
+          if (b === void 0) return 1;
+          return a.localeCompare(b);
+        }
+        toString() {
+          var _a;
+          return (_a = this.value) != null ? _a : "";
+        }
+      };
+      NamedAttributeFactory = class {
+        static deserialize(dto) {
+          const metadata = NamedAttributeMetadata.deserialize(dto.metadata);
+          switch (metadata.type) {
+            case "number":
+              return NumericNamedAttribute.fromMetadata(
+                metadata,
+                dto.value === void 0 ? void 0 : this.asNumber(dto.value)
+              );
+            case "boolean":
+              return BooleanNamedAttribute.fromMetadata(
+                metadata,
+                dto.value === void 0 ? void 0 : this.asBoolean(dto.value)
+              );
+            case "string":
+              return StringNamedAttribute.fromMetadata(
+                metadata,
+                dto.value === void 0 ? void 0 : String(dto.value)
+              );
+            default:
+              throw new Error(`Unsupported named attribute type: ${metadata.type}`);
+          }
+        }
+        static asBoolean(value) {
+          if (value === void 0) return void 0;
+          if (typeof value !== "boolean") {
+            throw new Error("Boolean attribute value must be boolean");
+          }
+          return value;
+        }
+        static asNumber(value) {
+          if (value === void 0) return void 0;
+          if (typeof value !== "number" || !Number.isFinite(value)) {
+            throw new Error("Numeric attribute value must be finite number");
+          }
+          return value;
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/settings/ExchangeInclusionCriteria.ts
+  var ExchangeInclusionCriteria;
+  var init_ExchangeInclusionCriteria = __esm({
+    "ts_libs/ts_worker/application/exports/settings/ExchangeInclusionCriteria.ts"() {
+      "use strict";
+      ExchangeInclusionCriteria = class _ExchangeInclusionCriteria {
+        constructor(name, id, include) {
+          this.name = name;
+          this.id = id;
+          this.include = include;
+        }
+        serialize() {
+          return {
+            name: this.name,
+            id: this.id,
+            include: this.include
+          };
+        }
+        static deserialize(dto) {
+          if (typeof dto.name !== "string") {
+            throw new Error("Invalid name");
+          }
+          if (typeof dto.id !== "number") {
+            throw new Error("Invalid id");
+          }
+          if (typeof dto.include !== "boolean") {
+            throw new Error("Invalid include flag");
+          }
+          return new _ExchangeInclusionCriteria(
+            dto.name,
+            dto.id,
+            dto.include
+          );
+        }
+        deepEquals(other) {
+          if (!other) return false;
+          return this.name === other.name && this.id === other.id && this.include === other.include;
+        }
+        deepClone() {
+          return new _ExchangeInclusionCriteria(this.name, this.id, this.include);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/ScreenerSettings.ts
+  var _ScreenerSettings, ScreenerSettings;
+  var init_ScreenerSettings = __esm({
+    "ts_libs/ts_worker/application/exports/ScreenerSettings.ts"() {
+      "use strict";
+      init_NamedAttribute();
+      init_ExchangeInclusionCriteria();
+      _ScreenerSettings = class _ScreenerSettings {
+        constructor(exchangeInclusionCriterias, sortableAttributes, filterableAttributes) {
+          this._parallelRequestsCount = 5;
+          this._maximumPairsCountPerExchange = 1e3;
+          this._exchangeInclusionCriterias = _ScreenerSettings.validateExchangeInclusionCriterias(exchangeInclusionCriterias);
+          this._sortableAttributes = sortableAttributes;
+          this._filterableAttributes = filterableAttributes;
+        }
+        serialize() {
+          return {
+            parallelRequestsCount: this.parallelRequestsCount,
+            sortableAttributes: this.sortableAttributes.map((s) => s.serialize()),
+            filterableAttributes: this.filterableAttributes.map((s) => s.serialize()),
+            exchangeInclusionCriterias: this._exchangeInclusionCriterias.map((s) => s.serialize()),
+            maximumPairsCountPerExchange: this.maximumPairsCountPerExchange
+          };
+        }
+        static deserialize(dto) {
+          const criterias = dto.exchangeInclusionCriterias.map(
+            (c) => ExchangeInclusionCriteria.deserialize(c)
+          );
+          const sortableAttributes = dto.sortableAttributes.map(
+            (a) => NamedAttributeMetadata.deserialize(a)
+          );
+          const filterableAttributes = dto.filterableAttributes.map(
+            (a) => NamedAttributeMetadata.deserialize(a)
+          );
+          const settings = new _ScreenerSettings(
+            criterias,
+            sortableAttributes,
+            filterableAttributes
+          );
+          settings.parallelRequestsCount = dto.parallelRequestsCount;
+          settings.maximumPairsCountPerExchange = dto.maximumPairsCountPerExchange;
+          return settings;
+        }
+        // =====================
+        // Getters / Setters
+        // =====================
+        get parallelRequestsCount() {
+          return this._parallelRequestsCount;
+        }
+        set parallelRequestsCount(value) {
+          if (!Number.isInteger(value) || value < 1 || value > 20) {
+            throw new Error("Invalid parallelRequestsCount");
+          }
+          this._parallelRequestsCount = value;
+        }
+        get maximumPairsCountPerExchange() {
+          return this._maximumPairsCountPerExchange;
+        }
+        set maximumPairsCountPerExchange(value) {
+          if (!Number.isInteger(value) || value < 1 || value > 2e3) {
+            throw new Error("Invalid maximumPairsCountPerExchange");
+          }
+          this._maximumPairsCountPerExchange = value;
+        }
+        get exchangeInclusionCriterias() {
+          return this._exchangeInclusionCriterias;
+        }
+        set exchangeInclusionCriterias(value) {
+          this._exchangeInclusionCriterias = _ScreenerSettings.validateExchangeInclusionCriterias(value);
+        }
+        get sortableAttributes() {
+          return this._sortableAttributes;
+        }
+        get filterableAttributes() {
+          return this._filterableAttributes;
+        }
+        // =====================
+        // Validation
+        // =====================
+        static validateExchangeInclusionCriterias(criterias) {
+          if (!criterias || !Array.isArray(criterias)) {
+            throw new Error("Exchange inclusion criterias cannot be null");
+          }
+          if (criterias.length === 0) {
+            throw new Error("At least one exchange must be configured");
+          }
+          const hasAtLeastOne = criterias.some((c) => c.include === true);
+          if (!hasAtLeastOne) {
+            throw new Error("At least one exchange must be selected");
+          }
+          return criterias;
+        }
+        // =====================
+        // Deep Clone & Compare
+        // =====================
+        deepClone() {
+          return _ScreenerSettings.deserialize(this.serialize());
+        }
+        deepEquals(other) {
+          if (!other) return false;
+          if (this.parallelRequestsCount !== other.parallelRequestsCount || this.maximumPairsCountPerExchange !== other.maximumPairsCountPerExchange) {
+            return false;
+          }
+          if (this.exchangeInclusionCriterias.length !== other.exchangeInclusionCriterias.length) {
+            return false;
+          }
+          for (let i = 0; i < this.exchangeInclusionCriterias.length; i++) {
+            if (!this.exchangeInclusionCriterias[i].deepEquals(other.exchangeInclusionCriterias[i])) {
+              return false;
+            }
+          }
+          return true;
+        }
+        //=========================
+        //Utility methods
+        //=========================
+        getIncludedExchangeNames() {
+          let toReturn = [];
+          for (let index = 0; index < this.exchangeInclusionCriterias.length; index++) {
+            const element = this.exchangeInclusionCriterias[index];
+            if (element.include === true) {
+              toReturn.push(element.name);
+            }
+          }
+          return toReturn;
+        }
+        persist() {
+          this.exchangeInclusionCriterias.forEach((element) => {
+            localStorage.setItem(`${_ScreenerSettings.INCLUDE_EXCHANGE_KEY}.${element.id}`, element.include.toString());
+          });
+          localStorage.setItem(_ScreenerSettings.MAX_PARALLEL_REQUESTS_COUNT_KEY, this.parallelRequestsCount.toString());
+          localStorage.setItem(_ScreenerSettings.MAX_PAIRS_PER_EXCHANGE_KEY, this.maximumPairsCountPerExchange.toString());
+        }
+        reconcile() {
+          this.exchangeInclusionCriterias.forEach((element) => {
+            const includeStr = localStorage.getItem(`${_ScreenerSettings.INCLUDE_EXCHANGE_KEY}.${element.id}`);
+            element.include = includeStr !== "false";
+          });
+          this.parallelRequestsCount = _ScreenerSettings.readIntFromLocalStorage(
+            _ScreenerSettings.MAX_PARALLEL_REQUESTS_COUNT_KEY,
+            5,
+            1,
+            20
+          );
+          this.maximumPairsCountPerExchange = _ScreenerSettings.readIntFromLocalStorage(
+            _ScreenerSettings.MAX_PAIRS_PER_EXCHANGE_KEY,
+            1e3,
+            1,
+            2e3
+          );
+        }
+        static readIntFromLocalStorage(key, fallback, min, max) {
+          const raw = localStorage.getItem(key);
+          if (raw === null) {
+            return fallback;
+          }
+          const parsed = Number.parseInt(raw, 10);
+          if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
+            return fallback;
+          }
+          return parsed;
+        }
+      };
+      //==========================
+      //Persistence methods
+      //==========================
+      _ScreenerSettings.MAX_PARALLEL_REQUESTS_COUNT_KEY = "v1.parallel.request.count";
+      _ScreenerSettings.MAX_PAIRS_PER_EXCHANGE_KEY = "v1.max.pairs.per.exchange";
+      _ScreenerSettings.INCLUDE_EXCHANGE_KEY = "v1.include.exchange";
+      ScreenerSettings = _ScreenerSettings;
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/SignalModel.ts
+  var SignalModel;
+  var init_SignalModel = __esm({
+    "ts_libs/ts_worker/application/exports/SignalModel.ts"() {
+      "use strict";
+      SignalModel = class _SignalModel {
+        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, exchangeUrl, description, direction, timestamp) {
+          this.baseAsset = baseAsset;
+          this.quoteAsset = quoteAsset;
+          this.exchangeName = exchangeName;
+          this.exchangeId = exchangeId;
+          this.exchangeUrl = exchangeUrl;
+          this.description = description;
+          this.direction = direction;
+          this.timestamp = timestamp;
+        }
+        serialize() {
+          return {
+            baseAsset: this.baseAsset,
+            quoteAsset: this.quoteAsset,
+            exchangeId: this.exchangeId,
+            exchangeName: this.exchangeName,
+            exchangeUrl: this.exchangeUrl,
+            description: this.description,
+            direction: this.direction,
+            timestamp: this.timestamp
+          };
+        }
+        static deserialize(dto) {
+          return new _SignalModel(
+            dto.baseAsset,
+            dto.quoteAsset,
+            dto.exchangeName,
+            dto.exchangeId,
+            dto.exchangeUrl,
+            dto.description,
+            dto.direction,
+            dto.timestamp
+          );
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/TradingPairModel.ts
+  var TradingPairModel;
+  var init_TradingPairModel = __esm({
+    "ts_libs/ts_worker/application/exports/TradingPairModel.ts"() {
+      "use strict";
+      init_NamedAttribute();
+      TradingPairModel = class _TradingPairModel {
+        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, exchangeUrl, attributes = []) {
+          this.baseAsset = baseAsset;
+          this.quoteAsset = quoteAsset;
+          this.exchangeName = exchangeName;
+          this.exchangeId = exchangeId;
+          this.exchangeUrl = exchangeUrl;
+          this.extended = [...attributes];
+        }
+        serialize() {
+          return {
+            baseAsset: this.baseAsset,
+            quoteAsset: this.quoteAsset,
+            exchangeName: this.exchangeName,
+            exchangeId: this.exchangeId,
+            exchangeUrl: this.exchangeUrl,
+            attributes: this.extended.map((attr) => attr.serialize())
+          };
+        }
+        static deserialize(tradingPairModelDto) {
+          const attributes = tradingPairModelDto.attributes.map(
+            (attr) => NamedAttributeFactory.deserialize(attr)
+          );
+          const model = new _TradingPairModel(
+            tradingPairModelDto.baseAsset,
+            tradingPairModelDto.quoteAsset,
+            tradingPairModelDto.exchangeName,
+            tradingPairModelDto.exchangeId,
+            tradingPairModelDto.exchangeUrl,
+            attributes
+          );
+          return model;
+        }
+        // ------------------------
+        // Typed attribute access
+        // ------------------------
+        addAttr(attr) {
+          this.extended.push(attr);
+        }
+        getAttr(key) {
+          return this.extended.find((a) => a.metadata.key === key);
+        }
+        getAttrValue(key, fallback) {
+          var _a, _b;
+          return (_b = (_a = this.getAttr(key)) == null ? void 0 : _a.value) != null ? _b : fallback;
+        }
+        hasAttr(key) {
+          return this.extended.some((a) => a.metadata.key === key);
+        }
+        getAttributes() {
+          return this.extended;
+        }
+        getNumericAttributes() {
+          return this.extended.filter((e) => e instanceof NumericNamedAttribute) || [];
+        }
+        getBooleanAttributes() {
+          return this.extended.filter((e) => e instanceof BooleanNamedAttribute) || [];
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/exports/SynchronizationModel.ts
+  var SynchronizationModel;
+  var init_SynchronizationModel = __esm({
+    "ts_libs/ts_worker/application/exports/SynchronizationModel.ts"() {
+      "use strict";
+      init_SignalModel();
+      init_TradingPairModel();
+      SynchronizationModel = class _SynchronizationModel {
+        constructor(tradingPairs = [], signals = []) {
+          this.tradingPairs = tradingPairs;
+          this.signals = signals;
+        }
+        serialize() {
+          return {
+            tradingPairs: this.tradingPairs.map((tp) => tp.serialize()),
+            signals: this.signals.map((signal) => signal.serialize())
+          };
+        }
+        static deserialize(dto) {
+          return new _SynchronizationModel(
+            dto.tradingPairs.map((tp) => TradingPairModel.deserialize(tp)),
+            dto.signals.map((signal) => SignalModel.deserialize(signal))
+          );
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/usecases/EnumerateExchanges/EnumerateExchangesRequest.ts
+  var EnumerateExchangesRequest;
+  var init_EnumerateExchangesRequest = __esm({
+    "ts_libs/ts_worker/application/usecases/EnumerateExchanges/EnumerateExchangesRequest.ts"() {
+      "use strict";
+      EnumerateExchangesRequest = class {
+        constructor(includes) {
+          this.includes = includes;
           Object.freeze(this);
         }
-        getValue() {
-          return this.value;
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest.ts
+  var _tradingPairs, _candlesPerTimeFrame, _parallelRequestsCount, _utcNowMs, _plugins, _progressCallback, FetchOhlcvDataRequest;
+  var init_FetchOhlcvDataRequest = __esm({
+    "ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest.ts"() {
+      "use strict";
+      FetchOhlcvDataRequest = class {
+        constructor(tradingPairs, candlesPerTimeFrame, parallelRequestsCount, utcNowMs, plugins, progressCallback) {
+          __privateAdd(this, _tradingPairs);
+          __privateAdd(this, _candlesPerTimeFrame);
+          __privateAdd(this, _parallelRequestsCount);
+          __privateAdd(this, _utcNowMs);
+          __privateAdd(this, _plugins);
+          __privateAdd(this, _progressCallback);
+          __privateSet(this, _tradingPairs, Object.freeze([...tradingPairs]));
+          __privateSet(this, _candlesPerTimeFrame, candlesPerTimeFrame);
+          __privateSet(this, _parallelRequestsCount, parallelRequestsCount);
+          __privateSet(this, _utcNowMs, utcNowMs);
+          __privateSet(this, _plugins, plugins);
+          __privateSet(this, _progressCallback, progressCallback);
+          Object.freeze(this);
+        }
+        reportProgress(progress) {
+          return __privateGet(this, _progressCallback).call(this, progress);
+        }
+        getUtcNowMilliseconds() {
+          return __privateGet(this, _utcNowMs);
+        }
+        getCandlesPerTimeFrame() {
+          return __privateGet(this, _candlesPerTimeFrame);
+        }
+        getTradingPairs() {
+          return __privateGet(this, _tradingPairs);
+        }
+        getParallelRequestsCount() {
+          return __privateGet(this, _parallelRequestsCount);
+        }
+        getPlugins() {
+          return __privateGet(this, _plugins);
+        }
+      };
+      _tradingPairs = new WeakMap();
+      _candlesPerTimeFrame = new WeakMap();
+      _parallelRequestsCount = new WeakMap();
+      _utcNowMs = new WeakMap();
+      _plugins = new WeakMap();
+      _progressCallback = new WeakMap();
+    }
+  });
+
+  // ts_libs/ts_worker/domain/exchange/ExchangeDescriptor.ts
+  var _id, _name, _ExchangeDescriptor, ExchangeDescriptor;
+  var init_ExchangeDescriptor = __esm({
+    "ts_libs/ts_worker/domain/exchange/ExchangeDescriptor.ts"() {
+      "use strict";
+      _ExchangeDescriptor = class _ExchangeDescriptor {
+        /**
+         * Create a new ExchangeDescriptor.
+         * @param id - integer ID
+         * @param name - non-empty string
+         */
+        constructor(id, name) {
+          // Private fields
+          __privateAdd(this, _id);
+          __privateAdd(this, _name);
+          if (!Number.isInteger(id)) {
+            throw new TypeError("id must be an integer");
+          }
+          if (typeof name !== "string" || name.length === 0) {
+            throw new TypeError("name must be a non-empty string");
+          }
+          __privateSet(this, _id, id);
+          __privateSet(this, _name, name);
+          Object.freeze(this);
+        }
+        /** ============================
+         * Public getters
+         * ============================ */
+        getId() {
+          return __privateGet(this, _id);
+        }
+        getName() {
+          return __privateGet(this, _name);
+        }
+        static fromUnknown(value) {
+          if (!(value instanceof _ExchangeDescriptor)) {
+            throw new TypeError("Expected ExchangeDescriptor");
+          }
+          return value;
+        }
+      };
+      _id = new WeakMap();
+      _name = new WeakMap();
+      ExchangeDescriptor = _ExchangeDescriptor;
+    }
+  });
+
+  // ts_libs/ts_worker/domain/values/Asset.ts
+  var Asset;
+  var init_Asset = __esm({
+    "ts_libs/ts_worker/domain/values/Asset.ts"() {
+      "use strict";
+      Asset = class _Asset {
+        /**
+         * @param symbol - asset symbol (non-empty, trimmed string)
+         */
+        constructor(symbol) {
+          if (symbol.trim() === "") {
+            throw new TypeError("Asset symbol must be a non-empty string");
+          }
+          this.symbol = symbol.trim().toUpperCase();
+          Object.freeze(this);
         }
         /**
-         * Runtime validation / normalization helper
-         * Accepts a Period or an integer.
-         *
-         * @param value unknown
-         * @throws TypeError | RangeError
+         * Value equality check.
+         * @param other another Asset
+         */
+        equals(other) {
+          return this.symbol === other.symbol;
+        }
+        toString() {
+          return this.symbol;
+        }
+        /**
+         * Runtime-safe factory: validate unknown input
+         * @param value unknown input (any type)
+         * @returns Asset
+         * @throws TypeError if value is not an Asset
          */
         static fromUnknown(value) {
-          if (value instanceof _Period) {
+          if (value instanceof _Asset) {
             return value;
           }
-          if (typeof value === "number") {
-            return new _Period(value);
+          if (typeof value === "string") {
+            return new _Asset(value);
           }
           throw new TypeError(
-            `Value must be a Period or an integer, got ${typeof value}`
+            `Cannot create Asset from value: ${String(value)}`
           );
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/usecases/FilterTradingPairs/FilterTradingPairsRequest.ts
+  var _exchanges, _quoteAssets, _requiredQuoteAssets, _excludedBaseAssets, _limit, FilterTradingPairsRequest;
+  var init_FilterTradingPairsRequest = __esm({
+    "ts_libs/ts_worker/application/usecases/FilterTradingPairs/FilterTradingPairsRequest.ts"() {
+      "use strict";
+      init_ExchangeDescriptor();
+      init_Asset();
+      FilterTradingPairsRequest = class {
+        constructor(exchanges = [], quoteAssets = [], requiredQuoteAssets = [], excludedBaseAssets = [], limit = void 0) {
+          __privateAdd(this, _exchanges);
+          __privateAdd(this, _quoteAssets);
+          __privateAdd(this, _requiredQuoteAssets);
+          __privateAdd(this, _excludedBaseAssets);
+          __privateAdd(this, _limit);
+          __privateSet(this, _exchanges, Object.freeze(
+            exchanges.map((ex) => ExchangeDescriptor.fromUnknown(ex))
+          ));
+          __privateSet(this, _quoteAssets, Object.freeze(
+            quoteAssets.map((a) => Asset.fromUnknown(a))
+          ));
+          __privateSet(this, _requiredQuoteAssets, Object.freeze(
+            requiredQuoteAssets.map((a) => Asset.fromUnknown(a))
+          ));
+          __privateSet(this, _excludedBaseAssets, Object.freeze(
+            excludedBaseAssets.map((a) => Asset.fromUnknown(a))
+          ));
+          __privateSet(this, _limit, limit !== void 0 && limit > 0 ? limit : void 0);
+          Object.freeze(this);
+        }
+        /** Exchanges to include */
+        getExchanges() {
+          return [...__privateGet(this, _exchanges)];
+        }
+        /** Quote assets to include (ANY match) */
+        getQuoteAssets() {
+          return [...__privateGet(this, _quoteAssets)];
+        }
+        /** Quote assets that MUST ALL exist for a base asset */
+        getRequiredQuoteAssets() {
+          return [...__privateGet(this, _requiredQuoteAssets)];
+        }
+        /** Base assets to exclude */
+        getExcludedBaseAssets() {
+          return [...__privateGet(this, _excludedBaseAssets)];
+        }
+        /** Whether full quote coverage is required */
+        requiresFullQuoteCoverage() {
+          return __privateGet(this, _requiredQuoteAssets).length > 0;
+        }
+        /** Wheter to limit output sizes or not */
+        getLimit() {
+          return __privateGet(this, _limit);
+        }
+      };
+      _exchanges = new WeakMap();
+      _quoteAssets = new WeakMap();
+      _requiredQuoteAssets = new WeakMap();
+      _excludedBaseAssets = new WeakMap();
+      _limit = new WeakMap();
+    }
+  });
+
+  // ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsRequest.ts
+  var _plugins2, _tradingPairs2, RegisterPluginsRequest;
+  var init_RegisterPluginsRequest = __esm({
+    "ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsRequest.ts"() {
+      "use strict";
+      RegisterPluginsRequest = class {
+        constructor(plugins, tradingPairs) {
+          __privateAdd(this, _plugins2);
+          __privateAdd(this, _tradingPairs2);
+          __privateSet(this, _plugins2, plugins);
+          __privateSet(this, _tradingPairs2, tradingPairs);
+          Object.freeze(this);
+        }
+        get plugins() {
+          return __privateGet(this, _plugins2);
+        }
+        get tradingPairs() {
+          return __privateGet(this, _tradingPairs2);
+        }
+      };
+      _plugins2 = new WeakMap();
+      _tradingPairs2 = new WeakMap();
+    }
+  });
+
+  // ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest.ts
+  var _paralelRequestsCount, _utcNowMs2, _progressCallback2, _plugins3, SyncOhlcvDataRequest;
+  var init_SyncOhlcvDataRequest = __esm({
+    "ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest.ts"() {
+      "use strict";
+      SyncOhlcvDataRequest = class {
+        constructor(plugins, paralelRequestsCount, utcNowMs, progressCallback) {
+          __privateAdd(this, _paralelRequestsCount);
+          __privateAdd(this, _utcNowMs2);
+          __privateAdd(this, _progressCallback2);
+          __privateAdd(this, _plugins3);
+          if (paralelRequestsCount <= 0) throw new RangeError("paralelRequestsCount must be > 0");
+          __privateSet(this, _plugins3, plugins);
+          __privateSet(this, _paralelRequestsCount, paralelRequestsCount);
+          __privateSet(this, _utcNowMs2, utcNowMs);
+          __privateSet(this, _progressCallback2, progressCallback);
+          Object.freeze(this);
+        }
+        reportProgress(progressData) {
+          return __privateGet(this, _progressCallback2).call(this, progressData);
+        }
+        getUtcNowMilliseconds() {
+          return __privateGet(this, _utcNowMs2);
+        }
+        getParalelRequestsCount() {
+          return __privateGet(this, _paralelRequestsCount);
+        }
+        getPlugins() {
+          return __privateGet(this, _plugins3);
+        }
+      };
+      _paralelRequestsCount = new WeakMap();
+      _utcNowMs2 = new WeakMap();
+      _progressCallback2 = new WeakMap();
+      _plugins3 = new WeakMap();
+    }
+  });
+
+  // ts_libs/ts_worker/domain/entities/TradingPair.ts
+  var _baseAsset, _quoteAsset, _exchangeDescriptor, _TradingPair, TradingPair;
+  var init_TradingPair = __esm({
+    "ts_libs/ts_worker/domain/entities/TradingPair.ts"() {
+      "use strict";
+      init_ExchangeDescriptor();
+      init_Asset();
+      _TradingPair = class _TradingPair {
+        /**
+         * @param exchangeDescriptor - ExchangeDescriptor
+         * @param baseAsset - Base asset
+         * @param quoteAsset - Quote asset
+         */
+        constructor(exchangeDescriptor, baseAsset, quoteAsset) {
+          // Private fields
+          __privateAdd(this, _baseAsset);
+          __privateAdd(this, _quoteAsset);
+          __privateAdd(this, _exchangeDescriptor);
+          __privateSet(this, _exchangeDescriptor, ExchangeDescriptor.fromUnknown(exchangeDescriptor));
+          __privateSet(this, _baseAsset, Asset.fromUnknown(baseAsset));
+          __privateSet(this, _quoteAsset, Asset.fromUnknown(quoteAsset));
+          Object.freeze(this);
+        }
+        /** Returns the base asset */
+        getBaseAsset() {
+          return __privateGet(this, _baseAsset);
+        }
+        /** Returns the quote asset */
+        getQuoteAsset() {
+          return __privateGet(this, _quoteAsset);
+        }
+        /** Returns the symbol concatenation (e.g., BTCUSDT) */
+        symbol() {
+          return __privateGet(this, _baseAsset).toString() + __privateGet(this, _quoteAsset).toString();
+        }
+        /** Returns a unique ID string for this trading pair */
+        getId() {
+          return `${__privateGet(this, _baseAsset).toString()} ${__privateGet(this, _quoteAsset).toString()} ${__privateGet(this, _exchangeDescriptor).getName()} ${__privateGet(this, _exchangeDescriptor).getId()}`;
+        }
+        /** Returns the ExchangeDescriptor associated with this pair */
+        getExchangeDescriptor() {
+          return __privateGet(this, _exchangeDescriptor);
+        }
+        /**
+         * Runtime validation: ensures the object is a TradingPair
+         * @param aTradingPair - object to validate
+         */
+        static fromUnknown(aTradingPair) {
+          if (!(aTradingPair instanceof _TradingPair)) {
+            throw new TypeError("aTradingPair must be an instance of TradingPair");
+          }
+          return aTradingPair;
+        }
+      };
+      _baseAsset = new WeakMap();
+      _quoteAsset = new WeakMap();
+      _exchangeDescriptor = new WeakMap();
+      TradingPair = _TradingPair;
+    }
+  });
+
+  // ts_libs/ts_worker/domain/exchange/ExchangeDescriptorRegistry.ts
+  var ExchangeDescriptorRegistry;
+  var init_ExchangeDescriptorRegistry = __esm({
+    "ts_libs/ts_worker/domain/exchange/ExchangeDescriptorRegistry.ts"() {
+      "use strict";
+      init_ExchangeDescriptor();
+      ExchangeDescriptorRegistry = class {
+        constructor() {
+          this.exchanges = /* @__PURE__ */ new Map();
+        }
+        /**
+         * Register a new exchange descriptor
+         * @param descriptor ExchangeDescriptor instance
+         * @returns The registered descriptor
+         */
+        register(descriptor) {
+          if (!(descriptor instanceof ExchangeDescriptor)) {
+            throw new TypeError("Must be ExchangeDescriptor");
+          }
+          this.exchanges.set(descriptor.getId(), descriptor);
+          return descriptor;
+        }
+        /**
+         * Find exchange descriptor by id
+         * @param id numeric id of the exchange
+         */
+        byId(id) {
+          const ex = this.exchanges.get(id);
+          if (!ex) throw new RangeError(`Exchange id=${id} not found`);
+          return ex;
+        }
+        /**
+         * Find exchange descriptor by name (case-insensitive)
+         * @param name exchange name
+         */
+        byName(name) {
+          for (const ex of this.exchanges.values()) {
+            if (ex.getName().toLowerCase() === name.toLowerCase()) return ex;
+          }
+          throw new RangeError(`Exchange name="${name}" not found`);
+        }
+        /**
+         * Return all registered exchanges
+         */
+        all() {
+          return Array.from(this.exchanges.values());
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/domain/exchange/ExchangeMethodsRegistry.ts
+  var ExchangeMethodsRegistry;
+  var init_ExchangeMethodsRegistry = __esm({
+    "ts_libs/ts_worker/domain/exchange/ExchangeMethodsRegistry.ts"() {
+      "use strict";
+      ExchangeMethodsRegistry = class {
+        constructor() {
+          this.map = /* @__PURE__ */ new Map();
+        }
+        /**
+         * Register exchange methods for a specific exchange.
+         * @param exchangeDescriptor - descriptor of the exchange
+         * @param methods - implementation of exchange methods
+         */
+        register(exchangeDescriptor, methods) {
+          this.map.set(exchangeDescriptor.getId(), methods);
+        }
+        /**
+         * Get exchange methods for a specific exchange.
+         * @param exchangeDescriptor - descriptor of the exchange
+         * @returns registered exchange methods
+         * @throws Error if no methods registered for this exchange
+         */
+        get(exchangeDescriptor) {
+          const methods = this.map.get(exchangeDescriptor.getId());
+          if (!methods) {
+            throw new Error(
+              `No ExchangeMethods registered for exchangeId=${exchangeDescriptor.getId()}`
+            );
+          }
+          return methods;
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/domain/repositories/TradingPairsRepository.ts
+  var TradingPairsRepository;
+  var init_TradingPairsRepository = __esm({
+    "ts_libs/ts_worker/domain/repositories/TradingPairsRepository.ts"() {
+      "use strict";
+      init_TradingPair();
+      init_ExchangeDescriptor();
+      init_Asset();
+      TradingPairsRepository = class {
+        constructor() {
+          this.pairs = [];
+        }
+        /* ============================
+         * Public Instance Methods
+         * ============================ */
+        /** Check if repository is empty */
+        isEmpty() {
+          return this.pairs.length === 0;
+        }
+        /**
+         * Filter trading pairs by exchanges and quote assets
+         * @param exchanges - Array of ExchangeDescriptor
+         * @param quoteAssets - Array of quote asset symbols
+         * @returns Array of TradingPair
+         */
+        filter(exchanges, quoteAssets) {
+          const givenExchangeIds = new Set(
+            exchanges.map((e) => ExchangeDescriptor.fromUnknown(e).getId())
+          );
+          const givenAssets = new Set(
+            quoteAssets.map((e) => Asset.fromUnknown(e).toString())
+          );
+          return this.pairs.filter(
+            (p) => givenExchangeIds.has(p.getExchangeDescriptor().getId()) && givenAssets.has(p.getQuoteAsset().toString())
+          );
+        }
+        /**
+         * Lookup a TradingPair by exchange + base + quote
+         * @param exchangeDescriptor
+         * @param baseAsset
+         * @param quoteAsset
+         * @returns TradingPair
+         */
+        lookup(exchangeDescriptor, baseAsset, quoteAsset) {
+          const base = Asset.fromUnknown(baseAsset);
+          const quote = Asset.fromUnknown(quoteAsset);
+          const exchangeId = ExchangeDescriptor.fromUnknown(exchangeDescriptor).getId();
+          const toReturn = this.pairs.find(
+            (p) => p.getExchangeDescriptor().getId() === exchangeId && p.getBaseAsset().equals(base) && p.getQuoteAsset().equals(quote)
+          );
+          if (!toReturn) {
+            throw new Error(
+              `Pair ${baseAsset.toString()}/${quoteAsset.toString()} was not found on ${exchangeDescriptor.getName()}`
+            );
+          }
+          return TradingPair.fromUnknown(toReturn);
+        }
+        /**
+         * Check if a trading pair is available
+         * @param exchangeDescriptor
+         * @param baseAsset
+         * @param quoteAsset
+         */
+        isTradingPairAvailable(exchangeDescriptor, baseAsset, quoteAsset) {
+          const base = Asset.fromUnknown(baseAsset);
+          const quote = Asset.fromUnknown(quoteAsset);
+          const exchangeId = ExchangeDescriptor.fromUnknown(exchangeDescriptor).getId();
+          const match = this.pairs.find(
+            (p) => p.getExchangeDescriptor().getId() === exchangeId && p.getBaseAsset().equals(base) && p.getQuoteAsset().equals(quote)
+          );
+          if (!match) {
+            return false;
+          }
+          const _ = TradingPair.fromUnknown(match);
+          return true;
+        }
+        /** Get a copy of all registered trading pairs */
+        getPairs() {
+          return this.pairs;
+        }
+        /** Register a new trading pair */
+        registerPair(tradingPair) {
+          this.pairs.push(TradingPair.fromUnknown(tradingPair));
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/domain/ta/TechnicalAnalisysRepository.ts
+  var TechnicalAnalisysRepository;
+  var init_TechnicalAnalisysRepository = __esm({
+    "ts_libs/ts_worker/domain/ta/TechnicalAnalisysRepository.ts"() {
+      "use strict";
+      TechnicalAnalisysRepository = class {
+        constructor() {
+          this.indicators = /* @__PURE__ */ new Map();
+          this.datasets = /* @__PURE__ */ new Map();
+          this.indicatorParameters = [];
+        }
+        pushUpdate(tradingPair, timeFrame, open, high, low, close, volume, startTime, endTime, isClosed) {
+          const dataset = this.getDataset(tradingPair);
+          return dataset.pushUpdate(
+            timeFrame,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            startTime,
+            endTime,
+            isClosed
+          );
+        }
+        addDataset(dataset) {
+          const tradingPair = dataset.getTradingPair();
+          if (this.datasets.has(tradingPair)) {
+            throw new Error(`TradingPair ${tradingPair} already added to repo.`);
+          }
+          this.datasets.set(tradingPair, dataset);
+        }
+        getDataset(tradingPair) {
+          const dataset = this.datasets.get(tradingPair);
+          if (!dataset) {
+            throw new Error(`No MTF dataset registered for ${tradingPair.symbol()}`);
+          }
+          return dataset;
+        }
+        getDatasets() {
+          return this.datasets;
+        }
+        getIndicators(tradingPair) {
+          const list = this.indicators.get(tradingPair);
+          if (!list) {
+            throw new Error(`No indicator found for: ${tradingPair.getId()}`);
+          }
+          return list;
+        }
+        initializeIndicatorsWithDatasets(tradingPair) {
+          const dataset = this.getDataset(tradingPair);
+          const created = this.indicatorParameters.map((indParam) => {
+            return indParam.createUsing(dataset);
+          });
+          this.indicators.set(tradingPair, created);
+        }
+        addIndicatorParameters(indicatorParams) {
+          const exists = this.indicatorParameters.some(
+            (ind) => ind.equals(indicatorParams)
+          );
+          if (exists) {
+            return false;
+          }
+          this.indicatorParameters.push(indicatorParams);
+          return true;
+        }
+        findIndicator(tradingPair, indicatorParams) {
+          const list = this.getIndicators(tradingPair);
+          const found = list.find(
+            (ind) => ind.getParameters().equals(indicatorParams)
+          );
+          if (!found) {
+            throw new Error(`Indicator ${indicatorParams.getId()} was not found for tp ${tradingPair.getId()}.`);
+          }
+          return found;
+        }
+        updateIndicators(tradingPair, timeFrame) {
+          const list = this.getIndicators(tradingPair);
+          list.forEach((ind) => {
+            if (ind.getParameters().getTimeFrame() === timeFrame) {
+              ind.update();
+            }
+          });
+        }
+        getTradingPairs() {
+          throw new Error("Method not implemented.");
+        }
+        getOhlcvData(tradingPair, source, timeframe, position) {
+          let dataset = this.getDataset(tradingPair);
+          let tfBuffer = dataset.getBuffer(timeframe);
+          return source.extract(tfBuffer.getCandle(position));
+        }
+        getOhlcvPendingData(tradingPair, source, timeframe) {
+          let dataset = this.getDataset(tradingPair);
+          let tfBuffer = dataset.getBuffer(timeframe);
+          return source.extract(tfBuffer.getPendingCandle());
+        }
+        getIndicatorValue(indicator, position) {
+          return indicator.getValue(position);
+        }
+        getPendingIndicatorValue(indicator) {
+          return indicator.getPendingValue();
+        }
+        isIndicatorReady(indicator) {
+          return indicator.isReady();
         }
       };
     }
@@ -338,192 +1476,6 @@
         /** Number of elements currently stored */
         getSize() {
           return this.size;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/domain/exchange/ExchangeDescriptor.ts
-  var _id, _name, _ExchangeDescriptor, ExchangeDescriptor;
-  var init_ExchangeDescriptor = __esm({
-    "ts_libs/ts_worker/domain/exchange/ExchangeDescriptor.ts"() {
-      "use strict";
-      _ExchangeDescriptor = class _ExchangeDescriptor {
-        /**
-         * Create a new ExchangeDescriptor.
-         * @param id - integer ID
-         * @param name - non-empty string
-         */
-        constructor(id, name) {
-          // Private fields
-          __privateAdd(this, _id);
-          __privateAdd(this, _name);
-          if (!Number.isInteger(id)) {
-            throw new TypeError("id must be an integer");
-          }
-          if (typeof name !== "string" || name.length === 0) {
-            throw new TypeError("name must be a non-empty string");
-          }
-          __privateSet(this, _id, id);
-          __privateSet(this, _name, name);
-          Object.freeze(this);
-        }
-        /** ============================
-         * Public getters
-         * ============================ */
-        getId() {
-          return __privateGet(this, _id);
-        }
-        getName() {
-          return __privateGet(this, _name);
-        }
-        static fromUnknown(value) {
-          if (!(value instanceof _ExchangeDescriptor)) {
-            throw new TypeError("Expected ExchangeDescriptor");
-          }
-          return value;
-        }
-      };
-      _id = new WeakMap();
-      _name = new WeakMap();
-      ExchangeDescriptor = _ExchangeDescriptor;
-    }
-  });
-
-  // ts_libs/ts_worker/domain/values/Asset.ts
-  var Asset;
-  var init_Asset = __esm({
-    "ts_libs/ts_worker/domain/values/Asset.ts"() {
-      "use strict";
-      Asset = class _Asset {
-        /**
-         * @param symbol - asset symbol (non-empty, trimmed string)
-         */
-        constructor(symbol) {
-          if (symbol.trim() === "") {
-            throw new TypeError("Asset symbol must be a non-empty string");
-          }
-          this.symbol = symbol.trim().toUpperCase();
-          Object.freeze(this);
-        }
-        /**
-         * Value equality check.
-         * @param other another Asset
-         */
-        equals(other) {
-          return this.symbol === other.symbol;
-        }
-        toString() {
-          return this.symbol;
-        }
-        /**
-         * Runtime-safe factory: validate unknown input
-         * @param value unknown input (any type)
-         * @returns Asset
-         * @throws TypeError if value is not an Asset
-         */
-        static fromUnknown(value) {
-          if (value instanceof _Asset) {
-            return value;
-          }
-          if (typeof value === "string") {
-            return new _Asset(value);
-          }
-          throw new TypeError(
-            `Cannot create Asset from value: ${String(value)}`
-          );
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/domain/entities/TradingPair.ts
-  var _baseAsset, _quoteAsset, _exchangeDescriptor, _TradingPair, TradingPair;
-  var init_TradingPair = __esm({
-    "ts_libs/ts_worker/domain/entities/TradingPair.ts"() {
-      "use strict";
-      init_ExchangeDescriptor();
-      init_Asset();
-      _TradingPair = class _TradingPair {
-        /**
-         * @param exchangeDescriptor - ExchangeDescriptor
-         * @param baseAsset - Base asset
-         * @param quoteAsset - Quote asset
-         */
-        constructor(exchangeDescriptor, baseAsset, quoteAsset) {
-          // Private fields
-          __privateAdd(this, _baseAsset);
-          __privateAdd(this, _quoteAsset);
-          __privateAdd(this, _exchangeDescriptor);
-          __privateSet(this, _exchangeDescriptor, ExchangeDescriptor.fromUnknown(exchangeDescriptor));
-          __privateSet(this, _baseAsset, Asset.fromUnknown(baseAsset));
-          __privateSet(this, _quoteAsset, Asset.fromUnknown(quoteAsset));
-          Object.freeze(this);
-        }
-        /** Returns the base asset */
-        getBaseAsset() {
-          return __privateGet(this, _baseAsset);
-        }
-        /** Returns the quote asset */
-        getQuoteAsset() {
-          return __privateGet(this, _quoteAsset);
-        }
-        /** Returns the symbol concatenation (e.g., BTCUSDT) */
-        symbol() {
-          return __privateGet(this, _baseAsset).toString() + __privateGet(this, _quoteAsset).toString();
-        }
-        /** Returns a unique ID string for this trading pair */
-        getId() {
-          return `${__privateGet(this, _baseAsset).toString()} ${__privateGet(this, _quoteAsset).toString()} ${__privateGet(this, _exchangeDescriptor).getName()} ${__privateGet(this, _exchangeDescriptor).getId()}`;
-        }
-        /** Returns the ExchangeDescriptor associated with this pair */
-        getExchangeDescriptor() {
-          return __privateGet(this, _exchangeDescriptor);
-        }
-        /**
-         * Runtime validation: ensures the object is a TradingPair
-         * @param aTradingPair - object to validate
-         */
-        static fromUnknown(aTradingPair) {
-          if (!(aTradingPair instanceof _TradingPair)) {
-            throw new TypeError("aTradingPair must be an instance of TradingPair");
-          }
-          return aTradingPair;
-        }
-      };
-      _baseAsset = new WeakMap();
-      _quoteAsset = new WeakMap();
-      _exchangeDescriptor = new WeakMap();
-      TradingPair = _TradingPair;
-    }
-  });
-
-  // ts_libs/ts_worker/domain/errors/InsufficientOhlcvDataError.ts
-  var InsufficientOhlcvDataError;
-  var init_InsufficientOhlcvDataError = __esm({
-    "ts_libs/ts_worker/domain/errors/InsufficientOhlcvDataError.ts"() {
-      "use strict";
-      InsufficientOhlcvDataError = class _InsufficientOhlcvDataError extends Error {
-        /**
-         * @param reason - Why the data is insufficient
-         * @param baseAsset - Base asset symbol
-         * @param quoteAsset - Quote asset symbol
-         * @param exchangeDescriptor - Exchange name
-         */
-        constructor(reason, pair) {
-          super(`Insufficient OHLCV data for ${pair.symbol()} on ${pair.getExchangeDescriptor().getName()}: ${reason}`);
-          this.name = "InsufficientOhlcvDataError";
-          this.reason = reason;
-          this.baseAsset = pair.getBaseAsset();
-          this.quoteAsset = pair.getQuoteAsset();
-          this.exchangeDescriptor = pair.getExchangeDescriptor();
-          Object.freeze(this);
-        }
-        /**
-         * Safe type guard for this error across realms/bundles
-         */
-        static isInstance(err) {
-          return err instanceof _InsufficientOhlcvDataError;
         }
       };
     }
@@ -961,6 +1913,37 @@
     }
   });
 
+  // ts_libs/ts_worker/domain/errors/InsufficientOhlcvDataError.ts
+  var InsufficientOhlcvDataError;
+  var init_InsufficientOhlcvDataError = __esm({
+    "ts_libs/ts_worker/domain/errors/InsufficientOhlcvDataError.ts"() {
+      "use strict";
+      InsufficientOhlcvDataError = class _InsufficientOhlcvDataError extends Error {
+        /**
+         * @param reason - Why the data is insufficient
+         * @param baseAsset - Base asset symbol
+         * @param quoteAsset - Quote asset symbol
+         * @param exchangeDescriptor - Exchange name
+         */
+        constructor(reason, pair) {
+          super(`Insufficient OHLCV data for ${pair.symbol()} on ${pair.getExchangeDescriptor().getName()}: ${reason}`);
+          this.name = "InsufficientOhlcvDataError";
+          this.reason = reason;
+          this.baseAsset = pair.getBaseAsset();
+          this.quoteAsset = pair.getQuoteAsset();
+          this.exchangeDescriptor = pair.getExchangeDescriptor();
+          Object.freeze(this);
+        }
+        /**
+         * Safe type guard for this error across realms/bundles
+         */
+        static isInstance(err) {
+          return err instanceof _InsufficientOhlcvDataError;
+        }
+      };
+    }
+  });
+
   // ts_libs/ts_worker/domain/values/MultiTimeframeOhlcv.ts
   var _MultiTimeframeOhlcv, MultiTimeframeOhlcv;
   var init_MultiTimeframeOhlcv = __esm({
@@ -1116,6 +2099,560 @@
         TimeFrame.ONE_DAY
       ];
       MultiTimeframeOhlcv = _MultiTimeframeOhlcv;
+    }
+  });
+
+  // ts_libs/ts_worker/domain/exchange/ExchangeMethodsBase.ts
+  var _ExchangeMethodsBase_static, getEntries_fn, _ExchangeMethodsBase, ExchangeMethodsBase;
+  var init_ExchangeMethodsBase = __esm({
+    "ts_libs/ts_worker/domain/exchange/ExchangeMethodsBase.ts"() {
+      "use strict";
+      init_TradingPair();
+      init_TimeFrame();
+      init_OhlcvBuffer();
+      init_MultiTimeframeOhlcv();
+      _ExchangeMethodsBase = class _ExchangeMethodsBase {
+        /**
+         * Create a buffer for a single timeframe
+         */
+        createSingleBuffer(tradingPair, timeFrame, endTimeStamp, count) {
+          return __async(this, null, function* () {
+            const relevantEndTimeStamp = endTimeStamp;
+            const duration = count * timeFrame.asMilliseconds();
+            const relevantStartTimeStamp = relevantEndTimeStamp - duration;
+            const data = yield this.fetchHistoricalCandles(
+              tradingPair,
+              timeFrame,
+              relevantStartTimeStamp,
+              relevantEndTimeStamp
+            );
+            const buffer = new OhlcvBuffer(tradingPair, timeFrame, count);
+            if (data.length === 0) return buffer;
+            let startIndex = 0;
+            for (let i = data.length - 1; i > 0; i--) {
+              const expectedPrev = data[i].startTime - timeFrame.asMilliseconds();
+              if (data[i - 1].startTime !== expectedPrev) {
+                startIndex = i;
+                break;
+              }
+            }
+            for (let i = startIndex; i < data.length; i++) {
+              buffer.pushEntry(data[i]);
+            }
+            return buffer;
+          });
+        }
+        /**
+         * Sync a MultiTimeframeOhlcv with new data up to newEndTimeMillis
+         */
+        syncOneMinuteTimeFrame(multiTimeframeOhlcv, newEndTimeMillis) {
+          return __async(this, null, function* () {
+            const timeFrame = TimeFrame.ONE_MINUTE;
+            const buffer = OhlcvBuffer.fromUnknown(multiTimeframeOhlcv.getBuffer(timeFrame));
+            if (buffer.isEmpty()) {
+              throw new Error("Cannot sync an empty buffer");
+            }
+            const relevantStartTimeStamp = buffer.getStartTime() + timeFrame.asMilliseconds();
+            const relevantEndTimeStamp = newEndTimeMillis;
+            if (relevantEndTimeStamp <= relevantStartTimeStamp) return void 0;
+            const data = yield this.fetchHistoricalCandles(
+              multiTimeframeOhlcv.getTradingPair(),
+              buffer.getBaseTimeFrame(),
+              relevantStartTimeStamp,
+              relevantEndTimeStamp
+            );
+            return data;
+          });
+        }
+        /**
+         * Create a MultiTimeframeOhlcv from historical data
+         */
+        createMultiTimeframeOhlcv(tradingPair, endTimeMsExclusive, totalCountPerTimeFrame) {
+          return __async(this, null, function* () {
+            var _a, _b, _c, _d, _e, _f;
+            if (!Number.isInteger(totalCountPerTimeFrame) || totalCountPerTimeFrame <= 10) {
+              throw new RangeError("totalCountPerTimeFrame must be > 10");
+            }
+            if (!Number.isFinite(endTimeMsExclusive)) {
+              throw new RangeError("endTimeMsExclusive must be finite");
+            }
+            const timeFrames = MultiTimeframeOhlcv.TimeframeHierarchy;
+            const results = yield Promise.all(timeFrames.map((tf) => __async(this, null, function* () {
+              const entries = yield this.createSingleBuffer(TradingPair.fromUnknown(tradingPair), tf, endTimeMsExclusive, totalCountPerTimeFrame);
+              return { timeFrame: tf, entries };
+            })));
+            return new MultiTimeframeOhlcv(
+              tradingPair,
+              __privateMethod(_a = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_a, results, TimeFrame.ONE_DAY),
+              __privateMethod(_b = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_b, results, TimeFrame.FOUR_HOURS),
+              __privateMethod(_c = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_c, results, TimeFrame.ONE_HOUR),
+              __privateMethod(_d = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_d, results, TimeFrame.FIFTEEN_MINUTES),
+              __privateMethod(_e = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_e, results, TimeFrame.FIVE_MINUTES),
+              __privateMethod(_f = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_f, results, TimeFrame.ONE_MINUTE)
+            );
+          });
+        }
+      };
+      _ExchangeMethodsBase_static = new WeakSet();
+      getEntries_fn = function(map, timeFrame) {
+        const found = map.find((x) => timeFrame.equals(x.timeFrame));
+        if (!found || !found.entries) {
+          throw new Error(`Entries for timeframe ${timeFrame.getLabel()} not found`);
+        }
+        return found.entries;
+      };
+      __privateAdd(_ExchangeMethodsBase, _ExchangeMethodsBase_static);
+      ExchangeMethodsBase = _ExchangeMethodsBase;
+    }
+  });
+
+  // ts_libs/ts_worker/infrastructure/exchanges/ExchangeMethodsBinance.ts
+  var _ExchangeMethodsBinance_static, createOhlcvEntry_fn, _ExchangeMethodsBinance, ExchangeMethodsBinance;
+  var init_ExchangeMethodsBinance = __esm({
+    "ts_libs/ts_worker/infrastructure/exchanges/ExchangeMethodsBinance.ts"() {
+      "use strict";
+      init_ExchangeMethodsBase();
+      init_TimeFrame();
+      init_OhlcvEntry();
+      init_Asset();
+      _ExchangeMethodsBinance = class _ExchangeMethodsBinance extends ExchangeMethodsBase {
+        constructor() {
+          super();
+        }
+        getTradingPairUrl(tradingPair) {
+          return `https://www.binance.com/en/trade/${tradingPair.getBaseAsset()}_${tradingPair.getQuoteAsset()}?type=spot`;
+        }
+        /**
+         * Fetch trading pairs from Binance.
+         * @param callback - called for each trading pair (baseAsset, quoteAsset)
+         */
+        fetchTradingPairs(callback) {
+          return __async(this, null, function* () {
+            if (typeof callback !== "function") {
+              throw new TypeError("callback must be a function");
+            }
+            const res = yield fetch(`${_ExchangeMethodsBinance.BASE_URL}/api/v3/exchangeInfo`);
+            if (!res.ok) {
+              throw new Error(`Binance exchangeInfo failed (${res.status})`);
+            }
+            const info = yield res.json();
+            if (!Array.isArray(info.symbols)) {
+              throw new Error("Invalid Binance exchangeInfo response");
+            }
+            for (const s of info.symbols) {
+              if (s.status !== "TRADING") continue;
+              if (!s.isSpotTradingAllowed) continue;
+              callback(Asset.fromUnknown(s.baseAsset), Asset.fromUnknown(s.quoteAsset));
+            }
+          });
+        }
+        /**
+         * Fetch historical candles.
+         * @param tradingPair - TradingPair instance
+         * @param timeFrame - TimeFrame instance
+         * @param startTimeMsInclusive - start timestamp (ms)
+         * @param endTimeMsExclusive - end timestamp (ms)
+         * @returns ordered OHLCV entries
+         */
+        fetchHistoricalCandles(tradingPair, timeFrame, startTimeMsInclusive, endTimeMsExclusive) {
+          return __async(this, null, function* () {
+            const symbol = tradingPair.symbol();
+            const interval = _ExchangeMethodsBinance.mapTimeFrameToBinanceInterval(timeFrame);
+            const toReturn = [];
+            let cursorTime = startTimeMsInclusive;
+            if (!timeFrame.isTimestampAligned(cursorTime)) {
+              cursorTime = cursorTime - cursorTime % timeFrame.asMilliseconds();
+            }
+            while (cursorTime < endTimeMsExclusive) {
+              const url = new URL(`${_ExchangeMethodsBinance.BASE_URL}/api/v3/klines`);
+              url.searchParams.set("symbol", symbol);
+              url.searchParams.set("interval", interval);
+              url.searchParams.set("startTime", `${cursorTime}`);
+              url.searchParams.set("limit", `${_ExchangeMethodsBinance.MAX_LIMIT}`);
+              const res = yield fetch(url.toString());
+              if (!res.ok) throw new Error(`Binance OHLCV fetch failed (${res.status})`);
+              const data = yield res.json();
+              if (!Array.isArray(data) || data.length === 0) break;
+              const entries = data.map(
+                (item) => {
+                  var _a;
+                  return __privateMethod(_a = _ExchangeMethodsBinance, _ExchangeMethodsBinance_static, createOhlcvEntry_fn).call(_a, item, timeFrame, endTimeMsExclusive);
+                }
+              );
+              if (entries.length > 0) {
+                const filtered = entries.filter((d) => d.isClosed === true);
+                toReturn.push(...filtered);
+                const last = entries[entries.length - 1];
+                cursorTime = last.startTime + timeFrame.asMilliseconds();
+              }
+              if (entries.length < _ExchangeMethodsBinance.MAX_LIMIT) {
+                break;
+              }
+            }
+            for (let i = 1; i < toReturn.length; i++) {
+              if (toReturn[i].startTime < toReturn[i - 1].startTime) {
+                throw new Error("Non-ascending candles returned by Binance");
+              }
+            }
+            return toReturn;
+          });
+        }
+        /** Returns the Binance string label for a TimeFrame instance */
+        static mapTimeFrameToBinanceInterval(timeFrame) {
+          switch (timeFrame) {
+            case TimeFrame.ONE_MINUTE:
+              return "1m";
+            case TimeFrame.FIVE_MINUTES:
+              return "5m";
+            case TimeFrame.FIFTEEN_MINUTES:
+              return "15m";
+            case TimeFrame.ONE_HOUR:
+              return "1h";
+            case TimeFrame.FOUR_HOURS:
+              return "4h";
+            case TimeFrame.ONE_DAY:
+              return "1d";
+            default:
+              throw new RangeError(`Unsupported TimeFrame for Binance: ${timeFrame.getLabel()}`);
+          }
+        }
+      };
+      _ExchangeMethodsBinance_static = new WeakSet();
+      createOhlcvEntry_fn = function(item, timeFrame, endTimeMsExclusive) {
+        if (!Array.isArray(item) || item.length < 7) {
+          throw new Error("Invalid kline format from Binance");
+        }
+        const entry = new OhlcvEntry();
+        entry.update(
+          timeFrame,
+          +item[1],
+          // open
+          +item[2],
+          // high
+          +item[3],
+          // low
+          +item[4],
+          // close
+          +item[5],
+          // volume
+          +item[0],
+          // startTime
+          +item[6],
+          // closeTime
+          +item[6] < endTimeMsExclusive
+          // isClosed
+        );
+        return entry;
+      };
+      __privateAdd(_ExchangeMethodsBinance, _ExchangeMethodsBinance_static);
+      _ExchangeMethodsBinance.BASE_URL = "https://api.binance.com";
+      _ExchangeMethodsBinance.MAX_LIMIT = 800;
+      ExchangeMethodsBinance = _ExchangeMethodsBinance;
+    }
+  });
+
+  // ts_libs/ts_worker/infrastructure/exchanges/ExchangeMethodsBybit.ts
+  var _ExchangeMethodsBybit, ExchangeMethodsBybit;
+  var init_ExchangeMethodsBybit = __esm({
+    "ts_libs/ts_worker/infrastructure/exchanges/ExchangeMethodsBybit.ts"() {
+      "use strict";
+      init_ExchangeMethodsBase();
+      init_TimeFrame();
+      init_OhlcvEntry();
+      init_Asset();
+      _ExchangeMethodsBybit = class _ExchangeMethodsBybit extends ExchangeMethodsBase {
+        // Bybit v5 spot max
+        constructor() {
+          super();
+        }
+        getTradingPairUrl(tradingPair) {
+          return `https://www.bybit.com/en/trade/spot/${tradingPair.getBaseAsset()}/${tradingPair.getQuoteAsset()}`;
+        }
+        /**
+         * Fetch trading pairs from Bybit Spot.
+         * @param callback Called for each trading pair (baseAsset, quoteAsset)
+         */
+        fetchTradingPairs(callback) {
+          return __async(this, null, function* () {
+            var _a, _b;
+            const url = `${_ExchangeMethodsBybit.BASE_URL}/v5/market/instruments-info?category=spot`;
+            const res = yield fetch(url);
+            if (!res.ok) {
+              throw new Error(`Bybit Spot symbols fetch failed (${res.status})`);
+            }
+            const json = yield res.json();
+            if (json.retCode !== 0) {
+              throw new Error(`Bybit Spot API error: ${json.retMsg}`);
+            }
+            const list = (_b = (_a = json.result) == null ? void 0 : _a.list) != null ? _b : [];
+            list.filter((s) => s.status === "Trading").forEach((s) => callback(Asset.fromUnknown(s.baseCoin), Asset.fromUnknown(s.quoteCoin)));
+          });
+        }
+        /**
+         * Map internal TimeFrame enum to Bybit v5 interval identifiers.
+         */
+        static mapTimeFrameToBybitInterval(timeFrame) {
+          switch (timeFrame) {
+            case TimeFrame.ONE_MINUTE:
+              return "1";
+            case TimeFrame.FIVE_MINUTES:
+              return "5";
+            case TimeFrame.FIFTEEN_MINUTES:
+              return "15";
+            case TimeFrame.ONE_HOUR:
+              return "60";
+            case TimeFrame.FOUR_HOURS:
+              return "240";
+            case TimeFrame.ONE_DAY:
+              return "D";
+            // case TimeFrame.ONE_WEEK: return "W"; // if you support weekly
+            default:
+              throw new RangeError(`Unsupported TimeFrame for Bybit Spot: ${timeFrame.getLabel()}`);
+          }
+        }
+        /**
+         * Fetch historical candles for a trading pair.
+         */
+        fetchHistoricalCandles(tradingPair, timeFrame, startTimeMsInclusive, endTimeMsExclusive) {
+          return __async(this, null, function* () {
+            var _a, _b;
+            const symbol = tradingPair.symbol();
+            const interval = _ExchangeMethodsBybit.mapTimeFrameToBybitInterval(timeFrame);
+            const toReturn = [];
+            let cursorTime = startTimeMsInclusive;
+            if (!timeFrame.isTimestampAligned(cursorTime)) {
+              cursorTime = cursorTime - cursorTime % timeFrame.asMilliseconds();
+            }
+            while (cursorTime < endTimeMsExclusive) {
+              const url = new URL(`${_ExchangeMethodsBybit.BASE_URL}/v5/market/kline`);
+              url.searchParams.set("category", "spot");
+              url.searchParams.set("symbol", symbol);
+              url.searchParams.set("interval", interval);
+              url.searchParams.set("start", `${cursorTime}`);
+              url.searchParams.set("limit", `${_ExchangeMethodsBybit.MAX_LIMIT}`);
+              const res = yield fetch(url.toString());
+              if (!res.ok) throw new Error(`Bybit Spot OHLCV fetch failed (${res.status})`);
+              const json = yield res.json();
+              if (json.retCode !== 0) throw new Error(`Bybit Spot API error: ${json.retMsg}`);
+              const list = (_b = (_a = json.result) == null ? void 0 : _a.list) != null ? _b : [];
+              if (list.length === 0) break;
+              list.reverse();
+              for (const item of list) {
+                const startMs = Number(item[0]);
+                const endMs = startMs + timeFrame.asMilliseconds() - 1;
+                if (startMs >= endTimeMsExclusive) {
+                  break;
+                }
+                if (startMs < cursorTime) {
+                  continue;
+                }
+                const entry = new OhlcvEntry();
+                entry.update(
+                  timeFrame,
+                  +item[1],
+                  // open
+                  +item[2],
+                  // high
+                  +item[3],
+                  // low
+                  +item[4],
+                  // close
+                  +item[5],
+                  // volume
+                  startMs,
+                  endMs,
+                  endMs < endTimeMsExclusive
+                  // isClosed
+                );
+                if (entry.isClosed) {
+                  toReturn.push(entry);
+                }
+              }
+              const lastRawStartTime = Number(list[list.length - 1][0]);
+              cursorTime = lastRawStartTime + timeFrame.asMilliseconds();
+              if (list.length < _ExchangeMethodsBybit.MAX_LIMIT) break;
+            }
+            for (let i = 1; i < toReturn.length; i++) {
+              if (toReturn[i].startTime < toReturn[i - 1].startTime) {
+                throw new Error("Non-ascending candles returned by Bybit");
+              }
+            }
+            return toReturn;
+          });
+        }
+      };
+      _ExchangeMethodsBybit.BASE_URL = "https://api.bybit.com";
+      _ExchangeMethodsBybit.MAX_LIMIT = 1e3;
+      ExchangeMethodsBybit = _ExchangeMethodsBybit;
+    }
+  });
+
+  // ts_libs/ts_worker/infrastructure/time/TimeProviderBase.ts
+  var TimeProviderBase;
+  var init_TimeProviderBase = __esm({
+    "ts_libs/ts_worker/infrastructure/time/TimeProviderBase.ts"() {
+      "use strict";
+      TimeProviderBase = class _TimeProviderBase {
+        /**
+         * Fetch unified server time from local. Optionally checks time skew.
+         *
+         * If skew <= MAX_ALLOWED_SKEW_MS → return the lowest time.
+         * If skew > MAX_ALLOWED_SKEW_MS → throw.
+         *
+         * @param checkForTimeSkew - whether to check for time skew
+         * @returns unified server time in milliseconds
+         * @throws Error if clock skew exceeds threshold
+         */
+        getUtcNowMilliseconds(checkForTimeSkew = false) {
+          return __async(this, null, function* () {
+            throw new Error("Not implemented");
+          });
+        }
+        /**
+         * Format a timestamp (ms) to a human-readable UTC string.
+         *
+         * Format: YYYY-MM-DD HH:mm:ss.SSS UTC
+         *
+         * @param timestampMs - timestamp in milliseconds
+         * @returns formatted UTC string
+         */
+        static formatUtc(timestampMs) {
+          if (!Number.isFinite(timestampMs)) {
+            throw new TypeError("timestampMs must be a finite number");
+          }
+          const d = new Date(timestampMs);
+          const yyyy = d.getUTCFullYear();
+          const mm = _TimeProviderBase.pad(d.getUTCMonth() + 1, 2);
+          const dd = _TimeProviderBase.pad(d.getUTCDate(), 2);
+          const hh = _TimeProviderBase.pad(d.getUTCHours(), 2);
+          const mi = _TimeProviderBase.pad(d.getUTCMinutes(), 2);
+          const ss = _TimeProviderBase.pad(d.getUTCSeconds(), 2);
+          const ms = _TimeProviderBase.pad(d.getUTCMilliseconds(), 3);
+          return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}.${ms} UTC`;
+        }
+        /**
+         * Left-pad a number with zeros
+         * @param value - number to pad
+         * @param width - desired width
+         * @returns zero-padded string
+         */
+        static pad(value, width) {
+          let s = String(value);
+          while (s.length < width) {
+            s = "0" + s;
+          }
+          return s;
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/infrastructure/time/TimeProvider.ts
+  var _TimeProvider_instances, fetchBinanceTime_fn, _TimeProvider, TimeProvider;
+  var init_TimeProvider = __esm({
+    "ts_libs/ts_worker/infrastructure/time/TimeProvider.ts"() {
+      "use strict";
+      init_TimeProviderBase();
+      _TimeProvider = class _TimeProvider extends TimeProviderBase {
+        constructor() {
+          super();
+          __privateAdd(this, _TimeProvider_instances);
+        }
+        /**
+         * Fetch unified server time from Local. Optionally checks time skew.
+         *
+         * If skew <= MAX_ALLOWED_SKEW_MS → returns the lowest time.
+         * If skew > MAX_ALLOWED_SKEW_MS → throws an Error.
+         *
+         * @param checkForTimeSkew - whether to check clock skew
+         * @returns unified server time in milliseconds
+         * @throws Error if clock skew exceeds threshold
+         */
+        getUtcNowMilliseconds(checkForTimeSkew = false) {
+          return __async(this, null, function* () {
+            const localTime = Date.now();
+            if (!checkForTimeSkew) {
+              return localTime;
+            }
+            const binanceTime = yield __privateMethod(this, _TimeProvider_instances, fetchBinanceTime_fn).call(this);
+            if (!Number.isFinite(binanceTime) || !Number.isFinite(localTime)) {
+              throw new Error("Invalid server time received");
+            }
+            const skew = Math.abs(binanceTime - localTime);
+            if (skew > _TimeProvider.MAX_ALLOWED_SKEW_MS) {
+              throw new Error(
+                `Time skew too large: ${skew} ms (Binance=${binanceTime}, LocalTime=${localTime})`
+              );
+            }
+            return Math.min(binanceTime, localTime);
+          });
+        }
+      };
+      _TimeProvider_instances = new WeakSet();
+      fetchBinanceTime_fn = function() {
+        return __async(this, null, function* () {
+          const res = yield fetch("https://api.binance.com/api/v3/time");
+          if (!res.ok) {
+            throw new Error(`Binance time fetch failed (${res.status})`);
+          }
+          const json = yield res.json();
+          if (!Number.isFinite(json.serverTime)) {
+            throw new Error("Invalid Binance time response");
+          }
+          return json.serverTime;
+        });
+      };
+      /** Maximum allowed clock skew in milliseconds (10 seconds) */
+      _TimeProvider.MAX_ALLOWED_SKEW_MS = 1e4;
+      TimeProvider = _TimeProvider;
+    }
+  });
+
+  // ts_libs/ts_worker/domain/ta/core/Period.ts
+  var Period;
+  var init_Period = __esm({
+    "ts_libs/ts_worker/domain/ta/core/Period.ts"() {
+      "use strict";
+      Period = class _Period {
+        /**
+         * @param aValue Must be a positive integer ≥ 2
+         */
+        constructor(aValue) {
+          if (!Number.isInteger(aValue)) {
+            throw new TypeError(
+              `Period value must be an integer, got ${aValue}`
+            );
+          }
+          if (aValue < 2) {
+            throw new RangeError(
+              `Period value must be at least 2, got ${aValue}`
+            );
+          }
+          this.value = aValue;
+          Object.freeze(this);
+        }
+        getValue() {
+          return this.value;
+        }
+        /**
+         * Runtime validation / normalization helper
+         * Accepts a Period or an integer.
+         *
+         * @param value unknown
+         * @throws TypeError | RangeError
+         */
+        static fromUnknown(value) {
+          if (value instanceof _Period) {
+            return value;
+          }
+          if (typeof value === "number") {
+            return new _Period(value);
+          }
+          throw new TypeError(
+            `Value must be a Period or an integer, got ${typeof value}`
+          );
+        }
+      };
     }
   });
 
@@ -1988,195 +3525,6 @@
     }
   });
 
-  // ts_libs/ts_worker/application/exports/NamedAttribute.ts
-  var NamedAttributeMetadata, NumericNamedAttribute, BooleanNamedAttribute, StringNamedAttribute, NamedAttributeFactory;
-  var init_NamedAttribute = __esm({
-    "ts_libs/ts_worker/application/exports/NamedAttribute.ts"() {
-      "use strict";
-      NamedAttributeMetadata = class {
-        constructor(key, label, type, precision) {
-          this.key = key;
-          this.label = label;
-          this.type = type;
-          this.precision = precision;
-        }
-      };
-      NumericNamedAttribute = class _NumericNamedAttribute {
-        constructor(key, label, value, precision) {
-          this.metadata = new NamedAttributeMetadata(key, label, "number", precision);
-          if (value !== void 0 && !Number.isFinite(value)) {
-            throw new Error("NumericNamedAttribute requires a finite number");
-          }
-          if (precision !== void 0 && (!Number.isInteger(precision) || precision < 0)) {
-            throw new Error("precision must be a non-negative integer");
-          }
-          this.value = value;
-        }
-        serialize() {
-          return {
-            metadata: {
-              key: this.metadata.key,
-              label: this.metadata.label,
-              type: this.metadata.type,
-              precision: this.metadata.precision
-            },
-            value: this.value
-          };
-        }
-        static fromMetadata(argMetadata, argValue) {
-          if (argMetadata.type !== "number") {
-            throw new Error("NumericNamedAttribute requires a valid metadata type");
-          }
-          return new _NumericNamedAttribute(argMetadata.key, argMetadata.label, argValue, argMetadata.precision);
-        }
-        compare(other) {
-          if (other.metadata.type !== this.metadata.type) {
-            throw new Error(
-              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
-            );
-          }
-          const a = this.value;
-          const b = other.value;
-          if (a === void 0 && b === void 0) return 0;
-          if (a === void 0) return -1;
-          if (b === void 0) return 1;
-          return a - b;
-        }
-        toString() {
-          if (this.value === void 0) return "";
-          return this.metadata.precision === void 0 ? this.value.toString() : this.value.toFixed(this.metadata.precision);
-        }
-      };
-      BooleanNamedAttribute = class _BooleanNamedAttribute {
-        constructor(key, label, value) {
-          this.metadata = new NamedAttributeMetadata(key, label, "boolean");
-          this.value = value;
-        }
-        serialize() {
-          return {
-            metadata: {
-              key: this.metadata.key,
-              label: this.metadata.label,
-              type: this.metadata.type
-            },
-            value: this.value
-          };
-        }
-        compare(other) {
-          if (other.metadata.type !== this.metadata.type) {
-            throw new Error(
-              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
-            );
-          }
-          const a = this.value;
-          const b = other.value;
-          if (a === void 0 && b === void 0) return 0;
-          if (a === void 0) return -1;
-          if (b === void 0) return 1;
-          return Number(a) - Number(b);
-        }
-        toString() {
-          return this.value === void 0 ? "" : this.value ? "true" : "false";
-        }
-        static fromMetadata(argMetadata, argValue) {
-          if (argMetadata.type !== "boolean") {
-            throw new Error("BooleanNamedAttribute requires a valid metadata type");
-          }
-          return new _BooleanNamedAttribute(argMetadata.key, argMetadata.label, argValue);
-        }
-      };
-      StringNamedAttribute = class _StringNamedAttribute {
-        constructor(key, label, value) {
-          this.metadata = new NamedAttributeMetadata(key, label, "string");
-          if (value !== void 0 && value.length === 0) {
-            throw new Error("StringNamedAttribute cannot be empty");
-          }
-          this.value = value;
-        }
-        serialize() {
-          return {
-            metadata: {
-              key: this.metadata.key,
-              label: this.metadata.label,
-              type: this.metadata.type
-            },
-            value: this.value
-          };
-        }
-        static fromMetadata(argMetadata, argValue) {
-          if (argMetadata.type !== "string") {
-            throw new Error("StringNamedAttribute requires a valid metadata type");
-          }
-          return new _StringNamedAttribute(
-            argMetadata.key,
-            argMetadata.label,
-            argValue
-          );
-        }
-        compare(other) {
-          if (other.metadata.type !== this.metadata.type) {
-            throw new Error(
-              `Cannot compare ${this.metadata.type} with ${other.metadata.type}`
-            );
-          }
-          const a = this.value;
-          const b = other.value;
-          if (a === void 0 && b === void 0) return 0;
-          if (a === void 0) return -1;
-          if (b === void 0) return 1;
-          return a.localeCompare(b);
-        }
-        toString() {
-          var _a;
-          return (_a = this.value) != null ? _a : "";
-        }
-      };
-      NamedAttributeFactory = class {
-        static deserialize(dto) {
-          const metadata = new NamedAttributeMetadata(
-            dto.metadata.key,
-            dto.metadata.label,
-            dto.metadata.type,
-            dto.metadata.precision
-          );
-          switch (metadata.type) {
-            case "number":
-              return NumericNamedAttribute.fromMetadata(
-                metadata,
-                dto.value === void 0 ? void 0 : this.asNumber(dto.value)
-              );
-            case "boolean":
-              return BooleanNamedAttribute.fromMetadata(
-                metadata,
-                dto.value === void 0 ? void 0 : this.asBoolean(dto.value)
-              );
-            case "string":
-              return StringNamedAttribute.fromMetadata(
-                metadata,
-                dto.value === void 0 ? void 0 : String(dto.value)
-              );
-            default:
-              throw new Error(`Unsupported named attribute type: ${metadata.type}`);
-          }
-        }
-        static asBoolean(value) {
-          if (value === void 0) return void 0;
-          if (typeof value !== "boolean") {
-            throw new Error("Boolean attribute value must be boolean");
-          }
-          return value;
-        }
-        static asNumber(value) {
-          if (value === void 0) return void 0;
-          if (typeof value !== "number" || !Number.isFinite(value)) {
-            throw new Error("Numeric attribute value must be finite number");
-          }
-          return value;
-        }
-      };
-    }
-  });
-
   // ts_libs/ts_worker/application/plugins/BaseFilterableAttributeExtractor.ts
   var BaseFilterableAttributeExtractor;
   var init_BaseFilterableAttributeExtractor = __esm({
@@ -2254,7 +3602,7 @@
         getFriendlyDescription() {
           return `Overbought: ${this.params.getDescription()} > ${this.overboughtTreshold}`;
         }
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
             return;
           }
@@ -2290,7 +3638,7 @@
         getFriendlyDescription() {
           return `Oversold: ${this.params.getDescription()} <= ${this.oversoldTreshold}`;
         }
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
             return;
           }
@@ -2325,7 +3673,7 @@
         getFriendlyDescription() {
           return `Downtrend: ${this.smaParameters.getDescription()} > Close`;
         }
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           if (!updatedTimeFrames.get(this.smaParameters.getTimeFrame())) {
             return;
           }
@@ -2364,7 +3712,7 @@
         getFriendlyDescription() {
           return `Uptrend: ${this.smaParameters.getDescription()} < Close`;
         }
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           if (!updatedTimeFrames.get(this.smaParameters.getTimeFrame())) {
             return;
           }
@@ -2394,7 +3742,7 @@
       init_TimeFrame();
       init_BaseSortableAttributeExtractor();
       CurrentPriceExtractor = class _CurrentPriceExtractor extends BaseSortableAttributeExtractor {
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           let hasOneMinuteData = updatedTimeFrames.get(TimeFrame.ONE_MINUTE) === true || void 0;
           if (hasOneMinuteData === void 0) {
             return;
@@ -2431,7 +3779,7 @@
           super();
           this.params = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
         }
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           const indicator = this.findIndicator(tradingPair, this.params);
           if (false === indicator.isReady()) {
             return;
@@ -2461,7 +3809,7 @@
       init_TimeFrame();
       init_BaseSortableAttributeExtractor();
       DailyPriceChangeExtractor = class _DailyPriceChangeExtractor extends BaseSortableAttributeExtractor {
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           if (false === updatedTimeFrames.has(TimeFrame.ONE_MINUTE)) {
             return;
           }
@@ -2502,7 +3850,7 @@
           super();
           this.params = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
         }
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           if (false === updatedTimeFrames.get(TimeFrame.ONE_DAY)) {
             return;
           }
@@ -2540,7 +3888,7 @@
           super();
           this.params = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, new Period(30), Source.CLOSE);
         }
-        next(tradingPair, updatedTimeFrames) {
+        next(tradingPair, updatedTimeFrames, ts) {
           if (false === updatedTimeFrames.get(TimeFrame.ONE_DAY)) {
             return;
           }
@@ -2564,51 +3912,82 @@
     }
   });
 
-  // ts_libs/ts_worker/application/exports/settings/ExchangeInclusionCriteria.ts
-  var ExchangeInclusionCriteria;
-  var init_ExchangeInclusionCriteria = __esm({
-    "ts_libs/ts_worker/application/exports/settings/ExchangeInclusionCriteria.ts"() {
+  // ts_libs/ts_worker/application/plugins/BaseSignalGenerator.ts
+  var BaseSignalGenerator;
+  var init_BaseSignalGenerator = __esm({
+    "ts_libs/ts_worker/application/plugins/BaseSignalGenerator.ts"() {
       "use strict";
-      ExchangeInclusionCriteria = class _ExchangeInclusionCriteria {
-        constructor(name, id, include) {
-          this.name = name;
-          this.id = id;
-          this.include = include;
+      init_BasePlugin();
+      BaseSignalGenerator = class extends BasePlugin {
+        constructor() {
+          super(...arguments);
+          this.signals = [];
         }
-        static fromJson(json) {
-          if (typeof json.name !== "string") {
-            throw new Error("Invalid name");
-          }
-          if (typeof json.id !== "number") {
-            throw new Error("Invalid id");
-          }
-          if (typeof json.include !== "boolean") {
-            throw new Error("Invalid include flag");
-          }
-          return new _ExchangeInclusionCriteria(json.name, json.id, json.include);
+        emit(tradingPair, signalDirection, timeStamp) {
+          this.signals.push({
+            tradingPair,
+            signalDirection,
+            source: this,
+            timeStamp
+          });
         }
-        toJson() {
-          return {
-            name: this.name,
-            id: this.id,
-            include: this.include
-          };
+        drain() {
+          const drained = this.signals.slice();
+          this.signals.length = 0;
+          return drained;
         }
-        deepEquals(other) {
-          if (!other) return false;
-          return this.name === other.name && this.id === other.id && this.include === other.include;
-        }
-        deepClone() {
-          return new _ExchangeInclusionCriteria(this.name, this.id, this.include);
+        getSignalsCount() {
+          return this.signals.length;
         }
       };
     }
   });
 
-  // ts_libs/ts_worker/application/exports/ScreenerSettings.ts
-  var _ScreenerSettings, ScreenerSettings;
-  var init_ScreenerSettings = __esm({
-    "ts_libs/ts_worker/application/exports/ScreenerSettings.ts"() {
+  // ts_libs/ts_worker/application/plugins/signal_generators/RsiCrossoverSignalGenerator.ts
+  var RsiCrossoverSignalGenerator;
+  var init_RsiCrossoverSignalGenerator = __esm({
+    "ts_libs/ts_worker/application/plugins/signal_generators/RsiCrossoverSignalGenerator.ts"() {
+      "use strict";
+      init_Source();
+      init_SignalModel();
+      init_BaseSignalGenerator();
+      RsiCrossoverSignalGenerator = class extends BaseSignalGenerator {
+        constructor(period, timeFrame, oversoldTreshold) {
+          super();
+          this.oversoldThreshold = oversoldTreshold;
+          this.rsiParams = this.useRsiIndicator(timeFrame, period, Source.CLOSE);
+        }
+        getId() {
+          return `rsi.crossover.treshold.signal.${this.rsiParams.getId()} X ${this.oversoldThreshold}`;
+        }
+        getFriendlyDescription() {
+          return `${this.rsiParams.getDescription()} crossed over ${this.oversoldThreshold}`;
+        }
+        next(tradingPair, updatedTimeFrames, ts) {
+          const timeFrame = this.rsiParams.getTimeFrame();
+          if (updatedTimeFrames.get(timeFrame) !== true) {
+            return;
+          }
+          const indicator = this.findIndicator(tradingPair, this.rsiParams);
+          if (indicator.getValuesCount() < 2) {
+            return;
+          }
+          const previous = this.getIndicatorValue(indicator, 1);
+          const current = this.getIndicatorValue(indicator, 0);
+          const crossedUp = previous.getValue() <= this.oversoldThreshold && current.getValue() > this.oversoldThreshold;
+          if (!crossedUp) {
+            return;
+          }
+          this.emit(tradingPair, "BULLISH" /* BULLISH */, ts);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_worker/application/plugins/PluginManager.ts
+  var _PluginManager, PluginManager;
+  var init_PluginManager = __esm({
+    "ts_libs/ts_worker/application/plugins/PluginManager.ts"() {
       "use strict";
       init_Period();
       init_TimeFrame();
@@ -2623,13 +4002,10 @@
       init_DailyPriceChangeExtractor();
       init_DailyRvaExtractor();
       init_ThirtyDayPercentChangeExtractor();
-      init_ExchangeInclusionCriteria();
-      _ScreenerSettings = class _ScreenerSettings {
-        constructor(exchangeInclusionCriterias) {
-          this._parallelRequestsCount = 5;
-          this._maximumPairsCountPerExchange = 1e3;
-          this._exchangeInclusionCriterias = _ScreenerSettings.validateExchangeInclusionCriterias(exchangeInclusionCriterias);
-          this._plugins = [..._ScreenerSettings.DefaultPlugins];
+      init_RsiCrossoverSignalGenerator();
+      _PluginManager = class _PluginManager {
+        constructor() {
+          this._plugins = [..._PluginManager.DefaultPlugins];
           this._filterableAttributes = [];
           this._sortableAttributes = [];
           this._plugins.forEach((plugin) => {
@@ -2641,131 +4017,21 @@
             }
           });
         }
-        // =====================
-        // Getters / Setters
-        // =====================
-        get parallelRequestsCount() {
-          return this._parallelRequestsCount;
-        }
-        set parallelRequestsCount(value) {
-          if (typeof value !== "number" || value < 1 || value > 20) {
-            throw new Error("Invalid parallelRequestsCount");
-          }
-          this._parallelRequestsCount = value;
-        }
-        get maximumPairsCountPerExchange() {
-          return this._maximumPairsCountPerExchange;
-        }
-        set maximumPairsCountPerExchange(value) {
-          if (typeof value !== "number" || value < 1 || value > 1e4) {
-            throw new Error("Invalid maximumPairsCountPerExchange");
-          }
-          this._maximumPairsCountPerExchange = value;
-        }
-        get exchangeInclusionCriterias() {
-          return this._exchangeInclusionCriterias;
-        }
-        set exchangeInclusionCriterias(value) {
-          this._exchangeInclusionCriterias = _ScreenerSettings.validateExchangeInclusionCriterias(value);
-        }
-        get plugins() {
-          return this._plugins;
-        }
         get sortableAttributes() {
           return this._sortableAttributes;
         }
         get filterableAttributes() {
           return this._filterableAttributes;
         }
-        // =====================
-        // Factory
-        // =====================
-        static fromJson(json) {
-          if (!Array.isArray(json.exchangeInclusionCriterias)) {
-            throw new Error("exchangeInclusionCriterias must be an array");
-          }
-          const criterias = json.exchangeInclusionCriterias.map(
-            (c) => ExchangeInclusionCriteria.fromJson(c)
-          );
-          const settings = new _ScreenerSettings(criterias);
-          settings.parallelRequestsCount = json.parallelRequestsCount;
-          settings.maximumPairsCountPerExchange = json.maximumPairsCountPerExchange;
-          return settings;
-        }
-        // =====================
-        // Serialization
-        // =====================
-        toJson() {
-          return {
-            parallelRequestsCount: this.parallelRequestsCount,
-            maximumPairsCountPerExchange: this.maximumPairsCountPerExchange,
-            exchangeInclusionCriterias: this.exchangeInclusionCriterias.map((c) => ({
-              name: c.name,
-              id: c.id,
-              include: c.include
-            }))
-          };
-        }
-        // =====================
-        // Validation
-        // =====================
-        static validateExchangeInclusionCriterias(criterias) {
-          if (!criterias || !Array.isArray(criterias)) {
-            throw new Error("Exchange inclusion criterias cannot be null");
-          }
-          if (criterias.length === 0) {
-            throw new Error("At least one exchange must be configured");
-          }
-          const hasAtLeastOne = criterias.some((c) => c.include === true);
-          if (!hasAtLeastOne) {
-            throw new Error("At least one exchange must be selected");
-          }
-          return criterias;
-        }
-        // =====================
-        // Deep Clone & Compare
-        // =====================
-        deepClone() {
-          const clonedCriterias = this.exchangeInclusionCriterias.map((c) => c.deepClone());
-          const newSettings = new _ScreenerSettings(clonedCriterias);
-          newSettings.parallelRequestsCount = this.parallelRequestsCount;
-          newSettings.maximumPairsCountPerExchange = this.maximumPairsCountPerExchange;
-          return newSettings;
-        }
-        deepEquals(other) {
-          if (!other) return false;
-          if (this.parallelRequestsCount !== other.parallelRequestsCount || this.maximumPairsCountPerExchange !== other.maximumPairsCountPerExchange) {
-            return false;
-          }
-          if (this.exchangeInclusionCriterias.length !== other.exchangeInclusionCriterias.length) {
-            return false;
-          }
-          for (let i = 0; i < this.exchangeInclusionCriterias.length; i++) {
-            if (!this.exchangeInclusionCriterias[i].deepEquals(other.exchangeInclusionCriterias[i])) {
-              return false;
-            }
-          }
-          return true;
-        }
-        //=========================
-        //Utility methods
-        //=========================
-        getIncludedExchangeNames() {
-          let toReturn = [];
-          for (let index = 0; index < this.exchangeInclusionCriterias.length; index++) {
-            const element = this.exchangeInclusionCriterias[index];
-            if (element.include === true) {
-              toReturn.push(element.name);
-            }
-          }
-          return toReturn;
+        get plugins() {
+          return this._plugins;
         }
       };
-      _ScreenerSettings.DailyPriceChangeExtractor = new DailyPriceChangeExtractor();
-      _ScreenerSettings.CurrentPriceExtractor = new CurrentPriceExtractor();
-      _ScreenerSettings.DefaultPlugins = [
-        _ScreenerSettings.CurrentPriceExtractor,
-        _ScreenerSettings.DailyPriceChangeExtractor,
+      _PluginManager.DailyPriceChangeExtractor = new DailyPriceChangeExtractor();
+      _PluginManager.CurrentPriceExtractor = new CurrentPriceExtractor();
+      _PluginManager.DefaultPlugins = [
+        _PluginManager.CurrentPriceExtractor,
+        _PluginManager.DailyPriceChangeExtractor,
         new DailyRvaExtractor(),
         new DailyPendingRvaExtractor(),
         new ThirtyDayPercentChangeExtractor(),
@@ -2792,1131 +4058,10 @@
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_HOUR, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
-        new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95)
+        new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
+        new RsiCrossoverSignalGenerator(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 5)
       ];
-      ScreenerSettings = _ScreenerSettings;
-    }
-  });
-
-  // ts_libs/ts_worker/application/exports/SignalModel.ts
-  var SignalModel;
-  var init_SignalModel = __esm({
-    "ts_libs/ts_worker/application/exports/SignalModel.ts"() {
-      "use strict";
-      SignalModel = class _SignalModel {
-        constructor(baseAsset, quoteAsset, exchangeId, exchangeUrl, title, subtitle, description, direction, timestamp) {
-          this.baseAsset = baseAsset;
-          this.quoteAsset = quoteAsset;
-          this.exchangeId = exchangeId;
-          this.exchangeUrl = exchangeUrl;
-          this.title = title;
-          this.subtitle = subtitle;
-          this.description = description;
-          this.direction = direction;
-          this.timestamp = timestamp;
-        }
-        serialize() {
-          return {
-            baseAsset: this.baseAsset,
-            quoteAsset: this.quoteAsset,
-            exchangeId: this.exchangeId,
-            exchangeUrl: this.exchangeUrl,
-            title: this.title,
-            subtitle: this.subtitle,
-            description: this.description,
-            direction: this.direction,
-            timestamp: this.timestamp
-          };
-        }
-        static deserialize(dto) {
-          return new _SignalModel(
-            dto.baseAsset,
-            dto.quoteAsset,
-            dto.exchangeId,
-            dto.exchangeUrl,
-            dto.title,
-            dto.subtitle,
-            dto.description,
-            dto.direction,
-            dto.timestamp
-          );
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/exports/TradingPairModel.ts
-  var TradingPairModel;
-  var init_TradingPairModel = __esm({
-    "ts_libs/ts_worker/application/exports/TradingPairModel.ts"() {
-      "use strict";
-      init_NamedAttribute();
-      TradingPairModel = class _TradingPairModel {
-        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, exchangeUrl, attributes = []) {
-          this.baseAsset = baseAsset;
-          this.quoteAsset = quoteAsset;
-          this.exchangeName = exchangeName;
-          this.exchangeId = exchangeId;
-          this.exchangeUrl = exchangeUrl;
-          this.extended = [...attributes];
-        }
-        serialize() {
-          return {
-            baseAsset: this.baseAsset,
-            quoteAsset: this.quoteAsset,
-            exchangeName: this.exchangeName,
-            exchangeId: this.exchangeId,
-            exchangeUrl: this.exchangeUrl,
-            attributes: this.extended.map((attr) => attr.serialize())
-          };
-        }
-        static deserialize(tradingPairModelDto) {
-          const attributes = tradingPairModelDto.attributes.map(
-            (attr) => NamedAttributeFactory.deserialize(attr)
-          );
-          const model = new _TradingPairModel(
-            tradingPairModelDto.baseAsset,
-            tradingPairModelDto.quoteAsset,
-            tradingPairModelDto.exchangeName,
-            tradingPairModelDto.exchangeId,
-            tradingPairModelDto.exchangeUrl,
-            attributes
-          );
-          return model;
-        }
-        // ------------------------
-        // Typed attribute access
-        // ------------------------
-        addAttr(attr) {
-          this.extended.push(attr);
-        }
-        getAttr(key) {
-          return this.extended.find((a) => a.metadata.key === key);
-        }
-        getAttrValue(key, fallback) {
-          var _a, _b;
-          return (_b = (_a = this.getAttr(key)) == null ? void 0 : _a.value) != null ? _b : fallback;
-        }
-        hasAttr(key) {
-          return this.extended.some((a) => a.metadata.key === key);
-        }
-        getAttributes() {
-          return this.extended;
-        }
-        getNumericAttributes() {
-          return this.extended.filter((e) => e instanceof NumericNamedAttribute) || [];
-        }
-        getBooleanAttributes() {
-          return this.extended.filter((e) => e instanceof BooleanNamedAttribute) || [];
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/exports/SynchronizationModel.ts
-  var SynchronizationModel;
-  var init_SynchronizationModel = __esm({
-    "ts_libs/ts_worker/application/exports/SynchronizationModel.ts"() {
-      "use strict";
-      init_SignalModel();
-      init_TradingPairModel();
-      SynchronizationModel = class _SynchronizationModel {
-        constructor(tradingPairs = [], signals = []) {
-          this.tradingPairs = tradingPairs;
-          this.signals = signals;
-        }
-        serialize() {
-          return {
-            tradingPairs: this.tradingPairs.map((tp) => tp.serialize()),
-            signals: this.signals.map((signal) => signal.serialize())
-          };
-        }
-        static deserialize(dto) {
-          return new _SynchronizationModel(
-            dto.tradingPairs.map((tp) => TradingPairModel.deserialize(tp)),
-            dto.signals.map((signal) => SignalModel.deserialize(signal))
-          );
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/usecases/EnumerateExchanges/EnumerateExchangesRequest.ts
-  var EnumerateExchangesRequest;
-  var init_EnumerateExchangesRequest = __esm({
-    "ts_libs/ts_worker/application/usecases/EnumerateExchanges/EnumerateExchangesRequest.ts"() {
-      "use strict";
-      EnumerateExchangesRequest = class {
-        constructor(includes) {
-          this.includes = includes;
-          Object.freeze(this);
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest.ts
-  var _tradingPairs, _candlesPerTimeFrame, _parallelRequestsCount, _utcNowMs, _plugins, _progressCallback, FetchOhlcvDataRequest;
-  var init_FetchOhlcvDataRequest = __esm({
-    "ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest.ts"() {
-      "use strict";
-      FetchOhlcvDataRequest = class {
-        constructor(tradingPairs, candlesPerTimeFrame, parallelRequestsCount, utcNowMs, plugins, progressCallback) {
-          __privateAdd(this, _tradingPairs);
-          __privateAdd(this, _candlesPerTimeFrame);
-          __privateAdd(this, _parallelRequestsCount);
-          __privateAdd(this, _utcNowMs);
-          __privateAdd(this, _plugins);
-          __privateAdd(this, _progressCallback);
-          __privateSet(this, _tradingPairs, Object.freeze([...tradingPairs]));
-          __privateSet(this, _candlesPerTimeFrame, candlesPerTimeFrame);
-          __privateSet(this, _parallelRequestsCount, parallelRequestsCount);
-          __privateSet(this, _utcNowMs, utcNowMs);
-          __privateSet(this, _plugins, plugins);
-          __privateSet(this, _progressCallback, progressCallback);
-          Object.freeze(this);
-        }
-        reportProgress(progress) {
-          return __privateGet(this, _progressCallback).call(this, progress);
-        }
-        getUtcNowMilliseconds() {
-          return __privateGet(this, _utcNowMs);
-        }
-        getCandlesPerTimeFrame() {
-          return __privateGet(this, _candlesPerTimeFrame);
-        }
-        getTradingPairs() {
-          return __privateGet(this, _tradingPairs);
-        }
-        getParallelRequestsCount() {
-          return __privateGet(this, _parallelRequestsCount);
-        }
-        getPlugins() {
-          return __privateGet(this, _plugins);
-        }
-      };
-      _tradingPairs = new WeakMap();
-      _candlesPerTimeFrame = new WeakMap();
-      _parallelRequestsCount = new WeakMap();
-      _utcNowMs = new WeakMap();
-      _plugins = new WeakMap();
-      _progressCallback = new WeakMap();
-    }
-  });
-
-  // ts_libs/ts_worker/application/usecases/FilterTradingPairs/FilterTradingPairsRequest.ts
-  var _exchanges, _quoteAssets, _requiredQuoteAssets, _excludedBaseAssets, _limit, FilterTradingPairsRequest;
-  var init_FilterTradingPairsRequest = __esm({
-    "ts_libs/ts_worker/application/usecases/FilterTradingPairs/FilterTradingPairsRequest.ts"() {
-      "use strict";
-      init_ExchangeDescriptor();
-      init_Asset();
-      FilterTradingPairsRequest = class {
-        constructor(exchanges = [], quoteAssets = [], requiredQuoteAssets = [], excludedBaseAssets = [], limit = void 0) {
-          __privateAdd(this, _exchanges);
-          __privateAdd(this, _quoteAssets);
-          __privateAdd(this, _requiredQuoteAssets);
-          __privateAdd(this, _excludedBaseAssets);
-          __privateAdd(this, _limit);
-          __privateSet(this, _exchanges, Object.freeze(
-            exchanges.map((ex) => ExchangeDescriptor.fromUnknown(ex))
-          ));
-          __privateSet(this, _quoteAssets, Object.freeze(
-            quoteAssets.map((a) => Asset.fromUnknown(a))
-          ));
-          __privateSet(this, _requiredQuoteAssets, Object.freeze(
-            requiredQuoteAssets.map((a) => Asset.fromUnknown(a))
-          ));
-          __privateSet(this, _excludedBaseAssets, Object.freeze(
-            excludedBaseAssets.map((a) => Asset.fromUnknown(a))
-          ));
-          __privateSet(this, _limit, limit !== void 0 && limit > 0 ? limit : void 0);
-          Object.freeze(this);
-        }
-        /** Exchanges to include */
-        getExchanges() {
-          return [...__privateGet(this, _exchanges)];
-        }
-        /** Quote assets to include (ANY match) */
-        getQuoteAssets() {
-          return [...__privateGet(this, _quoteAssets)];
-        }
-        /** Quote assets that MUST ALL exist for a base asset */
-        getRequiredQuoteAssets() {
-          return [...__privateGet(this, _requiredQuoteAssets)];
-        }
-        /** Base assets to exclude */
-        getExcludedBaseAssets() {
-          return [...__privateGet(this, _excludedBaseAssets)];
-        }
-        /** Whether full quote coverage is required */
-        requiresFullQuoteCoverage() {
-          return __privateGet(this, _requiredQuoteAssets).length > 0;
-        }
-        /** Wheter to limit output sizes or not */
-        getLimit() {
-          return __privateGet(this, _limit);
-        }
-      };
-      _exchanges = new WeakMap();
-      _quoteAssets = new WeakMap();
-      _requiredQuoteAssets = new WeakMap();
-      _excludedBaseAssets = new WeakMap();
-      _limit = new WeakMap();
-    }
-  });
-
-  // ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsRequest.ts
-  var _plugins2, _tradingPairs2, RegisterPluginsRequest;
-  var init_RegisterPluginsRequest = __esm({
-    "ts_libs/ts_worker/application/usecases/RegisterPlugins/RegisterPluginsRequest.ts"() {
-      "use strict";
-      RegisterPluginsRequest = class {
-        constructor(plugins, tradingPairs) {
-          __privateAdd(this, _plugins2);
-          __privateAdd(this, _tradingPairs2);
-          __privateSet(this, _plugins2, plugins);
-          __privateSet(this, _tradingPairs2, tradingPairs);
-          Object.freeze(this);
-        }
-        get plugins() {
-          return __privateGet(this, _plugins2);
-        }
-        get tradingPairs() {
-          return __privateGet(this, _tradingPairs2);
-        }
-      };
-      _plugins2 = new WeakMap();
-      _tradingPairs2 = new WeakMap();
-    }
-  });
-
-  // ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest.ts
-  var _paralelRequestsCount, _utcNowMs2, _progressCallback2, _plugins3, SyncOhlcvDataRequest;
-  var init_SyncOhlcvDataRequest = __esm({
-    "ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest.ts"() {
-      "use strict";
-      SyncOhlcvDataRequest = class {
-        constructor(plugins, paralelRequestsCount, utcNowMs, progressCallback) {
-          __privateAdd(this, _paralelRequestsCount);
-          __privateAdd(this, _utcNowMs2);
-          __privateAdd(this, _progressCallback2);
-          __privateAdd(this, _plugins3);
-          if (paralelRequestsCount <= 0) throw new RangeError("paralelRequestsCount must be > 0");
-          __privateSet(this, _plugins3, plugins);
-          __privateSet(this, _paralelRequestsCount, paralelRequestsCount);
-          __privateSet(this, _utcNowMs2, utcNowMs);
-          __privateSet(this, _progressCallback2, progressCallback);
-          Object.freeze(this);
-        }
-        reportProgress(progressData) {
-          return __privateGet(this, _progressCallback2).call(this, progressData);
-        }
-        getUtcNowMilliseconds() {
-          return __privateGet(this, _utcNowMs2);
-        }
-        getParalelRequestsCount() {
-          return __privateGet(this, _paralelRequestsCount);
-        }
-        getPlugins() {
-          return __privateGet(this, _plugins3);
-        }
-      };
-      _paralelRequestsCount = new WeakMap();
-      _utcNowMs2 = new WeakMap();
-      _progressCallback2 = new WeakMap();
-      _plugins3 = new WeakMap();
-    }
-  });
-
-  // ts_libs/ts_worker/domain/exchange/ExchangeDescriptorRegistry.ts
-  var ExchangeDescriptorRegistry;
-  var init_ExchangeDescriptorRegistry = __esm({
-    "ts_libs/ts_worker/domain/exchange/ExchangeDescriptorRegistry.ts"() {
-      "use strict";
-      init_ExchangeDescriptor();
-      ExchangeDescriptorRegistry = class {
-        constructor() {
-          this.exchanges = /* @__PURE__ */ new Map();
-        }
-        /**
-         * Register a new exchange descriptor
-         * @param descriptor ExchangeDescriptor instance
-         * @returns The registered descriptor
-         */
-        register(descriptor) {
-          if (!(descriptor instanceof ExchangeDescriptor)) {
-            throw new TypeError("Must be ExchangeDescriptor");
-          }
-          this.exchanges.set(descriptor.getId(), descriptor);
-          return descriptor;
-        }
-        /**
-         * Find exchange descriptor by id
-         * @param id numeric id of the exchange
-         */
-        byId(id) {
-          const ex = this.exchanges.get(id);
-          if (!ex) throw new RangeError(`Exchange id=${id} not found`);
-          return ex;
-        }
-        /**
-         * Find exchange descriptor by name (case-insensitive)
-         * @param name exchange name
-         */
-        byName(name) {
-          for (const ex of this.exchanges.values()) {
-            if (ex.getName().toLowerCase() === name.toLowerCase()) return ex;
-          }
-          throw new RangeError(`Exchange name="${name}" not found`);
-        }
-        /**
-         * Return all registered exchanges
-         */
-        all() {
-          return Array.from(this.exchanges.values());
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/domain/exchange/ExchangeMethodsRegistry.ts
-  var ExchangeMethodsRegistry;
-  var init_ExchangeMethodsRegistry = __esm({
-    "ts_libs/ts_worker/domain/exchange/ExchangeMethodsRegistry.ts"() {
-      "use strict";
-      ExchangeMethodsRegistry = class {
-        constructor() {
-          this.map = /* @__PURE__ */ new Map();
-        }
-        /**
-         * Register exchange methods for a specific exchange.
-         * @param exchangeDescriptor - descriptor of the exchange
-         * @param methods - implementation of exchange methods
-         */
-        register(exchangeDescriptor, methods) {
-          this.map.set(exchangeDescriptor.getId(), methods);
-        }
-        /**
-         * Get exchange methods for a specific exchange.
-         * @param exchangeDescriptor - descriptor of the exchange
-         * @returns registered exchange methods
-         * @throws Error if no methods registered for this exchange
-         */
-        get(exchangeDescriptor) {
-          const methods = this.map.get(exchangeDescriptor.getId());
-          if (!methods) {
-            throw new Error(
-              `No ExchangeMethods registered for exchangeId=${exchangeDescriptor.getId()}`
-            );
-          }
-          return methods;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/domain/repositories/TradingPairsRepository.ts
-  var TradingPairsRepository;
-  var init_TradingPairsRepository = __esm({
-    "ts_libs/ts_worker/domain/repositories/TradingPairsRepository.ts"() {
-      "use strict";
-      init_TradingPair();
-      init_ExchangeDescriptor();
-      init_Asset();
-      TradingPairsRepository = class {
-        constructor() {
-          this.pairs = [];
-        }
-        /* ============================
-         * Public Instance Methods
-         * ============================ */
-        /** Check if repository is empty */
-        isEmpty() {
-          return this.pairs.length === 0;
-        }
-        /**
-         * Filter trading pairs by exchanges and quote assets
-         * @param exchanges - Array of ExchangeDescriptor
-         * @param quoteAssets - Array of quote asset symbols
-         * @returns Array of TradingPair
-         */
-        filter(exchanges, quoteAssets) {
-          const givenExchangeIds = new Set(
-            exchanges.map((e) => ExchangeDescriptor.fromUnknown(e).getId())
-          );
-          const givenAssets = new Set(
-            quoteAssets.map((e) => Asset.fromUnknown(e).toString())
-          );
-          return this.pairs.filter(
-            (p) => givenExchangeIds.has(p.getExchangeDescriptor().getId()) && givenAssets.has(p.getQuoteAsset().toString())
-          );
-        }
-        /**
-         * Lookup a TradingPair by exchange + base + quote
-         * @param exchangeDescriptor
-         * @param baseAsset
-         * @param quoteAsset
-         * @returns TradingPair
-         */
-        lookup(exchangeDescriptor, baseAsset, quoteAsset) {
-          const base = Asset.fromUnknown(baseAsset);
-          const quote = Asset.fromUnknown(quoteAsset);
-          const exchangeId = ExchangeDescriptor.fromUnknown(exchangeDescriptor).getId();
-          const toReturn = this.pairs.find(
-            (p) => p.getExchangeDescriptor().getId() === exchangeId && p.getBaseAsset().equals(base) && p.getQuoteAsset().equals(quote)
-          );
-          if (!toReturn) {
-            throw new Error(
-              `Pair ${baseAsset.toString()}/${quoteAsset.toString()} was not found on ${exchangeDescriptor.getName()}`
-            );
-          }
-          return TradingPair.fromUnknown(toReturn);
-        }
-        /**
-         * Check if a trading pair is available
-         * @param exchangeDescriptor
-         * @param baseAsset
-         * @param quoteAsset
-         */
-        isTradingPairAvailable(exchangeDescriptor, baseAsset, quoteAsset) {
-          const base = Asset.fromUnknown(baseAsset);
-          const quote = Asset.fromUnknown(quoteAsset);
-          const exchangeId = ExchangeDescriptor.fromUnknown(exchangeDescriptor).getId();
-          const match = this.pairs.find(
-            (p) => p.getExchangeDescriptor().getId() === exchangeId && p.getBaseAsset().equals(base) && p.getQuoteAsset().equals(quote)
-          );
-          if (!match) {
-            return false;
-          }
-          const _ = TradingPair.fromUnknown(match);
-          return true;
-        }
-        /** Get a copy of all registered trading pairs */
-        getPairs() {
-          return this.pairs;
-        }
-        /** Register a new trading pair */
-        registerPair(tradingPair) {
-          this.pairs.push(TradingPair.fromUnknown(tradingPair));
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/domain/ta/TechnicalAnalisysRepository.ts
-  var TechnicalAnalisysRepository;
-  var init_TechnicalAnalisysRepository = __esm({
-    "ts_libs/ts_worker/domain/ta/TechnicalAnalisysRepository.ts"() {
-      "use strict";
-      TechnicalAnalisysRepository = class {
-        constructor() {
-          this.indicators = /* @__PURE__ */ new Map();
-          this.datasets = /* @__PURE__ */ new Map();
-          this.indicatorParameters = [];
-        }
-        pushUpdate(tradingPair, timeFrame, open, high, low, close, volume, startTime, endTime, isClosed) {
-          const dataset = this.getDataset(tradingPair);
-          return dataset.pushUpdate(
-            timeFrame,
-            open,
-            high,
-            low,
-            close,
-            volume,
-            startTime,
-            endTime,
-            isClosed
-          );
-        }
-        addDataset(dataset) {
-          const tradingPair = dataset.getTradingPair();
-          if (this.datasets.has(tradingPair)) {
-            throw new Error(`TradingPair ${tradingPair} already added to repo.`);
-          }
-          this.datasets.set(tradingPair, dataset);
-        }
-        getDataset(tradingPair) {
-          const dataset = this.datasets.get(tradingPair);
-          if (!dataset) {
-            throw new Error(`No MTF dataset registered for ${tradingPair.symbol()}`);
-          }
-          return dataset;
-        }
-        getDatasets() {
-          return this.datasets;
-        }
-        getIndicators(tradingPair) {
-          const list = this.indicators.get(tradingPair);
-          if (!list) {
-            throw new Error(`No indicator found for: ${tradingPair.getId()}`);
-          }
-          return list;
-        }
-        initializeIndicatorsWithDatasets(tradingPair) {
-          const dataset = this.getDataset(tradingPair);
-          const created = this.indicatorParameters.map((indParam) => {
-            return indParam.createUsing(dataset);
-          });
-          this.indicators.set(tradingPair, created);
-        }
-        addIndicatorParameters(indicatorParams) {
-          const exists = this.indicatorParameters.some(
-            (ind) => ind.equals(indicatorParams)
-          );
-          if (exists) {
-            return false;
-          }
-          this.indicatorParameters.push(indicatorParams);
-          return true;
-        }
-        findIndicator(tradingPair, indicatorParams) {
-          const list = this.getIndicators(tradingPair);
-          const found = list.find(
-            (ind) => ind.getParameters().equals(indicatorParams)
-          );
-          if (!found) {
-            throw new Error(`Indicator ${indicatorParams.getId()} was not found for tp ${tradingPair.getId()}.`);
-          }
-          return found;
-        }
-        updateIndicators(tradingPair, timeFrame) {
-          const list = this.getIndicators(tradingPair);
-          list.forEach((ind) => {
-            if (ind.getParameters().getTimeFrame() === timeFrame) {
-              ind.update();
-            }
-          });
-        }
-        getTradingPairs() {
-          throw new Error("Method not implemented.");
-        }
-        getOhlcvData(tradingPair, source, timeframe, position) {
-          let dataset = this.getDataset(tradingPair);
-          let tfBuffer = dataset.getBuffer(timeframe);
-          return source.extract(tfBuffer.getCandle(position));
-        }
-        getOhlcvPendingData(tradingPair, source, timeframe) {
-          let dataset = this.getDataset(tradingPair);
-          let tfBuffer = dataset.getBuffer(timeframe);
-          return source.extract(tfBuffer.getPendingCandle());
-        }
-        getIndicatorValue(indicator, position) {
-          return indicator.getValue(position);
-        }
-        getPendingIndicatorValue(indicator) {
-          return indicator.getPendingValue();
-        }
-        isIndicatorReady(indicator) {
-          return indicator.isReady();
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/domain/exchange/ExchangeMethodsBase.ts
-  var _ExchangeMethodsBase_static, getEntries_fn, _ExchangeMethodsBase, ExchangeMethodsBase;
-  var init_ExchangeMethodsBase = __esm({
-    "ts_libs/ts_worker/domain/exchange/ExchangeMethodsBase.ts"() {
-      "use strict";
-      init_TradingPair();
-      init_TimeFrame();
-      init_OhlcvBuffer();
-      init_MultiTimeframeOhlcv();
-      _ExchangeMethodsBase = class _ExchangeMethodsBase {
-        /**
-         * Create a buffer for a single timeframe
-         */
-        createSingleBuffer(tradingPair, timeFrame, endTimeStamp, count) {
-          return __async(this, null, function* () {
-            const relevantEndTimeStamp = endTimeStamp;
-            const duration = count * timeFrame.asMilliseconds();
-            const relevantStartTimeStamp = relevantEndTimeStamp - duration;
-            const data = yield this.fetchHistoricalCandles(
-              tradingPair,
-              timeFrame,
-              relevantStartTimeStamp,
-              relevantEndTimeStamp
-            );
-            const buffer = new OhlcvBuffer(tradingPair, timeFrame, count);
-            if (data.length === 0) return buffer;
-            let startIndex = 0;
-            for (let i = data.length - 1; i > 0; i--) {
-              const expectedPrev = data[i].startTime - timeFrame.asMilliseconds();
-              if (data[i - 1].startTime !== expectedPrev) {
-                startIndex = i;
-                break;
-              }
-            }
-            for (let i = startIndex; i < data.length; i++) {
-              buffer.pushEntry(data[i]);
-            }
-            return buffer;
-          });
-        }
-        /**
-         * Sync a MultiTimeframeOhlcv with new data up to newEndTimeMillis
-         */
-        syncOneMinuteTimeFrame(multiTimeframeOhlcv, newEndTimeMillis) {
-          return __async(this, null, function* () {
-            const timeFrame = TimeFrame.ONE_MINUTE;
-            const buffer = OhlcvBuffer.fromUnknown(multiTimeframeOhlcv.getBuffer(timeFrame));
-            if (buffer.isEmpty()) {
-              throw new Error("Cannot sync an empty buffer");
-            }
-            const relevantStartTimeStamp = buffer.getStartTime() + timeFrame.asMilliseconds();
-            const relevantEndTimeStamp = newEndTimeMillis;
-            if (relevantEndTimeStamp <= relevantStartTimeStamp) return void 0;
-            const data = yield this.fetchHistoricalCandles(
-              multiTimeframeOhlcv.getTradingPair(),
-              buffer.getBaseTimeFrame(),
-              relevantStartTimeStamp,
-              relevantEndTimeStamp
-            );
-            return data;
-          });
-        }
-        /**
-         * Create a MultiTimeframeOhlcv from historical data
-         */
-        createMultiTimeframeOhlcv(tradingPair, endTimeMsExclusive, totalCountPerTimeFrame) {
-          return __async(this, null, function* () {
-            var _a, _b, _c, _d, _e, _f;
-            if (!Number.isInteger(totalCountPerTimeFrame) || totalCountPerTimeFrame <= 10) {
-              throw new RangeError("totalCountPerTimeFrame must be > 10");
-            }
-            if (!Number.isFinite(endTimeMsExclusive)) {
-              throw new RangeError("endTimeMsExclusive must be finite");
-            }
-            const timeFrames = MultiTimeframeOhlcv.TimeframeHierarchy;
-            const results = yield Promise.all(timeFrames.map((tf) => __async(this, null, function* () {
-              const entries = yield this.createSingleBuffer(TradingPair.fromUnknown(tradingPair), tf, endTimeMsExclusive, totalCountPerTimeFrame);
-              return { timeFrame: tf, entries };
-            })));
-            return new MultiTimeframeOhlcv(
-              tradingPair,
-              __privateMethod(_a = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_a, results, TimeFrame.ONE_DAY),
-              __privateMethod(_b = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_b, results, TimeFrame.FOUR_HOURS),
-              __privateMethod(_c = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_c, results, TimeFrame.ONE_HOUR),
-              __privateMethod(_d = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_d, results, TimeFrame.FIFTEEN_MINUTES),
-              __privateMethod(_e = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_e, results, TimeFrame.FIVE_MINUTES),
-              __privateMethod(_f = _ExchangeMethodsBase, _ExchangeMethodsBase_static, getEntries_fn).call(_f, results, TimeFrame.ONE_MINUTE)
-            );
-          });
-        }
-      };
-      _ExchangeMethodsBase_static = new WeakSet();
-      getEntries_fn = function(map, timeFrame) {
-        const found = map.find((x) => timeFrame.equals(x.timeFrame));
-        if (!found || !found.entries) {
-          throw new Error(`Entries for timeframe ${timeFrame.getLabel()} not found`);
-        }
-        return found.entries;
-      };
-      __privateAdd(_ExchangeMethodsBase, _ExchangeMethodsBase_static);
-      ExchangeMethodsBase = _ExchangeMethodsBase;
-    }
-  });
-
-  // ts_libs/ts_worker/infrastructure/exchanges/ExchangeMethodsBinance.ts
-  var _ExchangeMethodsBinance_static, createOhlcvEntry_fn, _ExchangeMethodsBinance, ExchangeMethodsBinance;
-  var init_ExchangeMethodsBinance = __esm({
-    "ts_libs/ts_worker/infrastructure/exchanges/ExchangeMethodsBinance.ts"() {
-      "use strict";
-      init_ExchangeMethodsBase();
-      init_TimeFrame();
-      init_OhlcvEntry();
-      init_Asset();
-      _ExchangeMethodsBinance = class _ExchangeMethodsBinance extends ExchangeMethodsBase {
-        constructor() {
-          super();
-        }
-        getTradingPairUrl(tradingPair) {
-          return `https://www.binance.com/en/trade/${tradingPair.getBaseAsset()}_${tradingPair.getQuoteAsset()}?type=spot`;
-        }
-        /**
-         * Fetch trading pairs from Binance.
-         * @param callback - called for each trading pair (baseAsset, quoteAsset)
-         */
-        fetchTradingPairs(callback) {
-          return __async(this, null, function* () {
-            if (typeof callback !== "function") {
-              throw new TypeError("callback must be a function");
-            }
-            const res = yield fetch(`${_ExchangeMethodsBinance.BASE_URL}/api/v3/exchangeInfo`);
-            if (!res.ok) {
-              throw new Error(`Binance exchangeInfo failed (${res.status})`);
-            }
-            const info = yield res.json();
-            if (!Array.isArray(info.symbols)) {
-              throw new Error("Invalid Binance exchangeInfo response");
-            }
-            for (const s of info.symbols) {
-              if (s.status !== "TRADING") continue;
-              if (!s.isSpotTradingAllowed) continue;
-              callback(Asset.fromUnknown(s.baseAsset), Asset.fromUnknown(s.quoteAsset));
-            }
-          });
-        }
-        /**
-         * Fetch historical candles.
-         * @param tradingPair - TradingPair instance
-         * @param timeFrame - TimeFrame instance
-         * @param startTimeMsInclusive - start timestamp (ms)
-         * @param endTimeMsExclusive - end timestamp (ms)
-         * @returns ordered OHLCV entries
-         */
-        fetchHistoricalCandles(tradingPair, timeFrame, startTimeMsInclusive, endTimeMsExclusive) {
-          return __async(this, null, function* () {
-            const symbol = tradingPair.symbol();
-            const interval = _ExchangeMethodsBinance.mapTimeFrameToBinanceInterval(timeFrame);
-            const toReturn = [];
-            let cursorTime = startTimeMsInclusive;
-            if (!timeFrame.isTimestampAligned(cursorTime)) {
-              cursorTime = cursorTime - cursorTime % timeFrame.asMilliseconds();
-            }
-            while (cursorTime < endTimeMsExclusive) {
-              const url = new URL(`${_ExchangeMethodsBinance.BASE_URL}/api/v3/klines`);
-              url.searchParams.set("symbol", symbol);
-              url.searchParams.set("interval", interval);
-              url.searchParams.set("startTime", `${cursorTime}`);
-              url.searchParams.set("limit", `${_ExchangeMethodsBinance.MAX_LIMIT}`);
-              const res = yield fetch(url.toString());
-              if (!res.ok) throw new Error(`Binance OHLCV fetch failed (${res.status})`);
-              const data = yield res.json();
-              if (!Array.isArray(data) || data.length === 0) break;
-              const entries = data.map(
-                (item) => {
-                  var _a;
-                  return __privateMethod(_a = _ExchangeMethodsBinance, _ExchangeMethodsBinance_static, createOhlcvEntry_fn).call(_a, item, timeFrame, endTimeMsExclusive);
-                }
-              );
-              if (entries.length > 0) {
-                const filtered = entries.filter((d) => d.isClosed === true);
-                toReturn.push(...filtered);
-                const last = entries[entries.length - 1];
-                cursorTime = last.startTime + timeFrame.asMilliseconds();
-              }
-              if (entries.length < _ExchangeMethodsBinance.MAX_LIMIT) {
-                break;
-              }
-            }
-            for (let i = 1; i < toReturn.length; i++) {
-              if (toReturn[i].startTime < toReturn[i - 1].startTime) {
-                throw new Error("Non-ascending candles returned by Binance");
-              }
-            }
-            return toReturn;
-          });
-        }
-        /** Returns the Binance string label for a TimeFrame instance */
-        static mapTimeFrameToBinanceInterval(timeFrame) {
-          switch (timeFrame) {
-            case TimeFrame.ONE_MINUTE:
-              return "1m";
-            case TimeFrame.FIVE_MINUTES:
-              return "5m";
-            case TimeFrame.FIFTEEN_MINUTES:
-              return "15m";
-            case TimeFrame.ONE_HOUR:
-              return "1h";
-            case TimeFrame.FOUR_HOURS:
-              return "4h";
-            case TimeFrame.ONE_DAY:
-              return "1d";
-            default:
-              throw new RangeError(`Unsupported TimeFrame for Binance: ${timeFrame.getLabel()}`);
-          }
-        }
-      };
-      _ExchangeMethodsBinance_static = new WeakSet();
-      createOhlcvEntry_fn = function(item, timeFrame, endTimeMsExclusive) {
-        if (!Array.isArray(item) || item.length < 7) {
-          throw new Error("Invalid kline format from Binance");
-        }
-        const entry = new OhlcvEntry();
-        entry.update(
-          timeFrame,
-          +item[1],
-          // open
-          +item[2],
-          // high
-          +item[3],
-          // low
-          +item[4],
-          // close
-          +item[5],
-          // volume
-          +item[0],
-          // startTime
-          +item[6],
-          // closeTime
-          +item[6] < endTimeMsExclusive
-          // isClosed
-        );
-        return entry;
-      };
-      __privateAdd(_ExchangeMethodsBinance, _ExchangeMethodsBinance_static);
-      _ExchangeMethodsBinance.BASE_URL = "https://api.binance.com";
-      _ExchangeMethodsBinance.MAX_LIMIT = 800;
-      ExchangeMethodsBinance = _ExchangeMethodsBinance;
-    }
-  });
-
-  // ts_libs/ts_worker/infrastructure/exchanges/ExchangeMethodsBybit.ts
-  var _ExchangeMethodsBybit, ExchangeMethodsBybit;
-  var init_ExchangeMethodsBybit = __esm({
-    "ts_libs/ts_worker/infrastructure/exchanges/ExchangeMethodsBybit.ts"() {
-      "use strict";
-      init_ExchangeMethodsBase();
-      init_TimeFrame();
-      init_OhlcvEntry();
-      init_Asset();
-      _ExchangeMethodsBybit = class _ExchangeMethodsBybit extends ExchangeMethodsBase {
-        // Bybit v5 spot max
-        constructor() {
-          super();
-        }
-        getTradingPairUrl(tradingPair) {
-          return `https://www.bybit.com/en/trade/spot/${tradingPair.getBaseAsset()}/${tradingPair.getQuoteAsset()}`;
-        }
-        /**
-         * Fetch trading pairs from Bybit Spot.
-         * @param callback Called for each trading pair (baseAsset, quoteAsset)
-         */
-        fetchTradingPairs(callback) {
-          return __async(this, null, function* () {
-            var _a, _b;
-            const url = `${_ExchangeMethodsBybit.BASE_URL}/v5/market/instruments-info?category=spot`;
-            const res = yield fetch(url);
-            if (!res.ok) {
-              throw new Error(`Bybit Spot symbols fetch failed (${res.status})`);
-            }
-            const json = yield res.json();
-            if (json.retCode !== 0) {
-              throw new Error(`Bybit Spot API error: ${json.retMsg}`);
-            }
-            const list = (_b = (_a = json.result) == null ? void 0 : _a.list) != null ? _b : [];
-            list.filter((s) => s.status === "Trading").forEach((s) => callback(Asset.fromUnknown(s.baseCoin), Asset.fromUnknown(s.quoteCoin)));
-          });
-        }
-        /**
-         * Map internal TimeFrame enum to Bybit v5 interval identifiers.
-         */
-        static mapTimeFrameToBybitInterval(timeFrame) {
-          switch (timeFrame) {
-            case TimeFrame.ONE_MINUTE:
-              return "1";
-            case TimeFrame.FIVE_MINUTES:
-              return "5";
-            case TimeFrame.FIFTEEN_MINUTES:
-              return "15";
-            case TimeFrame.ONE_HOUR:
-              return "60";
-            case TimeFrame.FOUR_HOURS:
-              return "240";
-            case TimeFrame.ONE_DAY:
-              return "D";
-            // case TimeFrame.ONE_WEEK: return "W"; // if you support weekly
-            default:
-              throw new RangeError(`Unsupported TimeFrame for Bybit Spot: ${timeFrame.getLabel()}`);
-          }
-        }
-        /**
-         * Fetch historical candles for a trading pair.
-         */
-        fetchHistoricalCandles(tradingPair, timeFrame, startTimeMsInclusive, endTimeMsExclusive) {
-          return __async(this, null, function* () {
-            var _a, _b;
-            const symbol = tradingPair.symbol();
-            const interval = _ExchangeMethodsBybit.mapTimeFrameToBybitInterval(timeFrame);
-            const toReturn = [];
-            let cursorTime = startTimeMsInclusive;
-            if (!timeFrame.isTimestampAligned(cursorTime)) {
-              cursorTime = cursorTime - cursorTime % timeFrame.asMilliseconds();
-            }
-            while (cursorTime < endTimeMsExclusive) {
-              const url = new URL(`${_ExchangeMethodsBybit.BASE_URL}/v5/market/kline`);
-              url.searchParams.set("category", "spot");
-              url.searchParams.set("symbol", symbol);
-              url.searchParams.set("interval", interval);
-              url.searchParams.set("start", `${cursorTime}`);
-              url.searchParams.set("limit", `${_ExchangeMethodsBybit.MAX_LIMIT}`);
-              const res = yield fetch(url.toString());
-              if (!res.ok) throw new Error(`Bybit Spot OHLCV fetch failed (${res.status})`);
-              const json = yield res.json();
-              if (json.retCode !== 0) throw new Error(`Bybit Spot API error: ${json.retMsg}`);
-              const list = (_b = (_a = json.result) == null ? void 0 : _a.list) != null ? _b : [];
-              if (list.length === 0) break;
-              list.reverse();
-              for (const item of list) {
-                const startMs = Number(item[0]);
-                const endMs = startMs + timeFrame.asMilliseconds() - 1;
-                if (startMs >= endTimeMsExclusive) {
-                  break;
-                }
-                if (startMs < cursorTime) {
-                  continue;
-                }
-                const entry = new OhlcvEntry();
-                entry.update(
-                  timeFrame,
-                  +item[1],
-                  // open
-                  +item[2],
-                  // high
-                  +item[3],
-                  // low
-                  +item[4],
-                  // close
-                  +item[5],
-                  // volume
-                  startMs,
-                  endMs,
-                  endMs < endTimeMsExclusive
-                  // isClosed
-                );
-                if (entry.isClosed) {
-                  toReturn.push(entry);
-                }
-              }
-              const lastRawStartTime = Number(list[list.length - 1][0]);
-              cursorTime = lastRawStartTime + timeFrame.asMilliseconds();
-              if (list.length < _ExchangeMethodsBybit.MAX_LIMIT) break;
-            }
-            for (let i = 1; i < toReturn.length; i++) {
-              if (toReturn[i].startTime < toReturn[i - 1].startTime) {
-                throw new Error("Non-ascending candles returned by Bybit");
-              }
-            }
-            return toReturn;
-          });
-        }
-      };
-      _ExchangeMethodsBybit.BASE_URL = "https://api.bybit.com";
-      _ExchangeMethodsBybit.MAX_LIMIT = 1e3;
-      ExchangeMethodsBybit = _ExchangeMethodsBybit;
-    }
-  });
-
-  // ts_libs/ts_worker/infrastructure/time/TimeProviderBase.ts
-  var TimeProviderBase;
-  var init_TimeProviderBase = __esm({
-    "ts_libs/ts_worker/infrastructure/time/TimeProviderBase.ts"() {
-      "use strict";
-      TimeProviderBase = class _TimeProviderBase {
-        /**
-         * Fetch unified server time from local. Optionally checks time skew.
-         *
-         * If skew <= MAX_ALLOWED_SKEW_MS → return the lowest time.
-         * If skew > MAX_ALLOWED_SKEW_MS → throw.
-         *
-         * @param checkForTimeSkew - whether to check for time skew
-         * @returns unified server time in milliseconds
-         * @throws Error if clock skew exceeds threshold
-         */
-        getUtcNowMilliseconds(checkForTimeSkew = false) {
-          return __async(this, null, function* () {
-            throw new Error("Not implemented");
-          });
-        }
-        /**
-         * Format a timestamp (ms) to a human-readable UTC string.
-         *
-         * Format: YYYY-MM-DD HH:mm:ss.SSS UTC
-         *
-         * @param timestampMs - timestamp in milliseconds
-         * @returns formatted UTC string
-         */
-        static formatUtc(timestampMs) {
-          if (!Number.isFinite(timestampMs)) {
-            throw new TypeError("timestampMs must be a finite number");
-          }
-          const d = new Date(timestampMs);
-          const yyyy = d.getUTCFullYear();
-          const mm = _TimeProviderBase.pad(d.getUTCMonth() + 1, 2);
-          const dd = _TimeProviderBase.pad(d.getUTCDate(), 2);
-          const hh = _TimeProviderBase.pad(d.getUTCHours(), 2);
-          const mi = _TimeProviderBase.pad(d.getUTCMinutes(), 2);
-          const ss = _TimeProviderBase.pad(d.getUTCSeconds(), 2);
-          const ms = _TimeProviderBase.pad(d.getUTCMilliseconds(), 3);
-          return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}.${ms} UTC`;
-        }
-        /**
-         * Left-pad a number with zeros
-         * @param value - number to pad
-         * @param width - desired width
-         * @returns zero-padded string
-         */
-        static pad(value, width) {
-          let s = String(value);
-          while (s.length < width) {
-            s = "0" + s;
-          }
-          return s;
-        }
-      };
-    }
-  });
-
-  // ts_libs/ts_worker/infrastructure/time/TimeProvider.ts
-  var _TimeProvider_instances, fetchBinanceTime_fn, _TimeProvider, TimeProvider;
-  var init_TimeProvider = __esm({
-    "ts_libs/ts_worker/infrastructure/time/TimeProvider.ts"() {
-      "use strict";
-      init_TimeProviderBase();
-      _TimeProvider = class _TimeProvider extends TimeProviderBase {
-        constructor() {
-          super();
-          __privateAdd(this, _TimeProvider_instances);
-        }
-        /**
-         * Fetch unified server time from Local. Optionally checks time skew.
-         *
-         * If skew <= MAX_ALLOWED_SKEW_MS → returns the lowest time.
-         * If skew > MAX_ALLOWED_SKEW_MS → throws an Error.
-         *
-         * @param checkForTimeSkew - whether to check clock skew
-         * @returns unified server time in milliseconds
-         * @throws Error if clock skew exceeds threshold
-         */
-        getUtcNowMilliseconds(checkForTimeSkew = false) {
-          return __async(this, null, function* () {
-            const localTime = Date.now();
-            if (!checkForTimeSkew) {
-              return localTime;
-            }
-            const binanceTime = yield __privateMethod(this, _TimeProvider_instances, fetchBinanceTime_fn).call(this);
-            if (!Number.isFinite(binanceTime) || !Number.isFinite(localTime)) {
-              throw new Error("Invalid server time received");
-            }
-            const skew = Math.abs(binanceTime - localTime);
-            if (skew > _TimeProvider.MAX_ALLOWED_SKEW_MS) {
-              throw new Error(
-                `Time skew too large: ${skew} ms (Binance=${binanceTime}, LocalTime=${localTime})`
-              );
-            }
-            return Math.min(binanceTime, localTime);
-          });
-        }
-      };
-      _TimeProvider_instances = new WeakSet();
-      fetchBinanceTime_fn = function() {
-        return __async(this, null, function* () {
-          const res = yield fetch("https://api.binance.com/api/v3/time");
-          if (!res.ok) {
-            throw new Error(`Binance time fetch failed (${res.status})`);
-          }
-          const json = yield res.json();
-          if (!Number.isFinite(json.serverTime)) {
-            throw new Error("Invalid Binance time response");
-          }
-          return json.serverTime;
-        });
-      };
-      /** Maximum allowed clock skew in milliseconds (10 seconds) */
-      _TimeProvider.MAX_ALLOWED_SKEW_MS = 1e4;
-      TimeProvider = _TimeProvider;
+      PluginManager = _PluginManager;
     }
   });
 
@@ -4044,6 +4189,7 @@
       init_UseCaseBase();
       init_FetchOhlcvDataResponse();
       init_InsufficientOhlcvDataError();
+      init_TimeFrame();
       FetchOhlcvDataUseCase = class extends UseCaseBase {
         constructor(technicalAnalisysRepository, exchangeMethodsRegistry) {
           super();
@@ -4080,7 +4226,8 @@
             }
             plugins.forEach((plugin) => {
               results.forEach((result) => {
-                plugin.next(result.getTradingPair(), result.getUpdatedTimeFrames());
+                const ts = result.getBuffer(TimeFrame.ONE_MINUTE).getEndTime();
+                plugin.next(result.getTradingPair(), result.getUpdatedTimeFrames(), ts);
               });
             });
             return new FetchOhlcvDataResponse(results.length);
@@ -4267,27 +4414,33 @@
   });
 
   // ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataResponse.ts
-  var _updatedEntriesCount, _tradingPairModel, SyncOhlcvDataResponse;
+  var _updatedEntriesCount, _tradingPairModels, _signalModels, SyncOhlcvDataResponse;
   var init_SyncOhlcvDataResponse = __esm({
     "ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataResponse.ts"() {
       "use strict";
       SyncOhlcvDataResponse = class {
-        constructor(updatedEntriesCount, tradingPairModel) {
+        constructor(updatedEntriesCount, tradingPairModels, signalModels) {
           __privateAdd(this, _updatedEntriesCount);
-          __privateAdd(this, _tradingPairModel);
+          __privateAdd(this, _tradingPairModels);
+          __privateAdd(this, _signalModels);
           __privateSet(this, _updatedEntriesCount, updatedEntriesCount);
-          __privateSet(this, _tradingPairModel, tradingPairModel);
+          __privateSet(this, _tradingPairModels, tradingPairModels);
+          __privateSet(this, _signalModels, signalModels);
           Object.freeze(this);
         }
         getUpdatedEntriesCount() {
           return __privateGet(this, _updatedEntriesCount);
         }
-        getTradingPairModel() {
-          return __privateGet(this, _tradingPairModel);
+        getTradingPairModels() {
+          return __privateGet(this, _tradingPairModels);
+        }
+        getSignalModels() {
+          return __privateGet(this, _signalModels);
         }
       };
       _updatedEntriesCount = new WeakMap();
-      _tradingPairModel = new WeakMap();
+      _tradingPairModels = new WeakMap();
+      _signalModels = new WeakMap();
     }
   });
 
@@ -4302,6 +4455,8 @@
       init_TradingPairModel();
       init_BaseFilterableAttributeExtractor();
       init_BaseSortableAttributeExtractor();
+      init_SignalModel();
+      init_BaseSignalGenerator();
       SyncOhlcvDataUseCase = class extends UseCaseBase {
         constructor(technicalAnalisysRepository, exchangeMethodsRegistry) {
           super();
@@ -4322,18 +4477,19 @@
               return gap > TimeFrame.ONE_MINUTE.asMilliseconds();
             });
             let tradingPairModels = [];
+            let signalModels = [];
             if (shouldSync === false) {
-              return new SyncOhlcvDataResponse(0, tradingPairModels);
+              return new SyncOhlcvDataResponse(0, tradingPairModels, signalModels);
             }
             for (let i = 0; i < buffers.length; i += parallelCount) {
               const batch = buffers.slice(i, i + parallelCount);
               const results = yield Promise.all(batch.map((buffer) => __privateMethod(this, _SyncOhlcvDataUseCase_instances, syncOne_fn).call(this, requestModel, buffer, ts)));
               for (let j = 0; j < results.length; j++) {
                 const syncResult = results[j];
-                const tradingPair = syncResult.multiTimeframeBuffer.getTradingPair();
+                const tradingPair = syncResult.tradingPair;
                 const tradingPairIndex = i + j + 1;
-                if (syncResult.mappedModel !== void 0) {
-                  tradingPairModels.push(syncResult.mappedModel);
+                if (syncResult.tradingPairModel !== void 0) {
+                  tradingPairModels.push(syncResult.tradingPairModel);
                 }
                 yield requestModel.reportProgress({
                   currentTradingPair: tradingPair,
@@ -4343,11 +4499,41 @@
                 });
               }
             }
-            return new SyncOhlcvDataResponse(buffers.length, tradingPairModels);
+            this.drainSignals(signalModels, requestModel);
+            return new SyncOhlcvDataResponse(buffers.length, tradingPairModels, signalModels);
           });
         }
-        mapUiData(mtfBuffer, plugins) {
-          const tradingPair = mtfBuffer.getTradingPair();
+        drainSignals(signalModels, requestModel) {
+          const plugins = requestModel.getPlugins();
+          plugins.forEach((plugin) => {
+            if (plugin instanceof BaseSignalGenerator) {
+              if (plugin.getSignalsCount() > 0) {
+                let drained = plugin.drain();
+                let mapped = drained.map((s) => this.createSingleSignalModel(s, plugin));
+                mapped.forEach((m) => signalModels.push(m));
+              }
+            }
+          });
+          signalModels.sort((first, second) => first.timestamp - second.timestamp);
+        }
+        createSingleSignalModel(s, plugin) {
+          const tradingPair = s.tradingPair;
+          const exchange = tradingPair.getExchangeDescriptor();
+          const tradingPairUrl = __privateGet(this, _exchangeMethodsRegistry2).get(exchange).getTradingPairUrl(tradingPair);
+          var model = new SignalModel(
+            tradingPair.getBaseAsset().toString(),
+            tradingPair.getQuoteAsset().toString(),
+            exchange.getName(),
+            exchange.getId(),
+            tradingPairUrl,
+            plugin.getFriendlyDescription(),
+            s.signalDirection,
+            s.timeStamp
+          );
+          console.info(JSON.stringify(model.serialize()));
+          return model;
+        }
+        createSingleTradingPairModel(tradingPair, plugins) {
           const exchange = tradingPair.getExchangeDescriptor();
           const tradingPairUrl = __privateGet(this, _exchangeMethodsRegistry2).get(exchange).getTradingPairUrl(tradingPair);
           var model = new TradingPairModel(
@@ -4383,8 +4569,8 @@
           );
           if (newEntries === void 0 || newEntries === null || newEntries.length === 0) {
             return {
-              multiTimeframeBuffer: mtfBuffer,
-              mappedModel: void 0,
+              tradingPair,
+              tradingPairModel: void 0,
               syncCount: 0
             };
           }
@@ -4408,14 +4594,14 @@
               __privateGet(this, _technicalAnalisysRepository2).updateIndicators(tradingPair, timeFrame);
             });
             plugins.forEach((plugin) => {
-              plugin.next(tradingPair, updatedTimeFrames);
+              plugin.next(tradingPair, updatedTimeFrames, entry.endTime);
             });
           }
-          let mappedModel = this.mapUiData(mtfBuffer, plugins);
+          let tradingPairModel = this.createSingleTradingPairModel(tradingPair, plugins);
           return {
-            multiTimeframeBuffer: mtfBuffer,
+            tradingPair,
             syncCount: newEntries.length,
-            mappedModel
+            tradingPairModel
           };
         });
       };
@@ -4438,13 +4624,14 @@
       init_TimeProvider();
       init_ScreenerSettings();
       init_ExchangeInclusionCriteria();
+      init_PluginManager();
       init_EnumerateExchangesUseCase();
       init_FetchOhlcvDataUseCase();
       init_FilterTradingPairsUseCase();
       init_RegisterPluginsUseCase();
       init_SyncOhlcvDataUseCase();
       UseCaseContainer = class _UseCaseContainer {
-        constructor(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository) {
+        constructor(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository, pluginManager) {
           this.timeProvider = new TimeProvider();
           this.exchangeDescriptorRegistry = exchangeDescriptorRegistry;
           this.exchangeMethodsRegistry = exchangeMethodsRegistry;
@@ -4455,7 +4642,7 @@
           this.registerPluginsUseCase = new RegisterPluginsUseCase(this.technicalAnalisysRepository);
           this.fetchOhlcvDataUseCase = new FetchOhlcvDataUseCase(this.technicalAnalisysRepository, exchangeMethodsRegistry);
           this.syncOhlcvDataUseCase = new SyncOhlcvDataUseCase(this.technicalAnalisysRepository, exchangeMethodsRegistry);
-          Object.freeze(this);
+          this.pluginManager = pluginManager;
         }
         /** Factory method to create a fully initialized UseCaseContainer */
         static Create() {
@@ -4475,7 +4662,8 @@
                 tradingPairsRepository.registerPair(pair);
               });
             }
-            return new _UseCaseContainer(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository);
+            const pluginManager = new PluginManager();
+            return new _UseCaseContainer(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository, pluginManager);
           });
         }
         static CreateDefaultSettings(container) {
@@ -4484,19 +4672,17 @@
           for (let i = 0; i < available.length; i++) {
             exchangeInclusionCriterias.push(new ExchangeInclusionCriteria(available[i].getName(), available[i].getId(), true));
           }
-          return new ScreenerSettings(exchangeInclusionCriterias);
+          return new ScreenerSettings(exchangeInclusionCriterias, container.pluginManager.sortableAttributes, container.pluginManager.filterableAttributes);
         }
       };
     }
   });
 
   // ts_libs/ts_worker/worker/WorkerCoreImplementation.ts
-  var _container, _timeProvider, _candlesPerTimeFrame2, _settings, _WorkerCoreImplementation, WorkerCoreImplementation;
+  var _container, _timeProvider, _candlesPerTimeFrame2, _settings, _plugins5, _WorkerCoreImplementation, WorkerCoreImplementation;
   var init_WorkerCoreImplementation = __esm({
     "ts_libs/ts_worker/worker/WorkerCoreImplementation.ts"() {
       "use strict";
-      init_ScreenerSettings();
-      init_ExchangeInclusionCriteria();
       init_SynchronizationModel();
       init_EnumerateExchangesRequest();
       init_FetchOhlcvDataRequest();
@@ -4512,15 +4698,11 @@
           __privateAdd(this, _timeProvider);
           __privateAdd(this, _candlesPerTimeFrame2);
           __privateAdd(this, _settings);
+          __privateAdd(this, _plugins5);
           __privateSet(this, _container, container);
           __privateSet(this, _timeProvider, new TimeProvider());
           __privateSet(this, _candlesPerTimeFrame2, 400);
-          let exchangeInclusionCriterias = [];
-          let available = __privateGet(this, _container).exchangeDescriptorRegistry.all();
-          for (let i = 0; i < available.length; i++) {
-            exchangeInclusionCriterias.push(new ExchangeInclusionCriteria(available[i].getName(), available[i].getId(), true));
-          }
-          __privateSet(this, _settings, new ScreenerSettings(exchangeInclusionCriterias));
+          __privateSet(this, _settings, UseCaseContainer.CreateDefaultSettings(container));
         }
         static Create() {
           return __async(this, null, function* () {
@@ -4533,9 +4715,7 @@
          * Initialize settings for the screener, including exchange inclusion criteria
          */
         getDefaultSettings() {
-          return __async(this, null, function* () {
-            return __privateGet(this, _settings);
-          });
+          return __privateGet(this, _settings);
         }
         /**
          * Fetch initial data from exchanges
@@ -4556,15 +4736,18 @@
             const tradingPairs = tradingPairsResponse.getTradingPairs();
             const sixHours = 216e5;
             const nowMs = (yield __privateGet(this, _timeProvider).getUtcNowMilliseconds(true)) - sixHours;
-            const registerPluginsRequest = new RegisterPluginsRequest(__privateGet(this, _settings).plugins, tradingPairs);
+            const registerPluginsRequest = new RegisterPluginsRequest(
+              __privateGet(this, _container).pluginManager.plugins,
+              tradingPairs
+            );
             const registerPluginsResponse = yield __privateGet(this, _container).registerPluginsUseCase.execute(registerPluginsRequest);
-            const plugins = registerPluginsResponse.plugins;
+            __privateSet(this, _plugins5, registerPluginsResponse.plugins);
             const fetchRequest = new FetchOhlcvDataRequest(
               tradingPairs,
               __privateGet(this, _candlesPerTimeFrame2),
               __privateGet(this, _settings).parallelRequestsCount,
               nowMs,
-              __privateGet(this, _settings).plugins,
+              __privateGet(this, _plugins5),
               (progress) => __async(this, null, function* () {
                 let percent = 0.7 * (progress.currentPairIndex * 100) / progress.totalPairsCount;
                 var message = `${progress.currentPairIndex} / ${progress.totalPairsCount} - Fetched ${progress.currentTradingPair.symbol()} initial data from ${progress.currentTradingPair.getExchangeDescriptor().getName()} ...`;
@@ -4577,7 +4760,7 @@
             }
             const syncMs = yield __privateGet(this, _timeProvider).getUtcNowMilliseconds(true);
             const syncRequest = new SyncOhlcvDataRequest(
-              __privateGet(this, _settings).plugins,
+              __privateGet(this, _plugins5),
               __privateGet(this, _settings).parallelRequestsCount,
               syncMs,
               (progress) => __async(this, null, function* () {
@@ -4588,17 +4771,20 @@
             );
             const syncResponse = yield __privateGet(this, _container).syncOhlcvDataUseCase.execute(syncRequest);
             var synchronizationModel = new SynchronizationModel(
-              syncResponse.getTradingPairModel(),
-              []
+              syncResponse.getTradingPairModels(),
+              syncResponse.getSignalModels()
             );
             return synchronizationModel;
           });
         }
         synchronize(progressCallback) {
           return __async(this, null, function* () {
+            if (__privateGet(this, _plugins5) === void 0) {
+              throw new Error("Plugins undefined");
+            }
             const syncMs = yield __privateGet(this, _timeProvider).getUtcNowMilliseconds(true);
             const syncRequest = new SyncOhlcvDataRequest(
-              __privateGet(this, _settings).plugins,
+              __privateGet(this, _plugins5),
               __privateGet(this, _settings).parallelRequestsCount,
               syncMs,
               (progress) => __async(this, null, function* () {
@@ -4609,8 +4795,8 @@
             );
             const syncResponse = yield __privateGet(this, _container).syncOhlcvDataUseCase.execute(syncRequest);
             var synchronizationModel = new SynchronizationModel(
-              syncResponse.getTradingPairModel(),
-              []
+              syncResponse.getTradingPairModels(),
+              syncResponse.getSignalModels()
             );
             return synchronizationModel;
           });
@@ -4620,6 +4806,7 @@
       _timeProvider = new WeakMap();
       _candlesPerTimeFrame2 = new WeakMap();
       _settings = new WeakMap();
+      _plugins5 = new WeakMap();
       WorkerCoreImplementation = _WorkerCoreImplementation;
     }
   });
@@ -4633,8 +4820,8 @@
         return __async(this, null, function* () {
           try {
             var controller = yield getController();
-            var data = yield controller.getDefaultSettings();
-            var jsonData = data.toJson();
+            var data = controller.getDefaultSettings();
+            var jsonData = data.serialize();
             _workerPostResolve(id, jsonData);
           } catch (err) {
             _workerPostReject(id, err);
@@ -4645,7 +4832,7 @@
         return __async(this, null, function* () {
           try {
             var controller = yield getController();
-            var settings = ScreenerSettings.fromJson(payload);
+            var settings = ScreenerSettings.deserialize(payload);
             var data = yield controller.fetch(settings, (progress, message) => _workerPostEvent(id, progressEventName, { progress, message }));
             _workerPostResolve(id, data.serialize());
           } catch (err) {
@@ -4684,7 +4871,6 @@
         });
       }
       self.onmessage = (event) => {
-        console.log(`${WorkerCoreImplementation.name}::onmessage, ${JSON.stringify(event.data)}`);
         _workerHandleCalls(event);
       };
       function _workerHandleCalls(event) {

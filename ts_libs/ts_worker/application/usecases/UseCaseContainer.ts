@@ -10,6 +10,7 @@ import { ExchangeMethodsBybit } from "../../infrastructure/exchanges/ExchangeMet
 import { TimeProvider } from "../../infrastructure/time/TimeProvider";
 import { ScreenerSettings } from "../exports/ScreenerSettings";
 import { ExchangeInclusionCriteria } from "../exports/settings/ExchangeInclusionCriteria";
+import { PluginManager } from "../plugins/PluginManager";
 import { EnumerateExchangesUseCase } from "./EnumerateExchanges/EnumerateExchangesUseCase";
 import { FetchOhlcvDataUseCase } from "./FetchOhlcvData/FetchOhlcvDataUseCase";
 import { FilterTradingPairsUseCase } from "./FilterTradingPairs/FilterTradingPairsUseCase";
@@ -28,11 +29,13 @@ export class UseCaseContainer {
     public readonly fetchOhlcvDataUseCase: FetchOhlcvDataUseCase;
     public readonly syncOhlcvDataUseCase: SyncOhlcvDataUseCase;
     public readonly technicalAnalisysRepository: TechnicalAnalisysRepository;
+    public readonly pluginManager: PluginManager;
 
     constructor(
         exchangeDescriptorRegistry: ExchangeDescriptorRegistry,
         exchangeMethodsRegistry: ExchangeMethodsRegistry,
-        tradingPairsRepository: TradingPairsRepository
+        tradingPairsRepository: TradingPairsRepository,
+        pluginManager: PluginManager
     ) {
         this.timeProvider = new TimeProvider();
         this.exchangeDescriptorRegistry = exchangeDescriptorRegistry;
@@ -44,7 +47,7 @@ export class UseCaseContainer {
         this.registerPluginsUseCase = new RegisterPluginsUseCase(this.technicalAnalisysRepository);
         this.fetchOhlcvDataUseCase = new FetchOhlcvDataUseCase(this.technicalAnalisysRepository, exchangeMethodsRegistry);
         this.syncOhlcvDataUseCase = new SyncOhlcvDataUseCase(this.technicalAnalisysRepository, exchangeMethodsRegistry);
-        Object.freeze(this);
+        this.pluginManager = pluginManager;
     }
 
     /** Factory method to create a fully initialized UseCaseContainer */
@@ -72,7 +75,9 @@ export class UseCaseContainer {
             });
         }
 
-        return new UseCaseContainer(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository);
+        //initialize plugin manager
+        const pluginManager = new PluginManager();
+        return new UseCaseContainer(exchangeDescriptorRegistry, exchangeMethodsRegistry, tradingPairsRepository, pluginManager);
     }
 
     static CreateDefaultSettings(container: UseCaseContainer) {
@@ -81,6 +86,6 @@ export class UseCaseContainer {
         for (let i = 0; i < available.length; i++) {
             exchangeInclusionCriterias.push(new ExchangeInclusionCriteria(available[i].getName(), available[i].getId(), true));
         }
-        return new ScreenerSettings(exchangeInclusionCriterias);
+        return new ScreenerSettings(exchangeInclusionCriterias, container.pluginManager.sortableAttributes, container.pluginManager.filterableAttributes);
     }
 }

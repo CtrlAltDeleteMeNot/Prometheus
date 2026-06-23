@@ -54,7 +54,7 @@ describe("Container", () => {
         // -------------------------
         // Test 3: Init plugins
         // -------------------------
-        const registerPluginsRequest = new RegisterPluginsRequest(settings.plugins, tradingPairs);
+        const registerPluginsRequest = new RegisterPluginsRequest(container.pluginManager.plugins, tradingPairs);
         const registerPluginsResponse = await container.registerPluginsUseCase.execute(registerPluginsRequest);
         const plugins = registerPluginsResponse.plugins;
 

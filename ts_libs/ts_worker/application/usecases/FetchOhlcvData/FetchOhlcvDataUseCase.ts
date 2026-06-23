@@ -7,6 +7,7 @@ import { MultiTimeframeOhlcv } from "../../../domain/values/MultiTimeframeOhlcv"
 import { InsufficientOhlcvDataError } from "../../../domain/errors/InsufficientOhlcvDataError";
 import { TechnicalAnalisysRepository } from "../../../domain/ta/TechnicalAnalisysRepository";
 import { IndicatorParameters } from "../../../domain/ta/indicators/Indicator";
+import { TimeFrame } from "../../../domain/values/TimeFrame";
 
 /**
  * Use case: fetch initial OHLCV data for multiple trading pairs
@@ -29,6 +30,7 @@ export class FetchOhlcvDataUseCase extends UseCaseBase<FetchOhlcvDataRequest, Fe
         const parallelCount = requestModel.getParallelRequestsCount();
         const results: MultiTimeframeOhlcv[] = [];
         const plugins = requestModel.getPlugins();
+
         for (let i = 0; i < tradingPairs.length; i += parallelCount) {
             const batchPairs = tradingPairs.slice(i, i + parallelCount);
             const batchResults = await Promise.all(batchPairs.map((tp) => {
@@ -48,10 +50,10 @@ export class FetchOhlcvDataUseCase extends UseCaseBase<FetchOhlcvDataRequest, Fe
                 });
             }
         }
-
         plugins.forEach(plugin => {
             results.forEach(result => {
-                plugin.next(result.getTradingPair(), result.getUpdatedTimeFrames());
+                const ts = result.getBuffer(TimeFrame.ONE_MINUTE).getEndTime();
+                plugin.next(result.getTradingPair(), result.getUpdatedTimeFrames(), ts);
             });
         });
 

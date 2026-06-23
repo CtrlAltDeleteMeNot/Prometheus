@@ -20,7 +20,7 @@ export class RsiOversoldFilter extends BaseFilterableAttributeExtractor {
     public getFriendlyDescription(): string {
         return `Oversold: ${this.params.getDescription()} <= ${this.oversoldTreshold}`
     }
-    public next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>): void {
+    public next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, ts:number): void {
         if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
             return;
         }

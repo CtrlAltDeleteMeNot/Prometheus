@@ -11,7 +11,7 @@ export class DailyPendingRvaExtractor extends BaseSortableAttributeExtractor {
         this.params = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
     }
 
-    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>): void {
+    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>,  ts:number): void {
         const indicator = this.findIndicator(tradingPair, this.params) as RvaIndicator;
         if (false === indicator.isReady()) {
             return;

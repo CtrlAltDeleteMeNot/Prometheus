@@ -5,7 +5,7 @@ import { BaseSortableAttributeExtractor } from "../BaseSortableAttributeExtracto
 
 export class CurrentPriceExtractor extends BaseSortableAttributeExtractor {
 
-    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>): void {
+    public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>, ts:number): void {
         let hasOneMinuteData = updatedTimeFrames.get(TimeFrame.ONE_MINUTE) === true || undefined;
         if (hasOneMinuteData === undefined) {
             return;

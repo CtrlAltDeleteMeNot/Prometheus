@@ -8,7 +8,8 @@
   "scripts": {
     "start": "npx gulp",
     "test": "npx jest",
-    "download": "tsx download_tasks/index.ts"
+    "download": "tsx download_tasks/index.ts",
+    "ts-check": "npx tsc --noEmit"
   },
   "devDependencies": {
     "@types/browser-sync": "^2.29.1",

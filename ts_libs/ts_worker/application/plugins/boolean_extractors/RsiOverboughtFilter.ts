@@ -22,7 +22,7 @@ export class RsiOverboughtFilter extends BaseFilterableAttributeExtractor {
         return `Overbought: ${this.params.getDescription()} > ${this.overboughtTreshold}`
     }
 
-    public next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>): void {
+    public next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, ts: number): void {
         if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
             return;
         }

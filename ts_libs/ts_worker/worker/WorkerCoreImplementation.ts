@@ -7,6 +7,7 @@ import { FilterTradingPairsRequest } from "../application/usecases/FilterTrading
 import { RegisterPluginsRequest } from "../application/usecases/RegisterPlugins/RegisterPluginsRequest";
 import { SyncOhlcvDataRequest } from "../application/usecases/SyncOhlcvData/SyncOhlcvDataRequest";
 import { UseCaseContainer } from "../application/usecases/UseCaseContainer";
+import { BasePlugin } from "../domain/ta/export/BasePlugin";
 import { Asset } from "../domain/values/Asset";
 import { TimeProvider } from "../infrastructure/time/TimeProvider";
 
@@ -27,24 +28,19 @@ export class WorkerCoreImplementation {
     #timeProvider: TimeProvider;
     #candlesPerTimeFrame: number;
     #settings: ScreenerSettings;
-
+    #plugins: readonly BasePlugin[] | undefined;
 
     constructor(container: UseCaseContainer) {
         this.#container = container;
         this.#timeProvider = new TimeProvider();
         this.#candlesPerTimeFrame = 400;
-        let exchangeInclusionCriterias: ExchangeInclusionCriteria[] = [];
-        let available = this.#container.exchangeDescriptorRegistry.all();
-        for (let i = 0; i < available.length; i++) {
-            exchangeInclusionCriterias.push(new ExchangeInclusionCriteria(available[i].getName(), available[i].getId(), true));
-        }
-        this.#settings = new ScreenerSettings(exchangeInclusionCriterias);
+        this.#settings = UseCaseContainer.CreateDefaultSettings(container);
     }
 
     /**
      * Initialize settings for the screener, including exchange inclusion criteria
      */
-    public async getDefaultSettings(): Promise<ScreenerSettings> {
+    public getDefaultSettings(): ScreenerSettings {
         return this.#settings;
     }
 
@@ -66,16 +62,19 @@ export class WorkerCoreImplementation {
         const sixHours = 21_600_000;
         const nowMs = await this.#timeProvider.getUtcNowMilliseconds(true) - sixHours;
 
-        const registerPluginsRequest = new RegisterPluginsRequest(this.#settings.plugins, tradingPairs);
+        const registerPluginsRequest = new RegisterPluginsRequest(
+            this.#container.pluginManager.plugins, 
+            tradingPairs);
+
         const registerPluginsResponse = await this.#container.registerPluginsUseCase.execute(registerPluginsRequest);
-        const plugins = registerPluginsResponse.plugins;
+        this.#plugins = registerPluginsResponse.plugins;
 
         const fetchRequest = new FetchOhlcvDataRequest(
             tradingPairs,
             this.#candlesPerTimeFrame,
             this.#settings.parallelRequestsCount,
             nowMs,
-            this.#settings.plugins,
+            this.#plugins,
             async (progress) => {
                 let percent = 0.7 * (progress.currentPairIndex * 100) / progress.totalPairsCount;
                 var message = `${progress.currentPairIndex} / ${progress.totalPairsCount} - Fetched ${progress.currentTradingPair.symbol()} initial data from ${progress.currentTradingPair.getExchangeDescriptor().getName()} ...`;
@@ -90,7 +89,7 @@ export class WorkerCoreImplementation {
 
         const syncMs = await this.#timeProvider.getUtcNowMilliseconds(true);
         const syncRequest = new SyncOhlcvDataRequest(
-            this.#settings.plugins,
+            this.#plugins,
             this.#settings.parallelRequestsCount,
             syncMs,
             async (progress) => {
@@ -102,16 +101,19 @@ export class WorkerCoreImplementation {
         );
         const syncResponse = await this.#container.syncOhlcvDataUseCase.execute(syncRequest);
         var synchronizationModel = new SynchronizationModel(
-            syncResponse.getTradingPairModel(),
-            []
+            syncResponse.getTradingPairModels(),
+            syncResponse.getSignalModels()
         );
         return synchronizationModel;
     }
 
     async synchronize(progressCallback: ProgressCallback): Promise<SynchronizationModel> {
+        if (this.#plugins === undefined) {
+            throw new Error('Plugins undefined');
+        }
         const syncMs = await this.#timeProvider.getUtcNowMilliseconds(true);
         const syncRequest = new SyncOhlcvDataRequest(
-            this.#settings.plugins,
+            this.#plugins,
             this.#settings.parallelRequestsCount,
             syncMs,
             async (progress) => {
@@ -122,8 +124,8 @@ export class WorkerCoreImplementation {
         );
         const syncResponse = await this.#container.syncOhlcvDataUseCase.execute(syncRequest);
         var synchronizationModel = new SynchronizationModel(
-            syncResponse.getTradingPairModel(),
-            []
+            syncResponse.getTradingPairModels(),
+            syncResponse.getSignalModels(),
         );
         return synchronizationModel;
     }

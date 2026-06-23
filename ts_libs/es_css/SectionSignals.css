@@ -1,10 +1,103 @@
 #signals {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 1. Constraint: The parent limits the height to the screen */
+#signals-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 2. Scroller: Constraints itself to parent and allows content to overflow */
+#signals-scroll {
+  display: block;   /* Use block here to allow children to take full height */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#signals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--space-6);
+  grid-auto-rows: auto;
+  align-content: start;
+  /* CRITICAL: prevents scroll anchoring jitter */
+  overflow-anchor: none;
+  /* reduces paint thrash during batch inserts */
+  contain: layout paint;
+  
   padding-top: var(--safe-top);
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
-  padding-bottom: var(--safe-bottom);
 }
 
-#signals p:first-of-type {
-  margin-top: 0;
+
+#signals-footer {
+  display: block;
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+  
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+
+
+@media (max-width: 600px) {
+  #signals-grid {
+    grid-template-columns: 1fr;
+    /* one column on phones */
+  }
+}
+
+.signal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  background: var(--surface-3);
+  padding: 1rem;
+  /* CRITICAL: stabilizes grid measurement */
+  min-height: 120px;
+
+  /* prevents internal layout repaint from affecting grid */
+  contain: layout paint style;
+  overflow: hidden;
+}
+
+.signal-card--bullish {
+    border-left: 4px solid #22c55e;
+}
+
+.signal-card--bearish {
+    border-left: 4px solid #ef4444;
+}
+
+.signal-card--neutral {
+    border-left: 4px solid #3b82f6;
+}
+
+.signal-card__header{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.signal-card__description{
+
+}
+
+.signal-card__footer{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
 }
