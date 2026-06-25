@@ -194,6 +194,10 @@ p {
   overflow-y: hidden !important;
 }
 
+.modal-opened #signals-scroll {
+  overflow-y: hidden !important;
+}
+
 .modal-opened .modal-body {
   overflow-y: auto !important;
 }

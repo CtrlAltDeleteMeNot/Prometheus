@@ -1214,7 +1214,7 @@
   });
 
   // ts_libs/ts_client/views/SignalsSectionView.ts
-  var _root6, _footer4, _signalsGrid, _loadMoreBtn2, _cards2, _currentPage2, _pageSize2, _signals, SignalSectionView;
+  var _root6, _footer4, _signalsGrid, _loadMoreBtn2, _cards2, _currentPage2, _pageSize2, _signals, _syncAction2, _autoSyncAction, _autoSyncEnabled, _autoSyncTimer, _latestSignalTs, _notificationAudio, _wakeLockSentinel, SignalSectionView;
   var init_SignalsSectionView = __esm({
     "ts_libs/ts_client/views/SignalsSectionView.ts"() {
       "use strict";
@@ -1231,6 +1231,13 @@
           __privateAdd(this, _currentPage2, 1);
           __privateAdd(this, _pageSize2, 30);
           __privateAdd(this, _signals);
+          __privateAdd(this, _syncAction2);
+          __privateAdd(this, _autoSyncAction);
+          __privateAdd(this, _autoSyncEnabled);
+          __privateAdd(this, _autoSyncTimer);
+          __privateAdd(this, _latestSignalTs);
+          __privateAdd(this, _notificationAudio);
+          __privateAdd(this, _wakeLockSentinel);
           this.id = "signals";
           this.title = "Signals";
           __privateSet(this, _root6, ViewHelper.getHtmlElementOrThrow("signals"));
@@ -1239,6 +1246,57 @@
           __privateSet(this, _loadMoreBtn2, ViewHelper.getButtonOrThrow("signals-load-more"));
           __privateGet(this, _loadMoreBtn2).onclick = () => this.loadNextPage();
           __privateSet(this, _signals, []);
+          __privateSet(this, _syncAction2, ViewHelper.getButtonOrThrow("footer-signals-button-sync-manually"));
+          __privateGet(this, _syncAction2).onclick = () => console.log(`Sync action clicked`);
+          __privateSet(this, _autoSyncEnabled, false);
+          __privateSet(this, _autoSyncAction, ViewHelper.getButtonOrThrow("footer-signals-button-sync-automatically"));
+          __privateGet(this, _autoSyncAction).onclick = () => this.toggleAutoSync();
+          __privateSet(this, _autoSyncTimer, void 0);
+          __privateSet(this, _notificationAudio, new Audio("https://dn711000.ca.archive.org/0/items/android-4.1.2-stock-ringtones/ringtones/Seville.mp3"));
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible" && __privateGet(this, _autoSyncEnabled)) {
+              void this.acquireWakeLock();
+            }
+          });
+        }
+        onTimerCallback() {
+          console.log(`${this.onTimerCallback.name} ${__privateGet(this, _autoSyncEnabled)}`);
+          if (__privateGet(this, _autoSyncEnabled) === false) {
+            return;
+          }
+          __privateGet(this, _syncAction2).click();
+        }
+        toggleAutoSync() {
+          __privateSet(this, _autoSyncEnabled, !__privateGet(this, _autoSyncEnabled));
+          this.onAutosyncToggled();
+        }
+        onAutosyncToggled() {
+          if (__privateGet(this, _autoSyncEnabled)) {
+            __privateGet(this, _autoSyncAction).classList.add("btn--primary");
+            __privateGet(this, _syncAction2).classList.add("d-hidden");
+            this.onTimerCallback();
+            __privateSet(this, _autoSyncTimer, window.setInterval(
+              () => {
+                this.onTimerCallback();
+              },
+              6e4
+            ));
+            this.acquireWakeLock();
+          } else {
+            __privateGet(this, _autoSyncAction).classList.remove("btn--primary");
+            __privateGet(this, _syncAction2).classList.remove("d-hidden");
+            if (__privateGet(this, _autoSyncTimer) !== void 0) {
+              window.clearInterval(__privateGet(this, _autoSyncTimer));
+              __privateSet(this, _autoSyncTimer, void 0);
+            }
+            this.releaseWakeLock();
+          }
+        }
+        /**
+        * Bind a callback to the sync button
+        */
+        bindSyncButton(callback) {
+          __privateGet(this, _syncAction2).onclick = callback;
         }
         loadNextPage() {
           __privateWrapper(this, _currentPage2)._++;
@@ -1248,6 +1306,7 @@
           return true;
         }
         setData(signals) {
+          this.checkNewDataArrived(signals);
           __privateSet(this, _signals, signals);
           __privateSet(this, _currentPage2, 1);
           this.renderCards();
@@ -1275,17 +1334,32 @@
           inner.classList.add("signal-card__inner");
           const header = document.createElement("div");
           header.classList.add("signal-card__header");
+          const headerTextContents = document.createElement("div");
+          headerTextContents.classList.add("signal-card__header__texts");
           const title = document.createElement("h3");
           title.classList.add("signal-card__title");
           title.textContent = `${signalModel.baseAsset}/${signalModel.quoteAsset}`;
-          const direction = document.createElement("span");
-          direction.classList.add("signal-card__direction");
-          direction.textContent = signalModel.direction;
-          header.appendChild(title);
-          header.appendChild(direction);
-          const subtitle = document.createElement("div");
+          const subtitle = document.createElement("p");
           subtitle.classList.add("signal-card__subtitle");
           subtitle.textContent = signalModel.exchangeName;
+          headerTextContents.appendChild(title);
+          headerTextContents.appendChild(subtitle);
+          const button = document.createElement("button");
+          button.className = "btn btn--icon";
+          button.type = "button";
+          button.addEventListener("click", () => {
+            window.open(signalModel.exchangeUrl, "_blank", "noopener,noreferrer");
+          });
+          const btnText = document.createElement("span");
+          btnText.className = "signal-card__action-text";
+          btnText.textContent = signalModel.direction;
+          const btnSvg = getActionIconSVGElement("arrow-right");
+          btnSvg.classList.add("icon");
+          btnSvg.setAttribute("role", "img");
+          button.appendChild(btnText);
+          button.appendChild(btnSvg);
+          header.appendChild(headerTextContents);
+          header.appendChild(button);
           const description = document.createElement("div");
           description.classList.add("signal-card__description");
           description.textContent = signalModel.description;
@@ -1294,20 +1368,8 @@
           const time = document.createElement("span");
           time.classList.add("signal-card__time");
           time.textContent = this.formatTime(signalModel.timestamp);
-          const button = document.createElement("button");
-          button.className = "btn btn--square btn--icon";
-          button.type = "button";
-          button.addEventListener("click", () => {
-            window.open(signalModel.exchangeUrl, "_blank", "noopener,noreferrer");
-          });
-          const btnSvg = getActionIconSVGElement("arrow-right");
-          btnSvg.classList.add("icon");
-          btnSvg.setAttribute("role", "img");
-          button.appendChild(btnSvg);
           footer.appendChild(time);
-          footer.appendChild(button);
           inner.appendChild(header);
-          inner.appendChild(subtitle);
           inner.appendChild(description);
           inner.appendChild(footer);
           return inner;
@@ -1334,10 +1396,68 @@
         show() {
           ViewHelper.toggleVisibility(__privateGet(this, _root6), true);
           ViewHelper.toggleVisibility(__privateGet(this, _footer4), true);
+          __privateSet(this, _autoSyncEnabled, false);
+          this.onAutosyncToggled();
         }
         hide() {
           ViewHelper.toggleVisibility(__privateGet(this, _root6), false);
           ViewHelper.toggleVisibility(__privateGet(this, _footer4), false);
+          __privateSet(this, _autoSyncEnabled, false);
+          this.onAutosyncToggled();
+        }
+        checkNewDataArrived(signals) {
+          if (signals.length === 0) {
+            return;
+          }
+          const latest = signals[signals.length - 1];
+          if (__privateGet(this, _latestSignalTs) !== latest.timestamp) {
+            __privateSet(this, _latestSignalTs, latest.timestamp);
+            if (__privateGet(this, _autoSyncEnabled)) {
+              this.playNotificationSound();
+            }
+          }
+        }
+        playNotificationSound() {
+          __privateGet(this, _notificationAudio).play();
+        }
+        isInstalled() {
+          return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+        }
+        acquireWakeLock() {
+          return __async(this, null, function* () {
+            if (!this.isInstalled()) {
+              return;
+            }
+            if (!("wakeLock" in navigator)) {
+              return;
+            }
+            if (__privateGet(this, _wakeLockSentinel) !== void 0) {
+              return;
+            }
+            try {
+              __privateSet(this, _wakeLockSentinel, yield navigator.wakeLock.request("screen"));
+              __privateGet(this, _wakeLockSentinel).addEventListener("release", () => {
+                __privateSet(this, _wakeLockSentinel, void 0);
+                if (__privateGet(this, _autoSyncEnabled) && document.visibilityState === "visible") {
+                  void this.acquireWakeLock();
+                }
+              });
+            } catch (e) {
+              console.warn(e);
+            }
+          });
+        }
+        releaseWakeLock() {
+          return __async(this, null, function* () {
+            if (!__privateGet(this, _wakeLockSentinel)) {
+              return;
+            }
+            try {
+              yield __privateGet(this, _wakeLockSentinel).release();
+            } finally {
+              __privateSet(this, _wakeLockSentinel, void 0);
+            }
+          });
         }
       };
       _root6 = new WeakMap();
@@ -1348,6 +1468,13 @@
       _currentPage2 = new WeakMap();
       _pageSize2 = new WeakMap();
       _signals = new WeakMap();
+      _syncAction2 = new WeakMap();
+      _autoSyncAction = new WeakMap();
+      _autoSyncEnabled = new WeakMap();
+      _autoSyncTimer = new WeakMap();
+      _latestSignalTs = new WeakMap();
+      _notificationAudio = new WeakMap();
+      _wakeLockSentinel = new WeakMap();
     }
   });
 
@@ -2214,6 +2341,9 @@
           }));
           __privateGet(this, _mainView).screenerSection.bindSortButton(() => this.showSortModal());
           __privateGet(this, _mainView).screenerSection.bindFilterButton(() => this.showFilterModal());
+          __privateGet(this, _mainView).signalsSection.bindSyncButton(() => __async(this, null, function* () {
+            return yield this.synchronize();
+          }));
           __privateGet(this, _mainView).navigation.bindShowSectionAction((aPageName) => this.showSection(aPageName));
           __privateGet(this, _mainView).sortModalView.bindSortingRulesChanged((direction, sortKey) => this.doSort(direction, sortKey));
           __privateGet(this, _mainView).filterModalView.bindFilteringRulesChanged((rules) => this.doFilter(rules));

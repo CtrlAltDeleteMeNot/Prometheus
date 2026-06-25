@@ -13,7 +13,7 @@ import { DailyPendingRvaExtractor } from "./numeric_extractors/DailyPendingRvaEx
 import { DailyPriceChangeExtractor } from "./numeric_extractors/DailyPriceChangeExtractor";
 import { DailyRvaExtractor } from "./numeric_extractors/DailyRvaExtractor";
 import { ThirtyDayPercentChangeExtractor } from "./numeric_extractors/ThirtyDayPercentChangeExtractor";
-import { RsiCrossoverSignalGenerator } from "./signal_generators/RsiCrossoverSignalGenerator";
+import { MomentumRecoverySignalGenerator } from "./signal_generators/MomentumRecoverySignalGenerator";
 
 export class PluginManager {
     private _plugins: readonly BasePlugin[];
@@ -64,7 +64,7 @@ export class PluginManager {
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
-        new RsiCrossoverSignalGenerator(Period.fromUnknown(2),TimeFrame.FIFTEEN_MINUTES, 5)
+        new MomentumRecoverySignalGenerator()
     ];
 
     get sortableAttributes(): readonly NamedAttributeMetadata[] {

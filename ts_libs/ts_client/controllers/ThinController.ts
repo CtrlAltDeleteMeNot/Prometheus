@@ -42,6 +42,7 @@ export class ThinController {
         this.#mainView.screenerSection.bindSyncButton(async () => await this.synchronize());
         this.#mainView.screenerSection.bindSortButton(() => this.showSortModal());
         this.#mainView.screenerSection.bindFilterButton(() => this.showFilterModal());
+        this.#mainView.signalsSection.bindSyncButton(async () => await this.synchronize());
         this.#mainView.navigation.bindShowSectionAction((aPageName) => this.showSection(aPageName));
         this.#mainView.sortModalView.bindSortingRulesChanged((direction, sortKey) => this.doSort(direction, sortKey));
         this.#mainView.filterModalView.bindFilteringRulesChanged((rules) => this.doFilter(rules));

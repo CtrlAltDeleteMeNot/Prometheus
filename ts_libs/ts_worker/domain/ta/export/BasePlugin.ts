@@ -3,10 +3,10 @@ import { TimeFrame } from "../../values/TimeFrame";
 import { Period } from "../core/Period";
 import { Source } from "../core/Source";
 import { Indicator, IndicatorOutput, IndicatorParameters } from "../indicators/Indicator";
-import { PctChangeIndicatorParameters } from "../indicators/PctChangeIndicator";
-import { RsiIndicatorParameters } from "../indicators/RsiIndicator";
-import { RvaIndicatorParameters } from "../indicators/RvaIndicator";
-import { SmaIndicatorParameters } from "../indicators/SmaIndicator";
+import { PctChangeIndicatorOutput, PctChangeIndicatorParameters } from "../indicators/PctChangeIndicator";
+import { RsiIndicatorOutput, RsiIndicatorParameters } from "../indicators/RsiIndicator";
+import { RvaIndicatorOutput, RvaIndicatorParameters } from "../indicators/RvaIndicator";
+import { SmaIndicatorOutput, SmaIndicatorParameters } from "../indicators/SmaIndicator";
 
 export type SupportedNumericalIndicatorParameters =
     | SmaIndicatorParameters
@@ -18,7 +18,7 @@ export type SupportedNumericalIndicatorWithPendingParameters =
     | RvaIndicatorParameters;
 
 export interface IPluginContext {
-    getTradingPairs(): TradingPair[] | undefined;
+    getTradingPairs(): readonly TradingPair[];
     getOhlcvData(tradingPair: TradingPair, source: Source, timeframe: TimeFrame, position: number): number | undefined;
     getOhlcvPendingData(tradingPair: TradingPair, source: Source, timeframe: TimeFrame): number | undefined;
     findIndicator(tradingPair: TradingPair, indicatorParameters: IndicatorParameters<any>): Indicator<any>;
@@ -35,6 +35,7 @@ export abstract class BasePlugin implements IPluginContext {
 
     public abstract getId(): string;
     public abstract getFriendlyDescription(): string;
+    
     public abstract next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, nowTs: number): void;
     public transferContext(ctx: IPluginContext): void {
         this.ctx = ctx;
@@ -103,8 +104,11 @@ export abstract class BasePlugin implements IPluginContext {
         return this.ctx.getPendingIndicatorValue(indicator);
     }
 
-    getTradingPairs(): TradingPair[] | undefined {
-        throw new Error("Method not implemented.");
+    getTradingPairs(): readonly TradingPair[] {
+        if (this.ctx === undefined) {
+            throw new Error("Context is not defined");
+        }
+        return this.ctx.getTradingPairs();
     }
 
     isIndicatorReady(indicator: Indicator<any>): boolean {
@@ -120,4 +124,55 @@ export abstract class BasePlugin implements IPluginContext {
         }
         return this.ctx.findIndicator(tradingPair, indicatorParameters);
     }
+
+    protected getIndicatorNumericValue(
+        tradingPair: TradingPair,
+        params: SupportedNumericalIndicatorParameters,
+        position: number = 0
+    ): number | undefined {
+
+        const indicator = this.findIndicator(tradingPair, params);
+
+        if (!this.isIndicatorReady(indicator)) {
+            return undefined;
+        }
+
+        const output = this.getIndicatorValue(indicator, position);
+
+        switch (true) {
+            case output instanceof RsiIndicatorOutput:
+                return output.getValue();
+
+            case output instanceof SmaIndicatorOutput:
+                return output.getValue();
+
+            case output instanceof PctChangeIndicatorOutput:
+                return output.getValue();
+
+            case output instanceof RvaIndicatorOutput:
+                return output.getRelativeValue();
+
+            default:
+                throw new Error(
+                    `Unsupported output type: ${output.constructor.name}`
+                );
+        }
+    }
+
+    protected wasUpdated(
+        updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>,
+        timeFrame: TimeFrame
+    ): boolean {
+        return updatedTimeFrames.get(timeFrame) === true;
+    }
+
+    protected close(
+        tradingPair: TradingPair,
+        timeFrame: TimeFrame,
+        position: number = 0
+    ): number | undefined {
+        return this.getOhlcvData(tradingPair, Source.CLOSE, timeFrame, position);
+    }
+
+
 }

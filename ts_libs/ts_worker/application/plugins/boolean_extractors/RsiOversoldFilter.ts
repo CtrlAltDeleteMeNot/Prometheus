@@ -6,6 +6,7 @@ import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseFilterableAttributeExtractor } from "../BaseFilterableAttributeExtractor";
 
 export class RsiOversoldFilter extends BaseFilterableAttributeExtractor {
+
     params: RsiIndicatorParameters;
     oversoldTreshold: number;
     public constructor(period: Period, timeFrame: TimeFrame, oversoldTreshold: number) {
@@ -20,10 +21,15 @@ export class RsiOversoldFilter extends BaseFilterableAttributeExtractor {
     public getFriendlyDescription(): string {
         return `Oversold: ${this.params.getDescription()} <= ${this.oversoldTreshold}`
     }
-    public next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, ts:number): void {
-        if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
+    public next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, ts: number): void {
+        if (false === this.wasUpdated(updatedTimeFrames, this.params.getTimeFrame())) {
             return;
         }
+        this.updateBooleanAttribute(tradingPair);
+    }
+    
+
+    private updateBooleanAttribute(tradingPair: TradingPair): void {
         const indicator = this.findIndicator(tradingPair, this.params);
         const indicatorReady = this.isIndicatorReady(indicator);
         if (!indicatorReady) {

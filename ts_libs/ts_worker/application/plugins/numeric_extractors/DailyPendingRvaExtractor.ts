@@ -5,6 +5,7 @@ import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseSortableAttributeExtractor } from "../BaseSortableAttributeExtractor";
 
 export class DailyPendingRvaExtractor extends BaseSortableAttributeExtractor {
+    
     private params: RvaIndicatorParameters;
     public constructor() {
         super();

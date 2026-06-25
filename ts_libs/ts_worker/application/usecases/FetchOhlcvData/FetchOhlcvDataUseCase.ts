@@ -50,10 +50,10 @@ export class FetchOhlcvDataUseCase extends UseCaseBase<FetchOhlcvDataRequest, Fe
                 });
             }
         }
+        
         plugins.forEach(plugin => {
-            results.forEach(result => {
-                const ts = result.getBuffer(TimeFrame.ONE_MINUTE).getEndTime();
-                plugin.next(result.getTradingPair(), result.getUpdatedTimeFrames(), ts);
+            results.forEach(res=>{
+                plugin.next(res.getTradingPair(),res.getUpdatedTimeFrames(), res.getBuffer(TimeFrame.ONE_MINUTE).getEndTime());
             });
         });
 

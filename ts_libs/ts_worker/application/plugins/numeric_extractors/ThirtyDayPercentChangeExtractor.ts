@@ -6,6 +6,7 @@ import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseSortableAttributeExtractor } from "../BaseSortableAttributeExtractor";
 
 export class ThirtyDayPercentChangeExtractor extends BaseSortableAttributeExtractor {
+
     private params: PctChangeIndicatorParameters;
     public constructor() {
         super();
@@ -16,6 +17,10 @@ export class ThirtyDayPercentChangeExtractor extends BaseSortableAttributeExtrac
         if (false === updatedTimeFrames.get(TimeFrame.ONE_DAY)) {
             return;
         }
+        this.findAndUpdatePctChange(tradingPair);
+    }
+
+    private findAndUpdatePctChange(tradingPair: TradingPair) {
         const indicator = this.findIndicator(tradingPair, this.params) as PctChangeIndicator;
         if (false === indicator.isReady()) {
             return;

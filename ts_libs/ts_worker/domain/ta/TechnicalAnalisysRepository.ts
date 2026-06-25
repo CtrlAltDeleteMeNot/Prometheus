@@ -77,7 +77,7 @@ export class TechnicalAnalisysRepository implements IPluginContext {
 
     public initializeIndicatorsWithDatasets(
         tradingPair: TradingPair
-    ):void {
+    ): void {
         const dataset = this.getDataset(tradingPair);
         const created = this.indicatorParameters.map(indParam => {
             return indParam.createUsing(dataset);
@@ -129,9 +129,13 @@ export class TechnicalAnalisysRepository implements IPluginContext {
     }
 
 
-    getTradingPairs(): TradingPair[] | undefined {
-        throw new Error("Method not implemented.");
+    getTradingPairs(): readonly TradingPair[] {
+        if (this.getDatasets() === undefined) {
+            throw new Error("Cannot get trading pairs");
+        }
+        return [...this.getDatasets().keys()]
     }
+
     getOhlcvData(tradingPair: TradingPair, source: Source, timeframe: TimeFrame, position: number): number | undefined {
         let dataset = this.getDataset(tradingPair);
         let tfBuffer = dataset.getBuffer(timeframe);
@@ -148,7 +152,7 @@ export class TechnicalAnalisysRepository implements IPluginContext {
     }
 
     getPendingIndicatorValue(indicator: Indicator<any>): IndicatorOutput {
-       return indicator.getPendingValue();
+        return indicator.getPendingValue();
     }
 
     isIndicatorReady(indicator: Indicator<any>): boolean {

@@ -95,7 +95,7 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
             s.signalDirection,
             s.timeStamp
         );
-        console.info(JSON.stringify(model.serialize()));
+        //console.info(JSON.stringify(model.serialize()));
         return model;
     }
 

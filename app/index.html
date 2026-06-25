@@ -11,8 +11,8 @@
         content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0b0f1a">
     <meta name="color-scheme" content="only dark" />
-    <link rel="stylesheet" href="css/client/bundle.css?v=1782250909260">
-    <script src="js/client/bundle.js?v=1782250909260"></script>
+    <link rel="stylesheet" href="css/client/bundle.css?v=1782402462192">
+    <script src="js/client/bundle.js?v=1782402462192"></script>
     <link rel="manifest" href="manifest.json">
     <title>Prometheus</title>
     <!--ALWAYS FRESH DATA
@@ -150,7 +150,38 @@
                 </button>
             </div>
             <div id="footer-signals" class="footer-section d-none">
-
+                <div class="button-group spaced">
+                    <button id="footer-signals-button-sync-manually" class="btn btn--ghost btn--img btn--square"
+                        aria-label="Sync data" type="button">
+                        <svg class="icon" role="img" width="25" height="24" viewBox="0 0 25 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M3.13644 9.54175C3.02923 9.94185 3.26667 10.3531 3.66676 10.4603C4.06687 10.5675 4.47812 10.3301 4.58533 9.92998C5.04109 8.22904 6.04538 6.72602 7.44243 5.65403C8.83948 4.58203 10.5512 4.00098 12.3122 4.00098C14.0731 4.00098 15.7848 4.58203 17.1819 5.65403C18.3999 6.58866 19.3194 7.85095 19.8371 9.28639L18.162 8.34314C17.801 8.1399 17.3437 8.26774 17.1405 8.62867C16.9372 8.98959 17.0651 9.44694 17.426 9.65017L20.5067 11.3849C20.68 11.4825 20.885 11.5072 21.0766 11.4537C21.2682 11.4001 21.4306 11.2727 21.5282 11.0993L23.2629 8.01828C23.4661 7.65734 23.3382 7.2 22.9773 6.99679C22.6163 6.79358 22.159 6.92145 21.9558 7.28239L21.195 8.63372C20.5715 6.98861 19.5007 5.54258 18.095 4.464C16.436 3.19099 14.4033 2.50098 12.3122 2.50098C10.221 2.50098 8.1883 3.19099 6.52928 4.464C4.87027 5.737 3.67766 7.52186 3.13644 9.54175Z" />
+                            <path
+                                d="M21.4906 14.4582C21.5978 14.0581 21.3604 13.6469 20.9603 13.5397C20.5602 13.4325 20.1489 13.6699 20.0417 14.07C19.5859 15.7709 18.5816 17.274 17.1846 18.346C15.7875 19.418 14.0758 19.999 12.3149 19.999C10.5539 19.999 8.84219 19.418 7.44514 18.346C6.2292 17.4129 5.31079 16.1534 4.79261 14.721L6.45529 15.6573C6.81622 15.8605 7.27356 15.7327 7.47679 15.3718C7.68003 15.0108 7.55219 14.5535 7.19127 14.3502L4.11056 12.6155C3.93723 12.5179 3.73222 12.4932 3.54065 12.5467C3.34907 12.6003 3.18662 12.7278 3.08903 12.9011L1.3544 15.9821C1.15119 16.3431 1.27906 16.8004 1.64 17.0036C2.00094 17.2068 2.45828 17.079 2.66149 16.718L3.42822 15.3562C4.05115 17.0054 5.12348 18.4552 6.532 19.536C8.19102 20.809 10.2237 21.499 12.3149 21.499C14.406 21.499 16.4387 20.809 18.0977 19.536C19.7568 18.263 20.9494 16.4781 21.4906 14.4582Z" />
+                        </svg>
+                    </button>
+                </div>
+                <button id="footer-signals-button-sync-automatically" class="btn btn--img" type="button">
+                    <svg id="footer-signals-button-sync-automatically-svg" class="icon" role="img" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9.74902 2.75C9.74902 2.33579 10.0848 2 10.499 2H13.499C13.9132 2 14.249 2.33579 14.249 2.75C14.249 3.16421 13.9132 3.5 13.499 3.5H10.499C10.0848 3.5 9.74902 3.16421 9.74902 2.75Z"
+                             />
+                        <path
+                            d="M11.2485 13.2507C11.2485 13.6649 11.5843 14.0007 11.9985 14.0007C12.4128 14.0007 12.7485 13.6649 12.7485 13.2507V8.49454C12.7485 8.08033 12.4128 7.74454 11.9985 7.74454C11.5843 7.74454 11.2485 8.08033 11.2485 8.49454V13.2507Z"
+                             />
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M11.999 4.50192C7.16707 4.50192 3.25 8.41899 3.25 13.2509C3.25 18.0829 7.16707 22 11.999 22C16.831 22 20.748 18.0829 20.748 13.2509C20.748 11.1048 19.9753 9.13916 18.6929 7.61704L20.0316 6.27838C20.3244 5.98548 20.3244 5.51061 20.0316 5.21772C19.7387 4.92482 19.2638 4.92482 18.9709 5.21772L17.6322 6.55644C16.1102 5.2744 14.1448 4.50192 11.999 4.50192ZM4.75 13.2509C4.75 9.24742 7.99549 6.00192 11.999 6.00192C16.0025 6.00192 19.248 9.24742 19.248 13.2509C19.248 17.2545 16.0025 20.5 11.999 20.5C7.99549 20.5 4.75 17.2545 4.75 13.2509Z"
+                             />
+                    </svg>
+                    
+                    <span class="button-text">
+                        <span id="footer-signals-button-sync-automatically-main-text" class="main-text">Sync
+                            automatically</span>
+                        <span id="footer-signals-button-sync-automatically-sub-text" class="sub-text">Last update:
+                            Never</span>
+                    </span>
+                </button>
             </div>
             <div id="footer-about" class="footer-section d-none">
                 <button id="footer-about-linkedin-button" class="btn btn--img" type="button">
@@ -308,7 +339,7 @@
 
                     <div class="field-wrapper">
                         <p>Version info</p>
-                        <span class="field-description">Last updated @ 23 Jun 2026, 21:41:49 UTC</span>
+                        <span class="field-description">Last updated @ 25 Jun 2026, 15:47:42 UTC</span>
                     </div>
                 </div>
                 <div class="modal-footer">

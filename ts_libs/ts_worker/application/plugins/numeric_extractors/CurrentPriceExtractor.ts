@@ -1,16 +1,16 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
-import { Source } from "../../../domain/ta/core/Source";
 import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseSortableAttributeExtractor } from "../BaseSortableAttributeExtractor";
 
 export class CurrentPriceExtractor extends BaseSortableAttributeExtractor {
-
+    
+    
     public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>, ts:number): void {
-        let hasOneMinuteData = updatedTimeFrames.get(TimeFrame.ONE_MINUTE) === true || undefined;
-        if (hasOneMinuteData === undefined) {
+        if(false === this.wasUpdated(updatedTimeFrames, TimeFrame.ONE_MINUTE)){
             return;
         }
-        let currentPrice = this.getOhlcvData(tradingPair, Source.CLOSE, TimeFrame.ONE_MINUTE, 0);
+        
+        let currentPrice = this.close(tradingPair, TimeFrame.ONE_MINUTE);
         if (currentPrice === undefined) {
             return;
         }

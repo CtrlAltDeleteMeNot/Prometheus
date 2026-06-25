@@ -6,6 +6,7 @@ import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseFilterableAttributeExtractor } from "../BaseFilterableAttributeExtractor";
 
 export class RsiOverboughtFilter extends BaseFilterableAttributeExtractor {
+
     params: RsiIndicatorParameters;
     overboughtTreshold: number;
     public constructor(period: Period, timeFrame: TimeFrame, overboughtTreshold: number) {
@@ -23,9 +24,13 @@ export class RsiOverboughtFilter extends BaseFilterableAttributeExtractor {
     }
 
     public next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, ts: number): void {
-        if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
+        if (false === this.wasUpdated(updatedTimeFrames, this.params.getTimeFrame())) {
             return;
         }
+        this.updateBooeanAttribute(tradingPair);
+    }
+
+    private updateBooeanAttribute(tradingPair: TradingPair) {
         const indicator = this.findIndicator(tradingPair, this.params);
         const indicatorReady = this.isIndicatorReady(indicator);
         if (!indicatorReady) {
@@ -35,5 +40,4 @@ export class RsiOverboughtFilter extends BaseFilterableAttributeExtractor {
         const isOverbought = indicatorOutput.getValue() > this.overboughtTreshold;
         this.setValue(tradingPair, isOverbought);
     }
-
 }

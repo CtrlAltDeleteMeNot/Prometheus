@@ -15,7 +15,8 @@
 
 /* 2. Scroller: Constraints itself to parent and allows content to overflow */
 #signals-scroll {
-  display: block;   /* Use block here to allow children to take full height */
+  display: block;
+  /* Use block here to allow children to take full height */
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -32,7 +33,7 @@
   overflow-anchor: none;
   /* reduces paint thrash during batch inserts */
   contain: layout paint;
-  
+
   padding-top: var(--safe-top);
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
@@ -43,7 +44,7 @@
   display: block;
   margin-top: var(--space-6);
   margin-bottom: var(--space-6);
-  
+
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
 }
@@ -73,31 +74,68 @@
   overflow: hidden;
 }
 
+:root {
+  --signal-bullish: #166534;
+  --signal-bearish: #991b1b;
+  --signal-neutral: #2a62be;
+}
+
 .signal-card--bullish {
-    border-left: 4px solid #22c55e;
+  border-left: 4px solid var(--signal-bullish);
 }
 
 .signal-card--bearish {
-    border-left: 4px solid #ef4444;
+  border-left: 4px solid var(--signal-bearish);
 }
 
 .signal-card--neutral {
-    border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--signal-neutral);
 }
 
-.signal-card__header{
+.signal-card__header {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
 }
 
-.signal-card__description{
-
+.signal-card__header__texts {
+  display: flex;
+  flex-direction: column;
 }
 
-.signal-card__footer{
+.signal-card__subtitle{
+  margin: 0;
+}
+
+.signal-card__description {
+  margin-top: var(--space-6);
+}
+
+
+.signal-card__footer {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-end;
+}
+
+.signal-card__header .btn {
+  padding-right: var(--space-4);
+}
+
+
+
+.signal-card--bullish .btn {
+  border: 1px solid var(--signal-bullish);
+  background-color: var(--signal-bullish);
+}
+
+.signal-card--bearish .btn {
+  border: 1px solid var(--signal-bearish);
+  background-color: var(--signal-bearish);
+}
+
+.signal-card--neutral .btn {
+  border: 1px solid var(--signal-neutral);
+  background-color: var(--signal-neutral);
 }

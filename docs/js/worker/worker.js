@@ -1197,7 +1197,10 @@
           });
         }
         getTradingPairs() {
-          throw new Error("Method not implemented.");
+          if (this.getDatasets() === void 0) {
+            throw new Error("Cannot get trading pairs");
+          }
+          return [...this.getDatasets().keys()];
         }
         getOhlcvData(tradingPair, source, timeframe, position) {
           let dataset = this.getDataset(tradingPair);
@@ -2656,41 +2659,6 @@
     }
   });
 
-  // ts_libs/ts_worker/domain/ta/core/MutableFloat.ts
-  var _value, MutableFloat;
-  var init_MutableFloat = __esm({
-    "ts_libs/ts_worker/domain/ta/core/MutableFloat.ts"() {
-      "use strict";
-      MutableFloat = class {
-        /**
-         * @param initial Initial value (default 0)
-         */
-        constructor(initial = 0) {
-          __privateAdd(this, _value);
-          __privateSet(this, _value, 0);
-          this.update(initial);
-        }
-        /**
-         * Get the current value
-         */
-        getValue() {
-          return __privateGet(this, _value);
-        }
-        /**
-         * Update the value
-         * @param data New number
-         */
-        update(data) {
-          if (typeof data !== "number" || !Number.isFinite(data)) {
-            throw new TypeError("Data must be a finite number");
-          }
-          __privateSet(this, _value, data);
-        }
-      };
-      _value = new WeakMap();
-    }
-  });
-
   // ts_libs/ts_worker/domain/ta/core/Source.ts
   var _VALUES2, _Source, Source;
   var init_Source = __esm({
@@ -2762,6 +2730,41 @@
         (entry) => (entry.high + entry.low) / 2
       );
       Source = _Source;
+    }
+  });
+
+  // ts_libs/ts_worker/domain/ta/core/MutableFloat.ts
+  var _value, MutableFloat;
+  var init_MutableFloat = __esm({
+    "ts_libs/ts_worker/domain/ta/core/MutableFloat.ts"() {
+      "use strict";
+      MutableFloat = class {
+        /**
+         * @param initial Initial value (default 0)
+         */
+        constructor(initial = 0) {
+          __privateAdd(this, _value);
+          __privateSet(this, _value, 0);
+          this.update(initial);
+        }
+        /**
+         * Get the current value
+         */
+        getValue() {
+          return __privateGet(this, _value);
+        }
+        /**
+         * Update the value
+         * @param data New number
+         */
+        update(data) {
+          if (typeof data !== "number" || !Number.isFinite(data)) {
+            throw new TypeError("Data must be a finite number");
+          }
+          __privateSet(this, _value, data);
+        }
+      };
+      _value = new WeakMap();
     }
   });
 
@@ -3442,6 +3445,7 @@
   var init_BasePlugin = __esm({
     "ts_libs/ts_worker/domain/ta/export/BasePlugin.ts"() {
       "use strict";
+      init_Source();
       init_PctChangeIndicator();
       init_RsiIndicator();
       init_RvaIndicator();
@@ -3507,7 +3511,10 @@
           return this.ctx.getPendingIndicatorValue(indicator);
         }
         getTradingPairs() {
-          throw new Error("Method not implemented.");
+          if (this.ctx === void 0) {
+            throw new Error("Context is not defined");
+          }
+          return this.ctx.getTradingPairs();
         }
         isIndicatorReady(indicator) {
           if (this.ctx === void 0) {
@@ -3520,6 +3527,33 @@
             throw new Error("Context is not defined");
           }
           return this.ctx.findIndicator(tradingPair, indicatorParameters);
+        }
+        getIndicatorNumericValue(tradingPair, params, position = 0) {
+          const indicator = this.findIndicator(tradingPair, params);
+          if (!this.isIndicatorReady(indicator)) {
+            return void 0;
+          }
+          const output = this.getIndicatorValue(indicator, position);
+          switch (true) {
+            case output instanceof RsiIndicatorOutput:
+              return output.getValue();
+            case output instanceof SmaIndicatorOutput:
+              return output.getValue();
+            case output instanceof PctChangeIndicatorOutput:
+              return output.getValue();
+            case output instanceof RvaIndicatorOutput:
+              return output.getRelativeValue();
+            default:
+              throw new Error(
+                `Unsupported output type: ${output.constructor.name}`
+              );
+          }
+        }
+        wasUpdated(updatedTimeFrames, timeFrame) {
+          return updatedTimeFrames.get(timeFrame) === true;
+        }
+        close(tradingPair, timeFrame, position = 0) {
+          return this.getOhlcvData(tradingPair, Source.CLOSE, timeFrame, position);
         }
       };
     }
@@ -3603,9 +3637,12 @@
           return `Overbought: ${this.params.getDescription()} > ${this.overboughtTreshold}`;
         }
         next(tradingPair, updatedTimeFrames, ts) {
-          if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
+          if (false === this.wasUpdated(updatedTimeFrames, this.params.getTimeFrame())) {
             return;
           }
+          this.updateBooeanAttribute(tradingPair);
+        }
+        updateBooeanAttribute(tradingPair) {
           const indicator = this.findIndicator(tradingPair, this.params);
           const indicatorReady = this.isIndicatorReady(indicator);
           if (!indicatorReady) {
@@ -3639,9 +3676,12 @@
           return `Oversold: ${this.params.getDescription()} <= ${this.oversoldTreshold}`;
         }
         next(tradingPair, updatedTimeFrames, ts) {
-          if (!updatedTimeFrames.get(this.params.getTimeFrame())) {
+          if (false === this.wasUpdated(updatedTimeFrames, this.params.getTimeFrame())) {
             return;
           }
+          this.updateBooleanAttribute(tradingPair);
+        }
+        updateBooleanAttribute(tradingPair) {
           const indicator = this.findIndicator(tradingPair, this.params);
           const indicatorReady = this.isIndicatorReady(indicator);
           if (!indicatorReady) {
@@ -3674,9 +3714,12 @@
           return `Downtrend: ${this.smaParameters.getDescription()} > Close`;
         }
         next(tradingPair, updatedTimeFrames, ts) {
-          if (!updatedTimeFrames.get(this.smaParameters.getTimeFrame())) {
+          if (false === this.wasUpdated(updatedTimeFrames, this.smaParameters.getTimeFrame())) {
             return;
           }
+          this.updateBooleanAttribute(tradingPair);
+        }
+        updateBooleanAttribute(tradingPair) {
           const close = this.getOhlcvData(tradingPair, Source.CLOSE, this.smaParameters.getTimeFrame(), 0);
           const smaIndicator = this.findIndicator(tradingPair, this.smaParameters);
           const smaIndicatorReady = this.isIndicatorReady(smaIndicator);
@@ -3712,10 +3755,7 @@
         getFriendlyDescription() {
           return `Uptrend: ${this.smaParameters.getDescription()} < Close`;
         }
-        next(tradingPair, updatedTimeFrames, ts) {
-          if (!updatedTimeFrames.get(this.smaParameters.getTimeFrame())) {
-            return;
-          }
+        updateBooleanAttribute(tradingPair) {
           const close = this.getOhlcvData(tradingPair, Source.CLOSE, this.smaParameters.getTimeFrame(), 0);
           const smaIndicator = this.findIndicator(tradingPair, this.smaParameters);
           const smaIndicatorReady = this.isIndicatorReady(smaIndicator);
@@ -3729,6 +3769,12 @@
           const isUptrend = close > smaIndicatorOutput.getValue();
           this.setValue(tradingPair, isUptrend);
         }
+        next(tradingPair, updatedTimeFrames, ts) {
+          if (false === this.wasUpdated(updatedTimeFrames, this.smaParameters.getTimeFrame())) {
+            return;
+          }
+          this.updateBooleanAttribute(tradingPair);
+        }
       };
     }
   });
@@ -3738,16 +3784,14 @@
   var init_CurrentPriceExtractor = __esm({
     "ts_libs/ts_worker/application/plugins/numeric_extractors/CurrentPriceExtractor.ts"() {
       "use strict";
-      init_Source();
       init_TimeFrame();
       init_BaseSortableAttributeExtractor();
       CurrentPriceExtractor = class _CurrentPriceExtractor extends BaseSortableAttributeExtractor {
         next(tradingPair, updatedTimeFrames, ts) {
-          let hasOneMinuteData = updatedTimeFrames.get(TimeFrame.ONE_MINUTE) === true || void 0;
-          if (hasOneMinuteData === void 0) {
+          if (false === this.wasUpdated(updatedTimeFrames, TimeFrame.ONE_MINUTE)) {
             return;
           }
-          let currentPrice = this.getOhlcvData(tradingPair, Source.CLOSE, TimeFrame.ONE_MINUTE, 0);
+          let currentPrice = this.close(tradingPair, TimeFrame.ONE_MINUTE);
           if (currentPrice === void 0) {
             return;
           }
@@ -3810,7 +3854,7 @@
       init_BaseSortableAttributeExtractor();
       DailyPriceChangeExtractor = class _DailyPriceChangeExtractor extends BaseSortableAttributeExtractor {
         next(tradingPair, updatedTimeFrames, ts) {
-          if (false === updatedTimeFrames.has(TimeFrame.ONE_MINUTE)) {
+          if (false === this.wasUpdated(updatedTimeFrames, TimeFrame.ONE_MINUTE)) {
             return;
           }
           const dayOpenPrice = this.getOhlcvPendingData(tradingPair, Source.OPEN, TimeFrame.ONE_DAY);
@@ -3854,6 +3898,9 @@
           if (false === updatedTimeFrames.get(TimeFrame.ONE_DAY)) {
             return;
           }
+          this.findAndStoreRva(tradingPair);
+        }
+        findAndStoreRva(tradingPair) {
           const indicator = this.findIndicator(tradingPair, this.params);
           if (false === indicator.isReady()) {
             return;
@@ -3892,6 +3939,9 @@
           if (false === updatedTimeFrames.get(TimeFrame.ONE_DAY)) {
             return;
           }
+          this.findAndUpdatePctChange(tradingPair);
+        }
+        findAndUpdatePctChange(tradingPair) {
           const indicator = this.findIndicator(tradingPair, this.params);
           if (false === indicator.isReady()) {
             return;
@@ -3943,42 +3993,104 @@
     }
   });
 
-  // ts_libs/ts_worker/application/plugins/signal_generators/RsiCrossoverSignalGenerator.ts
-  var RsiCrossoverSignalGenerator;
-  var init_RsiCrossoverSignalGenerator = __esm({
-    "ts_libs/ts_worker/application/plugins/signal_generators/RsiCrossoverSignalGenerator.ts"() {
+  // ts_libs/ts_worker/application/plugins/signal_generators/MomentumRecoverySignalGenerator.ts
+  var MomentumRecoverySignalGenerator;
+  var init_MomentumRecoverySignalGenerator = __esm({
+    "ts_libs/ts_worker/application/plugins/signal_generators/MomentumRecoverySignalGenerator.ts"() {
       "use strict";
+      init_Period();
       init_Source();
+      init_TimeFrame();
       init_SignalModel();
       init_BaseSignalGenerator();
-      RsiCrossoverSignalGenerator = class extends BaseSignalGenerator {
-        constructor(period, timeFrame, oversoldTreshold) {
+      MomentumRecoverySignalGenerator = class extends BaseSignalGenerator {
+        constructor() {
           super();
-          this.oversoldThreshold = oversoldTreshold;
-          this.rsiParams = this.useRsiIndicator(timeFrame, period, Source.CLOSE);
+          this.fastCrossoverThreshold = 5;
+          this.rsiParamsFast = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
+          this.smaParamsFast = this.useSmaIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(200), Source.CLOSE);
+          this.smaParamsTrendFilter = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
+          this.gainersFilter = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, Period.fromUnknown(30), Source.CLOSE);
         }
         getId() {
-          return `rsi.crossover.treshold.signal.${this.rsiParams.getId()} X ${this.oversoldThreshold}`;
+          return `rsi.crossover.treshold.signal.${this.rsiParamsFast.getId()} X ${this.fastCrossoverThreshold}`;
         }
         getFriendlyDescription() {
-          return `${this.rsiParams.getDescription()} crossed over ${this.oversoldThreshold}`;
+          return "Bullish pullback recovery on a top 30-day momentum performer.";
         }
         next(tradingPair, updatedTimeFrames, ts) {
-          const timeFrame = this.rsiParams.getTimeFrame();
-          if (updatedTimeFrames.get(timeFrame) !== true) {
+          this.updateTopPairs(updatedTimeFrames, ts);
+          if (false === this.isTopGainer(tradingPair)) {
             return;
           }
-          const indicator = this.findIndicator(tradingPair, this.rsiParams);
-          if (indicator.getValuesCount() < 2) {
+          if (false === this.isFastRsiCrossover(tradingPair, updatedTimeFrames)) {
             return;
           }
-          const previous = this.getIndicatorValue(indicator, 1);
-          const current = this.getIndicatorValue(indicator, 0);
-          const crossedUp = previous.getValue() <= this.oversoldThreshold && current.getValue() > this.oversoldThreshold;
-          if (!crossedUp) {
+          if (false === this.isUptrend(tradingPair, this.smaParamsFast)) {
+            return;
+          }
+          if (false === this.isUptrend(tradingPair, this.smaParamsTrendFilter)) {
             return;
           }
           this.emit(tradingPair, "BULLISH" /* BULLISH */, ts);
+        }
+        isUptrend(tradingPair, smaParameters) {
+          const sma = this.getIndicatorNumericValue(tradingPair, smaParameters);
+          const close = this.close(tradingPair, smaParameters.getTimeFrame());
+          if (sma === void 0 || close === void 0) {
+            return false;
+          }
+          return sma < close;
+        }
+        isFastRsiCrossover(tradingPair, updatedTimeFrames) {
+          if (false === this.wasUpdated(updatedTimeFrames, this.rsiParamsFast.getTimeFrame())) {
+            return false;
+          }
+          const indicatorFast = this.findIndicator(tradingPair, this.rsiParamsFast);
+          if (indicatorFast.getValuesCount() < 2) {
+            return false;
+          }
+          const previousFast = this.getIndicatorValue(indicatorFast, 1);
+          const currentFast = this.getIndicatorValue(indicatorFast, 0);
+          const crossedUp = previousFast.getValue() <= this.fastCrossoverThreshold && currentFast.getValue() > this.fastCrossoverThreshold;
+          return crossedUp;
+        }
+        updateTopPairs(updatedTimeFrames, ts) {
+          if (this.topGainersUpdatedAt === ts) {
+            return;
+          }
+          if (false === this.wasUpdated(updatedTimeFrames, this.gainersFilter.getTimeFrame())) {
+            return;
+          }
+          const grouped = /* @__PURE__ */ new Map();
+          this.getTradingPairs().forEach((pair) => {
+            const exchangeId = pair.getExchangeDescriptor().getId();
+            let list = grouped.get(exchangeId);
+            if (!list) {
+              list = [];
+              grouped.set(exchangeId, list);
+            }
+            list.push(pair);
+          });
+          const top = /* @__PURE__ */ new Set();
+          grouped.forEach((pairs) => {
+            const ranked = pairs.map((pair) => {
+              var _a;
+              return {
+                pair,
+                percentChange: (_a = this.getIndicatorNumericValue(pair, this.gainersFilter)) != null ? _a : Number.NEGATIVE_INFINITY
+              };
+            }).sort((a, b) => b.percentChange - a.percentChange);
+            ranked.slice(0, 5).forEach((x) => top.add(x.pair));
+          });
+          this.topGainers = top;
+          this.topGainersUpdatedAt = ts;
+        }
+        isTopGainer(tradingPair) {
+          if (this.topGainers === void 0) {
+            return false;
+          }
+          return this.topGainers.has(tradingPair);
         }
       };
     }
@@ -4002,7 +4114,7 @@
       init_DailyPriceChangeExtractor();
       init_DailyRvaExtractor();
       init_ThirtyDayPercentChangeExtractor();
-      init_RsiCrossoverSignalGenerator();
+      init_MomentumRecoverySignalGenerator();
       _PluginManager = class _PluginManager {
         constructor() {
           this._plugins = [..._PluginManager.DefaultPlugins];
@@ -4059,7 +4171,7 @@
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
-        new RsiCrossoverSignalGenerator(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 5)
+        new MomentumRecoverySignalGenerator()
       ];
       PluginManager = _PluginManager;
     }
@@ -4225,9 +4337,8 @@
               }
             }
             plugins.forEach((plugin) => {
-              results.forEach((result) => {
-                const ts = result.getBuffer(TimeFrame.ONE_MINUTE).getEndTime();
-                plugin.next(result.getTradingPair(), result.getUpdatedTimeFrames(), ts);
+              results.forEach((res) => {
+                plugin.next(res.getTradingPair(), res.getUpdatedTimeFrames(), res.getBuffer(TimeFrame.ONE_MINUTE).getEndTime());
               });
             });
             return new FetchOhlcvDataResponse(results.length);
@@ -4530,7 +4641,6 @@
             s.signalDirection,
             s.timeStamp
           );
-          console.info(JSON.stringify(model.serialize()));
           return model;
         }
         createSingleTradingPairModel(tradingPair, plugins) {
