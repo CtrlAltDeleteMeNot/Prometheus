@@ -1214,7 +1214,7 @@
   });
 
   // ts_libs/ts_client/views/SignalsSectionView.ts
-  var _root6, _footer4, _signalsGrid, _loadMoreBtn2, _cards2, _currentPage2, _pageSize2, _signals, _syncAction2, _autoSyncAction, _autoSyncEnabled, _autoSyncTimer, _latestSignalTs, _notificationAudio, _wakeLockSentinel, SignalSectionView;
+  var _root6, _footer4, _signalsGrid, _loadMoreBtn2, _cards2, _currentPage2, _pageSize2, _signals, _syncAction2, _autoSyncAction, _autoSyncEnabled, _autoSyncTimer, _latestSignalTs, _notificationAudio, _wakeLockSentinel, _loadMoreBtnText, _loadMoreBtnSubText, SignalSectionView;
   var init_SignalsSectionView = __esm({
     "ts_libs/ts_client/views/SignalsSectionView.ts"() {
       "use strict";
@@ -1238,12 +1238,17 @@
           __privateAdd(this, _latestSignalTs);
           __privateAdd(this, _notificationAudio);
           __privateAdd(this, _wakeLockSentinel);
+          __privateAdd(this, _loadMoreBtnText);
+          __privateAdd(this, _loadMoreBtnSubText);
           this.id = "signals";
           this.title = "Signals";
           __privateSet(this, _root6, ViewHelper.getHtmlElementOrThrow("signals"));
           __privateSet(this, _footer4, ViewHelper.getHtmlElementOrThrow("footer-signals"));
           __privateSet(this, _signalsGrid, ViewHelper.getHtmlElementOrThrow("signals-grid"));
           __privateSet(this, _loadMoreBtn2, ViewHelper.getButtonOrThrow("signals-load-more"));
+          __privateSet(this, _loadMoreBtnText, ViewHelper.getSpanOrThrow("footer-signals-button-sync-automatically-main-text"));
+          __privateSet(this, _loadMoreBtnSubText, ViewHelper.getSpanOrThrow("footer-signals-button-sync-automatically-sub-text"));
+          __privateGet(this, _loadMoreBtnSubText).textContent = "Disabled";
           __privateGet(this, _loadMoreBtn2).onclick = () => this.loadNextPage();
           __privateSet(this, _signals, []);
           __privateSet(this, _syncAction2, ViewHelper.getButtonOrThrow("footer-signals-button-sync-manually"));
@@ -1272,6 +1277,7 @@
         }
         onAutosyncToggled() {
           if (__privateGet(this, _autoSyncEnabled)) {
+            __privateGet(this, _loadMoreBtnSubText).textContent = "Enabled";
             __privateGet(this, _autoSyncAction).classList.add("btn--primary");
             __privateGet(this, _syncAction2).classList.add("d-hidden");
             this.onTimerCallback();
@@ -1283,6 +1289,7 @@
             ));
             this.acquireWakeLock();
           } else {
+            __privateGet(this, _loadMoreBtnSubText).textContent = "Disabled";
             __privateGet(this, _autoSyncAction).classList.remove("btn--primary");
             __privateGet(this, _syncAction2).classList.remove("d-hidden");
             if (__privateGet(this, _autoSyncTimer) !== void 0) {
@@ -1345,18 +1352,14 @@
           headerTextContents.appendChild(title);
           headerTextContents.appendChild(subtitle);
           const button = document.createElement("button");
-          button.className = "btn btn--icon";
+          button.className = "btn btn--square btn--icon";
           button.type = "button";
           button.addEventListener("click", () => {
             window.open(signalModel.exchangeUrl, "_blank", "noopener,noreferrer");
           });
-          const btnText = document.createElement("span");
-          btnText.className = "signal-card__action-text";
-          btnText.textContent = signalModel.direction;
           const btnSvg = getActionIconSVGElement("arrow-right");
           btnSvg.classList.add("icon");
           btnSvg.setAttribute("role", "img");
-          button.appendChild(btnText);
           button.appendChild(btnSvg);
           header.appendChild(headerTextContents);
           header.appendChild(button);
@@ -1376,12 +1379,14 @@
         }
         formatTime(timestamp) {
           return new Date(timestamp).toLocaleString([], {
+            timeZone: "UTC",
             month: "short",
             day: "2-digit",
             hour: "2-digit",
             minute: "2-digit",
-            second: "2-digit"
-          });
+            second: "2-digit",
+            hour12: false
+          }) + " UTC";
         }
         getDirectionClass(direction) {
           switch (direction) {
@@ -1475,6 +1480,8 @@
       _latestSignalTs = new WeakMap();
       _notificationAudio = new WeakMap();
       _wakeLockSentinel = new WeakMap();
+      _loadMoreBtnText = new WeakMap();
+      _loadMoreBtnSubText = new WeakMap();
     }
   });
 

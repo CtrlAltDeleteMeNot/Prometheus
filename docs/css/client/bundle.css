@@ -983,20 +983,8 @@ textarea {
   justify-content: space-between;
   align-items: flex-end;
 }
-.signal-card__header .btn {
-  padding-right: var(--space-4);
-}
-.signal-card--bullish .btn {
-  border: 1px solid var(--signal-bullish);
-  background-color: var(--signal-bullish);
-}
-.signal-card--bearish .btn {
-  border: 1px solid var(--signal-bearish);
-  background-color: var(--signal-bearish);
-}
-.signal-card--neutral .btn {
-  border: 1px solid var(--signal-neutral);
-  background-color: var(--signal-neutral);
+.signal-card__time {
+  color: var(--muted);
 }
 
 /* ts_libs/es_css/index.css */

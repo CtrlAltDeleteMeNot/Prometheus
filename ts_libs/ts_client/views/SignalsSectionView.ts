@@ -22,6 +22,8 @@ export class SignalSectionView implements ISection {
     #latestSignalTs: number | undefined;
     #notificationAudio: HTMLAudioElement;
     #wakeLockSentinel: WakeLockSentinel | undefined;
+    #loadMoreBtnText: HTMLSpanElement;
+    #loadMoreBtnSubText: HTMLSpanElement;
 
     constructor() {
         this.id = 'signals';
@@ -30,6 +32,9 @@ export class SignalSectionView implements ISection {
         this.#footer = ViewHelper.getHtmlElementOrThrow('footer-signals');
         this.#signalsGrid = ViewHelper.getHtmlElementOrThrow('signals-grid');
         this.#loadMoreBtn = ViewHelper.getButtonOrThrow('signals-load-more');
+        this.#loadMoreBtnText = ViewHelper.getSpanOrThrow('footer-signals-button-sync-automatically-main-text');
+        this.#loadMoreBtnSubText = ViewHelper.getSpanOrThrow('footer-signals-button-sync-automatically-sub-text');
+        this.#loadMoreBtnSubText.textContent = "Disabled";
         this.#loadMoreBtn.onclick = () => this.loadNextPage();
         this.#signals = [];
         this.#syncAction = ViewHelper.getButtonOrThrow('footer-signals-button-sync-manually');
@@ -65,6 +70,7 @@ export class SignalSectionView implements ISection {
 
     private onAutosyncToggled(): void {
         if (this.#autoSyncEnabled) {
+            this.#loadMoreBtnSubText.textContent = "Enabled";
             this.#autoSyncAction.classList.add('btn--primary');
             this.#syncAction.classList.add('d-hidden');
             this.onTimerCallback();
@@ -74,6 +80,7 @@ export class SignalSectionView implements ISection {
             );
             this.acquireWakeLock();
         } else {
+            this.#loadMoreBtnSubText.textContent = "Disabled";
             this.#autoSyncAction.classList.remove('btn--primary');
             this.#syncAction.classList.remove('d-hidden');
             if (this.#autoSyncTimer !== undefined) {
@@ -154,24 +161,20 @@ export class SignalSectionView implements ISection {
         headerTextContents.appendChild(title);
         headerTextContents.appendChild(subtitle);
 
+
         const button = document.createElement('button');
-        button.className = 'btn btn--icon';
+        button.className = 'btn btn--square btn--icon';
         button.type = 'button';
 
         button.addEventListener('click', () => {
             window.open(signalModel.exchangeUrl, '_blank', 'noopener,noreferrer');
         });
 
-        const btnText = document.createElement('span');
-        btnText.className = 'signal-card__action-text';
-        btnText.textContent = signalModel.direction;
-
 
         const btnSvg = getActionIconSVGElement('arrow-right');
         btnSvg.classList.add('icon');
         btnSvg.setAttribute('role', 'img');
 
-        button.appendChild(btnText);
         button.appendChild(btnSvg);
 
 
@@ -202,12 +205,14 @@ export class SignalSectionView implements ISection {
 
     private formatTime(timestamp: number): string {
         return new Date(timestamp).toLocaleString([], {
+            timeZone: "UTC",
             month: "short",
             day: "2-digit",
             hour: "2-digit",
             minute: "2-digit",
-            second: "2-digit"
-        });
+            second: "2-digit",
+            hour12: false
+        }) + " UTC";
     }
 
     private getDirectionClass(direction: SignalDirection): string {
