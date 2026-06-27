@@ -942,6 +942,7 @@ textarea {
   gap: 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
+  border-left-style: none;
   background: var(--surface-3);
   padding: 1rem;
   min-height: 120px;
@@ -954,13 +955,13 @@ textarea {
   --signal-neutral: #2a62be;
 }
 .signal-card--bullish {
-  border-left: 4px solid var(--signal-bullish);
+  box-shadow: inset 4px 0 0 0 var(--signal-bullish);
 }
 .signal-card--bearish {
-  border-left: 4px solid var(--signal-bearish);
+  box-shadow: inset 4px 0 0 0 var(--signal-bearish);
 }
 .signal-card--neutral {
-  border-left: 4px solid var(--signal-neutral);
+  box-shadow: inset 4px 0 0 0 var(--signal-neutral);
 }
 .signal-card__header {
   display: flex;

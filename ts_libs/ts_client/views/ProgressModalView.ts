@@ -30,8 +30,12 @@ export class ProgressModalView {
         this.#body.innerHTML = '';
     }
 
+    public get isVisible(): boolean {
+        return ViewHelper.isVisible(this.#root);
+    }
+
     public updateProgress(percent: number, message: string): void {
-        const scale = percent / 100; 
+        const scale = percent / 100;
         const percentValue = percent.toFixed(0);
         requestAnimationFrame(() => {
             this.#percentText.textContent = `${percentValue} %`;

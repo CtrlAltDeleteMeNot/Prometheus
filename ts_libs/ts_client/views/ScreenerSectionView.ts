@@ -19,10 +19,10 @@ export class ScreenerSectionView implements ISection {
     #footer: HTMLElement;
 
     //actions
-    #syncAction: HTMLButtonElement;
-    #sortAction: HTMLButtonElement;
-    #filterAction: HTMLButtonElement;
-
+    #syncButton: HTMLButtonElement;
+    #sortButton: HTMLButtonElement;
+    #filterButton: HTMLButtonElement;
+    #syncRequested: (()=>Promise<void>)|undefined;
     constructor() {
         this.title = "Screener";
         this.id = "screener";
@@ -32,13 +32,20 @@ export class ScreenerSectionView implements ISection {
         this.#loadMoreBtn = ViewHelper.getButtonOrThrow('screener-load-more');
         this.#footer = ViewHelper.getHtmlElementOrThrow('footer-screener');
         this.#loadMoreBtn.onclick = () => this.loadNextPage();
-        this.#syncAction = ViewHelper.getButtonOrThrow('nav-footer-sync');
-        this.#sortAction = ViewHelper.getButtonOrThrow('nav-footer-sort');
-        this.#filterAction = ViewHelper.getButtonOrThrow('nav-footer-filter');
+        this.#syncButton = ViewHelper.getButtonOrThrow('nav-footer-sync');
+        this.#sortButton = ViewHelper.getButtonOrThrow('nav-footer-sort');
+        this.#filterButton = ViewHelper.getButtonOrThrow('nav-footer-filter');
 
-        this.#sortAction.onclick = () => console.log(`Sort action clicked`);
-        this.#syncAction.onclick = () => console.log(`Sync action clicked`);
-        this.#filterAction.onclick = () => console.log(`Filter action clicked`);
+        this.#sortButton.onclick = () => console.log(`Sort action clicked`);
+        this.#syncButton.onclick = () => this.requestSynchronization();
+        this.#filterButton.onclick = () => console.log(`Filter action clicked`);
+    }
+
+    private async requestSynchronization(): Promise<void> {
+        if (!this.#syncRequested) {
+            return;
+        }
+        await this.#syncRequested();
     }
 
     hasExternalActions(): boolean {
@@ -193,20 +200,23 @@ export class ScreenerSectionView implements ISection {
     * Bind a callback to the sort button
     */
     bindSortButton(callback: () => void | Promise<void>): void {
-        this.#sortAction.onclick = callback;
+        this.#sortButton.onclick = callback;
     }
 
     /**
     * Bind a callback to the sync button
     */
-    bindSyncButton(callback: () => void | Promise<void>): void {
-        this.#syncAction.onclick = callback;
+    /**
+    * Bind a callback to the sync button
+    */
+    bindSynchronizationRequested(callback: () =>  Promise<void>): void {
+        this.#syncRequested = callback;
     }
 
     /**
     * Bind a callback to the filter button
     */
     bindFilterButton(callback: () => void | Promise<void>): void {
-        this.#filterAction.onclick = callback;
+        this.#filterButton.onclick = callback;
     }
 }

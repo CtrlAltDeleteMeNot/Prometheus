@@ -1,4 +1,6 @@
 import { SignalDirection, SignalModel } from "../../ts_worker/application/exports/SignalModel";
+import { Logger, TaggedLogger } from "../utils/Logger";
+import { WakeLock } from "../utils/WakeLock";
 import { getActionIconSVGElement } from "./generated/ActionIconsRegistry";
 import { ISection } from "./ISection";
 import { ViewHelper } from "./ViewHelper";
@@ -15,79 +17,83 @@ export class SignalSectionView implements ISection {
     #currentPage = 1;
     #pageSize = 30;
     #signals: readonly SignalModel[];
-    #syncAction: HTMLButtonElement;
-    #autoSyncAction: HTMLButtonElement;
+    #manualSyncButton: HTMLButtonElement;
+    #autoSyncButton: HTMLButtonElement;
     #autoSyncEnabled: boolean;
     #autoSyncTimer: number | undefined;
     #latestSignalTs: number | undefined;
     #notificationAudio: HTMLAudioElement;
-    #wakeLockSentinel: WakeLockSentinel | undefined;
-    #loadMoreBtnText: HTMLSpanElement;
-    #loadMoreBtnSubText: HTMLSpanElement;
+    #autoSyncButtonText: HTMLSpanElement;
+    #autoSyncButtonSubText: HTMLSpanElement;
+    #wakeLock: WakeLock;
+    #syncRequested: (()=>Promise<void>)|undefined;
+    #logger: TaggedLogger;
 
     constructor() {
         this.id = 'signals';
         this.title = 'Signals';
+        this.#logger = Logger.create(SignalSectionView);
         this.#root = ViewHelper.getHtmlElementOrThrow('signals');
         this.#footer = ViewHelper.getHtmlElementOrThrow('footer-signals');
         this.#signalsGrid = ViewHelper.getHtmlElementOrThrow('signals-grid');
         this.#loadMoreBtn = ViewHelper.getButtonOrThrow('signals-load-more');
-        this.#loadMoreBtnText = ViewHelper.getSpanOrThrow('footer-signals-button-sync-automatically-main-text');
-        this.#loadMoreBtnSubText = ViewHelper.getSpanOrThrow('footer-signals-button-sync-automatically-sub-text');
-        this.#loadMoreBtnSubText.textContent = "Disabled";
+        this.#autoSyncButtonText = ViewHelper.getSpanOrThrow('footer-signals-button-sync-automatically-main-text');
+        this.#autoSyncButtonSubText = ViewHelper.getSpanOrThrow('footer-signals-button-sync-automatically-sub-text');
+        this.#autoSyncButtonText.textContent = "Live Monitoring";
+        this.#autoSyncButtonSubText.textContent = "Disabled";
         this.#loadMoreBtn.onclick = () => this.loadNextPage();
         this.#signals = [];
-        this.#syncAction = ViewHelper.getButtonOrThrow('footer-signals-button-sync-manually');
-        this.#syncAction.onclick = () => console.log(`Sync action clicked`);
+        this.#manualSyncButton = ViewHelper.getButtonOrThrow('footer-signals-button-sync-manually');
+        this.#manualSyncButton.onclick = () => this.requestSynchronization();
         this.#autoSyncEnabled = false;
-        this.#autoSyncAction = ViewHelper.getButtonOrThrow('footer-signals-button-sync-automatically');
-        this.#autoSyncAction.onclick = () => this.toggleAutoSync();
+        this.#autoSyncButton = ViewHelper.getButtonOrThrow('footer-signals-button-sync-automatically');
+        this.#autoSyncButton.onclick = () => this.toggleAutoSync();
         this.#autoSyncTimer = undefined;
         this.#notificationAudio = new Audio('https://dn711000.ca.archive.org/0/items/android-4.1.2-stock-ringtones/ringtones/Seville.mp3');
-        document.addEventListener('visibilitychange', () => {
-            if (
-                document.visibilityState === 'visible' &&
-                this.#autoSyncEnabled
-            ) {
-                void this.acquireWakeLock();
-            }
-        });
+        this.#wakeLock = new WakeLock();
     }
 
     private onTimerCallback() {
-        console.log(`${this.onTimerCallback.name} ${this.#autoSyncEnabled}`);
+        this.#logger.info(`Timer fired, autosync status: ${this.#autoSyncEnabled}`);
         if (this.#autoSyncEnabled === false) {
             return;
         }
-        this.#syncAction.click();
+        this.requestSynchronization();
+    }
+
+    private async requestSynchronization(): Promise<void> {
+        if (!this.#syncRequested) {
+            return;
+        }
+        await this.#syncRequested();
     }
 
     private toggleAutoSync() {
         //console.log(`Autosync action clicked`);
         this.#autoSyncEnabled = !this.#autoSyncEnabled;
-        this.onAutosyncToggled();
+        this.onAutosyncChanged();
     }
 
-    private onAutosyncToggled(): void {
+    private onAutosyncChanged(): void {
         if (this.#autoSyncEnabled) {
-            this.#loadMoreBtnSubText.textContent = "Enabled";
-            this.#autoSyncAction.classList.add('btn--primary');
-            this.#syncAction.classList.add('d-hidden');
+            this.#autoSyncButtonSubText.textContent = "Enabled";
+            this.#autoSyncButton.classList.add('btn--primary');
+            this.#manualSyncButton.classList.add('d-hidden');
             this.onTimerCallback();
             this.#autoSyncTimer = window.setInterval(
                 () => { this.onTimerCallback(); },
                 60_000
             );
-            this.acquireWakeLock();
+            this.#wakeLock.acquire();
         } else {
-            this.#loadMoreBtnSubText.textContent = "Disabled";
-            this.#autoSyncAction.classList.remove('btn--primary');
-            this.#syncAction.classList.remove('d-hidden');
+            this.#autoSyncButtonSubText.textContent = "Disabled";
+            this.#autoSyncButton.classList.remove('btn--primary');
+            this.#manualSyncButton.classList.remove('d-hidden');
             if (this.#autoSyncTimer !== undefined) {
                 window.clearInterval(this.#autoSyncTimer);
                 this.#autoSyncTimer = undefined;
             }
-            this.releaseWakeLock();
+            this.#wakeLock.release();
         }
     }
 
@@ -96,8 +102,8 @@ export class SignalSectionView implements ISection {
     /**
     * Bind a callback to the sync button
     */
-    bindSyncButton(callback: () => void | Promise<void>): void {
-        this.#syncAction.onclick = callback;
+    bindSynchronizationRequested(callback: () =>  Promise<void>): void {
+        this.#syncRequested = callback;
     }
 
     loadNextPage(): void {
@@ -167,6 +173,7 @@ export class SignalSectionView implements ISection {
         button.type = 'button';
 
         button.addEventListener('click', () => {
+            this.disableAutosync();
             window.open(signalModel.exchangeUrl, '_blank', 'noopener,noreferrer');
         });
 
@@ -232,17 +239,18 @@ export class SignalSectionView implements ISection {
     public show() {
         ViewHelper.toggleVisibility(this.#root, true);
         ViewHelper.toggleVisibility(this.#footer, true);
-        //console.log(`${SignalSectionView.name}::${this.show.name}`);
-        this.#autoSyncEnabled = false;
-        this.onAutosyncToggled();
+        this.disableAutosync();
     }
 
     public hide() {
         ViewHelper.toggleVisibility(this.#root, false);
         ViewHelper.toggleVisibility(this.#footer, false);
-        //console.log(`${SignalSectionView.name}::${this.hide.name}`);
+        this.disableAutosync();
+    }
+
+    private disableAutosync(){
         this.#autoSyncEnabled = false;
-        this.onAutosyncToggled();
+        this.onAutosyncChanged();
     }
 
     private checkNewDataArrived(signals: readonly SignalModel[]) {
@@ -258,50 +266,9 @@ export class SignalSectionView implements ISection {
         }
     }
     private playNotificationSound() {
-        this.#notificationAudio.play();
-    }
-
-    private isInstalled(): boolean {
-        return window.matchMedia('(display-mode: standalone)').matches
-            || (window.navigator as any).standalone === true;
-    }
-
-    async acquireWakeLock() {
-        if (!this.isInstalled()) {
-            return;
-        }
-
-        if (!('wakeLock' in navigator)) {
-            return;
-        }
-
-        if (this.#wakeLockSentinel !== undefined) {
-            return;
-        }
-
-        try {
-            this.#wakeLockSentinel = await navigator.wakeLock.request('screen');
-            this.#wakeLockSentinel.addEventListener('release', () => {
-                this.#wakeLockSentinel = undefined;
-                //maybe os decided it's time to cut us down due to low battery
-                if (this.#autoSyncEnabled && document.visibilityState === 'visible') {
-                    void this.acquireWakeLock();
-                }
-            });
-        } catch (e) {
-            console.warn(e);
-        }
-    }
-
-    async releaseWakeLock() {
-        if (!this.#wakeLockSentinel) {
-            return;
-        }
-
-        try {
-            await this.#wakeLockSentinel.release();
-        } finally {
-            this.#wakeLockSentinel = undefined;
-        }
+        this.#notificationAudio.currentTime = 0;
+        void this.#notificationAudio
+            .play()
+            .catch((error) => this.#logger.warn(error));
     }
 }

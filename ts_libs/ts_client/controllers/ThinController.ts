@@ -39,10 +39,10 @@ export class ThinController {
         this.#mainView.startSection.bindStartAction(async () => await this.fetch());
         this.#mainView.startSection.bindSettingsAction(() => this.showSettingsModal());
         this.#mainView.startSection.disableActions(true);
-        this.#mainView.screenerSection.bindSyncButton(async () => await this.synchronize());
+        this.#mainView.screenerSection.bindSynchronizationRequested(async () => await this.synchronize());
         this.#mainView.screenerSection.bindSortButton(() => this.showSortModal());
         this.#mainView.screenerSection.bindFilterButton(() => this.showFilterModal());
-        this.#mainView.signalsSection.bindSyncButton(async () => await this.synchronize());
+        this.#mainView.signalsSection.bindSynchronizationRequested(() => this.synchronize());
         this.#mainView.navigation.bindShowSectionAction((aPageName) => this.showSection(aPageName));
         this.#mainView.sortModalView.bindSortingRulesChanged((direction, sortKey) => this.doSort(direction, sortKey));
         this.#mainView.filterModalView.bindFilteringRulesChanged((rules) => this.doFilter(rules));
@@ -178,6 +178,9 @@ export class ThinController {
     }
 
     async synchronize() {
+        if(this.#mainView.progressModalView.isVisible){
+            return;
+        }
         this.#mainView.progressModalView.show('Synchronizing market data ...');
         const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
         this.on("synchronize:progress", handler);

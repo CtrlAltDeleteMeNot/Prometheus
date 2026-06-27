@@ -91,6 +91,9 @@
             return;
           }
         }
+        static isVisible(element) {
+          return !element.classList.contains("d-none");
+        }
       };
     }
   });
@@ -426,6 +429,9 @@
           ViewHelper.toggleVisibility(__privateGet(this, _root3), false);
           ViewHelper.setModalState(false);
           __privateGet(this, _body).innerHTML = "";
+        }
+        get isVisible() {
+          return ViewHelper.isVisible(__privateGet(this, _root3));
         }
         updateProgress(percent, message) {
           const scale = percent / 100;
@@ -870,7 +876,7 @@
   });
 
   // ts_libs/ts_client/views/ScreenerSectionView.ts
-  var _root4, _screenerGrid, _allData, _currentPage, _pageSize, _loadMoreBtn, _cards, _footer3, _syncAction, _sortAction, _filterAction, ScreenerSectionView;
+  var _root4, _screenerGrid, _allData, _currentPage, _pageSize, _loadMoreBtn, _cards, _footer3, _syncButton, _sortButton, _filterButton, _syncRequested, ScreenerSectionView;
   var init_ScreenerSectionView = __esm({
     "ts_libs/ts_client/views/ScreenerSectionView.ts"() {
       "use strict";
@@ -888,9 +894,10 @@
           __privateAdd(this, _cards, []);
           __privateAdd(this, _footer3);
           //actions
-          __privateAdd(this, _syncAction);
-          __privateAdd(this, _sortAction);
-          __privateAdd(this, _filterAction);
+          __privateAdd(this, _syncButton);
+          __privateAdd(this, _sortButton);
+          __privateAdd(this, _filterButton);
+          __privateAdd(this, _syncRequested);
           this.title = "Screener";
           this.id = "screener";
           __privateSet(this, _root4, ViewHelper.getHtmlElementOrThrow(this.id));
@@ -898,12 +905,20 @@
           __privateSet(this, _loadMoreBtn, ViewHelper.getButtonOrThrow("screener-load-more"));
           __privateSet(this, _footer3, ViewHelper.getHtmlElementOrThrow("footer-screener"));
           __privateGet(this, _loadMoreBtn).onclick = () => this.loadNextPage();
-          __privateSet(this, _syncAction, ViewHelper.getButtonOrThrow("nav-footer-sync"));
-          __privateSet(this, _sortAction, ViewHelper.getButtonOrThrow("nav-footer-sort"));
-          __privateSet(this, _filterAction, ViewHelper.getButtonOrThrow("nav-footer-filter"));
-          __privateGet(this, _sortAction).onclick = () => console.log(`Sort action clicked`);
-          __privateGet(this, _syncAction).onclick = () => console.log(`Sync action clicked`);
-          __privateGet(this, _filterAction).onclick = () => console.log(`Filter action clicked`);
+          __privateSet(this, _syncButton, ViewHelper.getButtonOrThrow("nav-footer-sync"));
+          __privateSet(this, _sortButton, ViewHelper.getButtonOrThrow("nav-footer-sort"));
+          __privateSet(this, _filterButton, ViewHelper.getButtonOrThrow("nav-footer-filter"));
+          __privateGet(this, _sortButton).onclick = () => console.log(`Sort action clicked`);
+          __privateGet(this, _syncButton).onclick = () => this.requestSynchronization();
+          __privateGet(this, _filterButton).onclick = () => console.log(`Filter action clicked`);
+        }
+        requestSynchronization() {
+          return __async(this, null, function* () {
+            if (!__privateGet(this, _syncRequested)) {
+              return;
+            }
+            yield __privateGet(this, _syncRequested).call(this);
+          });
         }
         hasExternalActions() {
           return true;
@@ -1013,19 +1028,22 @@
         * Bind a callback to the sort button
         */
         bindSortButton(callback) {
-          __privateGet(this, _sortAction).onclick = callback;
+          __privateGet(this, _sortButton).onclick = callback;
         }
         /**
         * Bind a callback to the sync button
         */
-        bindSyncButton(callback) {
-          __privateGet(this, _syncAction).onclick = callback;
+        /**
+        * Bind a callback to the sync button
+        */
+        bindSynchronizationRequested(callback) {
+          __privateSet(this, _syncRequested, callback);
         }
         /**
         * Bind a callback to the filter button
         */
         bindFilterButton(callback) {
-          __privateGet(this, _filterAction).onclick = callback;
+          __privateGet(this, _filterButton).onclick = callback;
         }
       };
       _root4 = new WeakMap();
@@ -1036,9 +1054,10 @@
       _loadMoreBtn = new WeakMap();
       _cards = new WeakMap();
       _footer3 = new WeakMap();
-      _syncAction = new WeakMap();
-      _sortAction = new WeakMap();
-      _filterAction = new WeakMap();
+      _syncButton = new WeakMap();
+      _sortButton = new WeakMap();
+      _filterButton = new WeakMap();
+      _syncRequested = new WeakMap();
     }
   });
 
@@ -1213,15 +1232,107 @@
     }
   });
 
+  // ts_libs/ts_client/utils/Logger.ts
+  var Logger, TaggedLogger;
+  var init_Logger = __esm({
+    "ts_libs/ts_client/utils/Logger.ts"() {
+      "use strict";
+      Logger = class {
+        static create(type) {
+          return new TaggedLogger(type.name);
+        }
+      };
+      TaggedLogger = class {
+        constructor(tag) {
+          this.tag = tag;
+        }
+        info(message, ...args) {
+          console.info(`[${this.tag}] ${message}`, ...args);
+        }
+        warn(message, ...args) {
+          console.warn(`[${this.tag}] ${message}`, ...args);
+        }
+        error(message, ...args) {
+          console.error(`[${this.tag}] ${message}`, ...args);
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_client/utils/PwaUtils.ts
+  var PwaUtils;
+  var init_PwaUtils = __esm({
+    "ts_libs/ts_client/utils/PwaUtils.ts"() {
+      "use strict";
+      PwaUtils = class {
+        static isInstalled() {
+          return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+        }
+        static isWakeLockSupported() {
+          return "wakeLock" in navigator;
+        }
+      };
+    }
+  });
+
+  // ts_libs/ts_client/utils/WakeLock.ts
+  var _wakeLockSentinel, _logger, _WakeLock, WakeLock;
+  var init_WakeLock = __esm({
+    "ts_libs/ts_client/utils/WakeLock.ts"() {
+      "use strict";
+      init_Logger();
+      init_PwaUtils();
+      _WakeLock = class _WakeLock {
+        constructor() {
+          __privateAdd(this, _wakeLockSentinel);
+          __privateAdd(this, _logger);
+          __privateSet(this, _wakeLockSentinel, void 0);
+          __privateSet(this, _logger, Logger.create(_WakeLock));
+        }
+        acquire() {
+          if (!this.canAcquire()) {
+            return;
+          }
+          navigator.wakeLock.request("screen").then((wakeLockSentinel) => this.assignWakeLockSentinel(wakeLockSentinel)).catch((error) => __privateGet(this, _logger).warn(error));
+        }
+        release() {
+          if (!__privateGet(this, _wakeLockSentinel) || !this.isHeld) {
+            return;
+          }
+          __privateGet(this, _wakeLockSentinel).release().catch((error) => __privateGet(this, _logger).warn(error)).finally(() => __privateSet(this, _wakeLockSentinel, void 0));
+        }
+        canAcquire() {
+          return PwaUtils.isInstalled() && PwaUtils.isWakeLockSupported() && !this.isHeld;
+        }
+        assignWakeLockSentinel(sentinel) {
+          __privateGet(this, _logger).info("Wake lock acquired");
+          __privateSet(this, _wakeLockSentinel, sentinel);
+          sentinel.onrelease = () => {
+            __privateGet(this, _logger).info("Wake lock released.");
+            __privateSet(this, _wakeLockSentinel, void 0);
+          };
+        }
+        get isHeld() {
+          return __privateGet(this, _wakeLockSentinel) !== void 0 && __privateGet(this, _wakeLockSentinel).released === false;
+        }
+      };
+      _wakeLockSentinel = new WeakMap();
+      _logger = new WeakMap();
+      WakeLock = _WakeLock;
+    }
+  });
+
   // ts_libs/ts_client/views/SignalsSectionView.ts
-  var _root6, _footer4, _signalsGrid, _loadMoreBtn2, _cards2, _currentPage2, _pageSize2, _signals, _syncAction2, _autoSyncAction, _autoSyncEnabled, _autoSyncTimer, _latestSignalTs, _notificationAudio, _wakeLockSentinel, _loadMoreBtnText, _loadMoreBtnSubText, SignalSectionView;
+  var _root6, _footer4, _signalsGrid, _loadMoreBtn2, _cards2, _currentPage2, _pageSize2, _signals, _manualSyncButton, _autoSyncButton, _autoSyncEnabled, _autoSyncTimer, _latestSignalTs, _notificationAudio, _autoSyncButtonText, _autoSyncButtonSubText, _wakeLock, _syncRequested2, _logger2, _SignalSectionView, SignalSectionView;
   var init_SignalsSectionView = __esm({
     "ts_libs/ts_client/views/SignalsSectionView.ts"() {
       "use strict";
       init_SignalModel();
+      init_Logger();
+      init_WakeLock();
       init_ActionIconsRegistry();
       init_ViewHelper();
-      SignalSectionView = class {
+      _SignalSectionView = class _SignalSectionView {
         constructor() {
           __privateAdd(this, _root6);
           __privateAdd(this, _footer4);
@@ -1231,55 +1342,63 @@
           __privateAdd(this, _currentPage2, 1);
           __privateAdd(this, _pageSize2, 30);
           __privateAdd(this, _signals);
-          __privateAdd(this, _syncAction2);
-          __privateAdd(this, _autoSyncAction);
+          __privateAdd(this, _manualSyncButton);
+          __privateAdd(this, _autoSyncButton);
           __privateAdd(this, _autoSyncEnabled);
           __privateAdd(this, _autoSyncTimer);
           __privateAdd(this, _latestSignalTs);
           __privateAdd(this, _notificationAudio);
-          __privateAdd(this, _wakeLockSentinel);
-          __privateAdd(this, _loadMoreBtnText);
-          __privateAdd(this, _loadMoreBtnSubText);
+          __privateAdd(this, _autoSyncButtonText);
+          __privateAdd(this, _autoSyncButtonSubText);
+          __privateAdd(this, _wakeLock);
+          __privateAdd(this, _syncRequested2);
+          __privateAdd(this, _logger2);
           this.id = "signals";
           this.title = "Signals";
+          __privateSet(this, _logger2, Logger.create(_SignalSectionView));
           __privateSet(this, _root6, ViewHelper.getHtmlElementOrThrow("signals"));
           __privateSet(this, _footer4, ViewHelper.getHtmlElementOrThrow("footer-signals"));
           __privateSet(this, _signalsGrid, ViewHelper.getHtmlElementOrThrow("signals-grid"));
           __privateSet(this, _loadMoreBtn2, ViewHelper.getButtonOrThrow("signals-load-more"));
-          __privateSet(this, _loadMoreBtnText, ViewHelper.getSpanOrThrow("footer-signals-button-sync-automatically-main-text"));
-          __privateSet(this, _loadMoreBtnSubText, ViewHelper.getSpanOrThrow("footer-signals-button-sync-automatically-sub-text"));
-          __privateGet(this, _loadMoreBtnSubText).textContent = "Disabled";
+          __privateSet(this, _autoSyncButtonText, ViewHelper.getSpanOrThrow("footer-signals-button-sync-automatically-main-text"));
+          __privateSet(this, _autoSyncButtonSubText, ViewHelper.getSpanOrThrow("footer-signals-button-sync-automatically-sub-text"));
+          __privateGet(this, _autoSyncButtonText).textContent = "Live Monitoring";
+          __privateGet(this, _autoSyncButtonSubText).textContent = "Disabled";
           __privateGet(this, _loadMoreBtn2).onclick = () => this.loadNextPage();
           __privateSet(this, _signals, []);
-          __privateSet(this, _syncAction2, ViewHelper.getButtonOrThrow("footer-signals-button-sync-manually"));
-          __privateGet(this, _syncAction2).onclick = () => console.log(`Sync action clicked`);
+          __privateSet(this, _manualSyncButton, ViewHelper.getButtonOrThrow("footer-signals-button-sync-manually"));
+          __privateGet(this, _manualSyncButton).onclick = () => this.requestSynchronization();
           __privateSet(this, _autoSyncEnabled, false);
-          __privateSet(this, _autoSyncAction, ViewHelper.getButtonOrThrow("footer-signals-button-sync-automatically"));
-          __privateGet(this, _autoSyncAction).onclick = () => this.toggleAutoSync();
+          __privateSet(this, _autoSyncButton, ViewHelper.getButtonOrThrow("footer-signals-button-sync-automatically"));
+          __privateGet(this, _autoSyncButton).onclick = () => this.toggleAutoSync();
           __privateSet(this, _autoSyncTimer, void 0);
           __privateSet(this, _notificationAudio, new Audio("https://dn711000.ca.archive.org/0/items/android-4.1.2-stock-ringtones/ringtones/Seville.mp3"));
-          document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible" && __privateGet(this, _autoSyncEnabled)) {
-              void this.acquireWakeLock();
-            }
-          });
+          __privateSet(this, _wakeLock, new WakeLock());
         }
         onTimerCallback() {
-          console.log(`${this.onTimerCallback.name} ${__privateGet(this, _autoSyncEnabled)}`);
+          __privateGet(this, _logger2).info(`Timer fired, autosync status: ${__privateGet(this, _autoSyncEnabled)}`);
           if (__privateGet(this, _autoSyncEnabled) === false) {
             return;
           }
-          __privateGet(this, _syncAction2).click();
+          this.requestSynchronization();
+        }
+        requestSynchronization() {
+          return __async(this, null, function* () {
+            if (!__privateGet(this, _syncRequested2)) {
+              return;
+            }
+            yield __privateGet(this, _syncRequested2).call(this);
+          });
         }
         toggleAutoSync() {
           __privateSet(this, _autoSyncEnabled, !__privateGet(this, _autoSyncEnabled));
-          this.onAutosyncToggled();
+          this.onAutosyncChanged();
         }
-        onAutosyncToggled() {
+        onAutosyncChanged() {
           if (__privateGet(this, _autoSyncEnabled)) {
-            __privateGet(this, _loadMoreBtnSubText).textContent = "Enabled";
-            __privateGet(this, _autoSyncAction).classList.add("btn--primary");
-            __privateGet(this, _syncAction2).classList.add("d-hidden");
+            __privateGet(this, _autoSyncButtonSubText).textContent = "Enabled";
+            __privateGet(this, _autoSyncButton).classList.add("btn--primary");
+            __privateGet(this, _manualSyncButton).classList.add("d-hidden");
             this.onTimerCallback();
             __privateSet(this, _autoSyncTimer, window.setInterval(
               () => {
@@ -1287,23 +1406,23 @@
               },
               6e4
             ));
-            this.acquireWakeLock();
+            __privateGet(this, _wakeLock).acquire();
           } else {
-            __privateGet(this, _loadMoreBtnSubText).textContent = "Disabled";
-            __privateGet(this, _autoSyncAction).classList.remove("btn--primary");
-            __privateGet(this, _syncAction2).classList.remove("d-hidden");
+            __privateGet(this, _autoSyncButtonSubText).textContent = "Disabled";
+            __privateGet(this, _autoSyncButton).classList.remove("btn--primary");
+            __privateGet(this, _manualSyncButton).classList.remove("d-hidden");
             if (__privateGet(this, _autoSyncTimer) !== void 0) {
               window.clearInterval(__privateGet(this, _autoSyncTimer));
               __privateSet(this, _autoSyncTimer, void 0);
             }
-            this.releaseWakeLock();
+            __privateGet(this, _wakeLock).release();
           }
         }
         /**
         * Bind a callback to the sync button
         */
-        bindSyncButton(callback) {
-          __privateGet(this, _syncAction2).onclick = callback;
+        bindSynchronizationRequested(callback) {
+          __privateSet(this, _syncRequested2, callback);
         }
         loadNextPage() {
           __privateWrapper(this, _currentPage2)._++;
@@ -1355,6 +1474,7 @@
           button.className = "btn btn--square btn--icon";
           button.type = "button";
           button.addEventListener("click", () => {
+            this.disableAutosync();
             window.open(signalModel.exchangeUrl, "_blank", "noopener,noreferrer");
           });
           const btnSvg = getActionIconSVGElement("arrow-right");
@@ -1401,14 +1521,16 @@
         show() {
           ViewHelper.toggleVisibility(__privateGet(this, _root6), true);
           ViewHelper.toggleVisibility(__privateGet(this, _footer4), true);
-          __privateSet(this, _autoSyncEnabled, false);
-          this.onAutosyncToggled();
+          this.disableAutosync();
         }
         hide() {
           ViewHelper.toggleVisibility(__privateGet(this, _root6), false);
           ViewHelper.toggleVisibility(__privateGet(this, _footer4), false);
+          this.disableAutosync();
+        }
+        disableAutosync() {
           __privateSet(this, _autoSyncEnabled, false);
-          this.onAutosyncToggled();
+          this.onAutosyncChanged();
         }
         checkNewDataArrived(signals) {
           if (signals.length === 0) {
@@ -1423,46 +1545,8 @@
           }
         }
         playNotificationSound() {
-          __privateGet(this, _notificationAudio).play();
-        }
-        isInstalled() {
-          return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-        }
-        acquireWakeLock() {
-          return __async(this, null, function* () {
-            if (!this.isInstalled()) {
-              return;
-            }
-            if (!("wakeLock" in navigator)) {
-              return;
-            }
-            if (__privateGet(this, _wakeLockSentinel) !== void 0) {
-              return;
-            }
-            try {
-              __privateSet(this, _wakeLockSentinel, yield navigator.wakeLock.request("screen"));
-              __privateGet(this, _wakeLockSentinel).addEventListener("release", () => {
-                __privateSet(this, _wakeLockSentinel, void 0);
-                if (__privateGet(this, _autoSyncEnabled) && document.visibilityState === "visible") {
-                  void this.acquireWakeLock();
-                }
-              });
-            } catch (e) {
-              console.warn(e);
-            }
-          });
-        }
-        releaseWakeLock() {
-          return __async(this, null, function* () {
-            if (!__privateGet(this, _wakeLockSentinel)) {
-              return;
-            }
-            try {
-              yield __privateGet(this, _wakeLockSentinel).release();
-            } finally {
-              __privateSet(this, _wakeLockSentinel, void 0);
-            }
-          });
+          __privateGet(this, _notificationAudio).currentTime = 0;
+          void __privateGet(this, _notificationAudio).play().catch((error) => __privateGet(this, _logger2).warn(error));
         }
       };
       _root6 = new WeakMap();
@@ -1473,15 +1557,18 @@
       _currentPage2 = new WeakMap();
       _pageSize2 = new WeakMap();
       _signals = new WeakMap();
-      _syncAction2 = new WeakMap();
-      _autoSyncAction = new WeakMap();
+      _manualSyncButton = new WeakMap();
+      _autoSyncButton = new WeakMap();
       _autoSyncEnabled = new WeakMap();
       _autoSyncTimer = new WeakMap();
       _latestSignalTs = new WeakMap();
       _notificationAudio = new WeakMap();
-      _wakeLockSentinel = new WeakMap();
-      _loadMoreBtnText = new WeakMap();
-      _loadMoreBtnSubText = new WeakMap();
+      _autoSyncButtonText = new WeakMap();
+      _autoSyncButtonSubText = new WeakMap();
+      _wakeLock = new WeakMap();
+      _syncRequested2 = new WeakMap();
+      _logger2 = new WeakMap();
+      SignalSectionView = _SignalSectionView;
     }
   });
 
@@ -2343,14 +2430,12 @@
           }));
           __privateGet(this, _mainView).startSection.bindSettingsAction(() => this.showSettingsModal());
           __privateGet(this, _mainView).startSection.disableActions(true);
-          __privateGet(this, _mainView).screenerSection.bindSyncButton(() => __async(this, null, function* () {
+          __privateGet(this, _mainView).screenerSection.bindSynchronizationRequested(() => __async(this, null, function* () {
             return yield this.synchronize();
           }));
           __privateGet(this, _mainView).screenerSection.bindSortButton(() => this.showSortModal());
           __privateGet(this, _mainView).screenerSection.bindFilterButton(() => this.showFilterModal());
-          __privateGet(this, _mainView).signalsSection.bindSyncButton(() => __async(this, null, function* () {
-            return yield this.synchronize();
-          }));
+          __privateGet(this, _mainView).signalsSection.bindSynchronizationRequested(() => this.synchronize());
           __privateGet(this, _mainView).navigation.bindShowSectionAction((aPageName) => this.showSection(aPageName));
           __privateGet(this, _mainView).sortModalView.bindSortingRulesChanged((direction, sortKey) => this.doSort(direction, sortKey));
           __privateGet(this, _mainView).filterModalView.bindFilteringRulesChanged((rules) => this.doFilter(rules));
@@ -2477,6 +2562,9 @@
         synchronize() {
           return __async(this, null, function* () {
             var _a;
+            if (__privateGet(this, _mainView).progressModalView.isVisible) {
+              return;
+            }
             __privateGet(this, _mainView).progressModalView.show("Synchronizing market data ...");
             const handler = (data) => __privateGet(this, _mainView).progressModalView.updateProgressFromWorker(data);
             this.on("synchronize:progress", handler);

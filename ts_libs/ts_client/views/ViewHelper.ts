@@ -48,4 +48,8 @@ export class ViewHelper {
             return;
         }
     }
+
+    static isVisible(element: HTMLElement){
+       return !element.classList.contains('d-none');
+    }
 }
