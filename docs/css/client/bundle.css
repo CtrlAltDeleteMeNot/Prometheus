@@ -942,7 +942,7 @@ textarea {
   gap: 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--border-radius);
-  border-left-style: none;
+  border-left-style: hidden;
   background: var(--surface-3);
   padding: 1rem;
   min-height: 120px;

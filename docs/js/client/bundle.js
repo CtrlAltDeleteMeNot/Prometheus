@@ -2430,9 +2430,7 @@
           }));
           __privateGet(this, _mainView).startSection.bindSettingsAction(() => this.showSettingsModal());
           __privateGet(this, _mainView).startSection.disableActions(true);
-          __privateGet(this, _mainView).screenerSection.bindSynchronizationRequested(() => __async(this, null, function* () {
-            return yield this.synchronize();
-          }));
+          __privateGet(this, _mainView).screenerSection.bindSynchronizationRequested(() => this.synchronize());
           __privateGet(this, _mainView).screenerSection.bindSortButton(() => this.showSortModal());
           __privateGet(this, _mainView).screenerSection.bindFilterButton(() => this.showFilterModal());
           __privateGet(this, _mainView).signalsSection.bindSynchronizationRequested(() => this.synchronize());
