@@ -75,7 +75,7 @@ export class WorkerCoreImplementation {
             this.#settings.parallelRequestsCount,
             nowMs,
             this.#plugins,
-            async (progress) => {
+            (progress) => {
                 let percent = 0.7 * (progress.currentPairIndex * 100) / progress.totalPairsCount;
                 var message = `${progress.currentPairIndex} / ${progress.totalPairsCount} - Fetched ${progress.currentTradingPair.symbol()} initial data from ${progress.currentTradingPair.getExchangeDescriptor().getName()} ...`;
                 progressCallback(percent, message);

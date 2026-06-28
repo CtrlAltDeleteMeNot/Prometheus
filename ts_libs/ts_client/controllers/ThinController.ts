@@ -132,16 +132,20 @@ export class ThinController {
     }
 
     async initialize(): Promise<void> {
-        const rawResponse = await this.callWorker('init') as ScreenerSettingsDto;
-        const settings = ScreenerSettings.deserialize(rawResponse);
         try {
-            settings.reconcile();
+            const rawResponse = await this.callWorker('init') as ScreenerSettingsDto;
+            const settings = ScreenerSettings.deserialize(rawResponse);
+            try {
+                settings.reconcile();
+            } catch (err) {
+                console.log(err);
+            }
+            finally {
+                this.#mainModel.setScreenerSettings(settings);
+                this.#mainView.startSection.disableActions(false);
+            }
         } catch (err) {
-            console.log(err);
-        }
-        finally {
-            this.#mainModel.setScreenerSettings(settings);
-            this.#mainView.startSection.disableActions(false);
+            this.#mainView.genericModalView.showError("Error", "Application initialzation failure, please restart.", err, () => { });
         }
     }
 
@@ -151,50 +155,61 @@ export class ThinController {
     }
 
     async fetch(): Promise<void> {
+
         const settings = this.#mainModel.getScreenerSettingsOrThrow();
         this.#mainView.progressModalView.show('Fetching market data ...');
-        const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
-        this.on("fetch:progress", handler);
-        const response = await this.callWorker('fetch', settings.serialize()) as SynchronizationModelDto;
-        this.off("fetch:progress", handler);
-        const responseModel = SynchronizationModel.deserialize(response);
-        const sortDirection = SortDirection.Descending;
-        const sortFieldMetadata = settings.sortableAttributes[1];
-        const sorted = ThinController.doFilteringAndSortingCore(responseModel.tradingPairs, sortDirection, sortFieldMetadata.key, this.#mainModel.getActiveFilterableAttributes());
-        this.#mainModel.appendSignals(responseModel.signals);
-        this.#mainModel.setSortableAttributes(settings.sortableAttributes);
-        this.#mainModel.setFilterableAttributes(settings.filterableAttributes);
-        this.#mainModel.setMultiTimeFrameSnapshot(sorted);
-        this.#mainModel.setSortDirection(sortDirection);
-        this.#mainModel.setSortNamedAttributeMetadata(sortFieldMetadata);
-        this.#mainView.screenerSection.setData(sorted);
-        this.#mainView.signalsSection.setData(this.#mainModel.getSignals());
-        this.#mainView.sortModalView.update(this.#mainModel);
-        this.#mainView.filterModalView.update(this.#mainModel);
-        this.#mainView.progressModalView.hide();
-        this.#mainView.screenerSection.show();
-        this.#mainView.navigation.update(this.#mainModel);
-        this.#mainView.navigation.show();
+        try {
+            const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
+            this.on("fetch:progress", handler);
+            const response = await this.callWorker('fetch', settings.serialize()) as SynchronizationModelDto;
+            this.off("fetch:progress", handler);
+            const responseModel = SynchronizationModel.deserialize(response);
+            const sortDirection = SortDirection.Descending;
+            const sortFieldMetadata = settings.sortableAttributes[1];
+            const sorted = ThinController.doFilteringAndSortingCore(responseModel.tradingPairs, sortDirection, sortFieldMetadata.key, this.#mainModel.getActiveFilterableAttributes());
+            this.#mainModel.appendSignals(responseModel.signals);
+            this.#mainModel.setSortableAttributes(settings.sortableAttributes);
+            this.#mainModel.setFilterableAttributes(settings.filterableAttributes);
+            this.#mainModel.setMultiTimeFrameSnapshot(sorted);
+            this.#mainModel.setSortDirection(sortDirection);
+            this.#mainModel.setSortNamedAttributeMetadata(sortFieldMetadata);
+            this.#mainView.screenerSection.setData(sorted);
+            this.#mainView.signalsSection.setData(this.#mainModel.getSignals());
+            this.#mainView.sortModalView.update(this.#mainModel);
+            this.#mainView.filterModalView.update(this.#mainModel);
+            this.#mainView.progressModalView.hide();
+            this.#mainView.screenerSection.show();
+            this.#mainView.navigation.update(this.#mainModel);
+            this.#mainView.navigation.show();
+        } catch (err) {
+            this.#mainView.progressModalView.hide();
+            this.#mainView.genericModalView.showError("Error", "Application data fetch failure, please restart.", err, () => { });
+        }
     }
 
     async synchronize() {
-        if(this.#mainView.progressModalView.isVisible){
+        if (this.#mainView.progressModalView.isVisible) {
             return;
         }
         this.#mainView.progressModalView.show('Synchronizing market data ...');
-        const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
-        this.on("synchronize:progress", handler);
-        const rawResponse = await this.callWorker('synchronize', this.#mainModel.getScreenerSettings()?.serialize()) as SynchronizationModelDto;
-        this.off("synchronize:progress", handler);
-        const synchronizationModel = SynchronizationModel.deserialize(rawResponse);
-        if (synchronizationModel.tradingPairs.length > 0) {
-            const sorted = ThinController.doFilteringAndSortingCore(synchronizationModel.tradingPairs, this.#mainModel.getSortDirection(), this.#mainModel.getSortNamedAttributeMetadata().key, this.#mainModel.getActiveFilterableAttributes());
-            this.#mainModel.setMultiTimeFrameSnapshot(synchronizationModel.tradingPairs);
-            this.#mainModel.appendSignals(synchronizationModel.signals);
-            this.#mainView.screenerSection.setData(sorted);
-            this.#mainView.signalsSection.setData(this.#mainModel.getSignals());
+        try {
+            const handler: WorkerEventHandler<any> = (data) => this.#mainView.progressModalView.updateProgressFromWorker(data);
+            this.on("synchronize:progress", handler);
+            const rawResponse = await this.callWorker('synchronize', this.#mainModel.getScreenerSettings()?.serialize()) as SynchronizationModelDto;
+            this.off("synchronize:progress", handler);
+            const synchronizationModel = SynchronizationModel.deserialize(rawResponse);
+            if (synchronizationModel.tradingPairs.length > 0) {
+                const sorted = ThinController.doFilteringAndSortingCore(synchronizationModel.tradingPairs, this.#mainModel.getSortDirection(), this.#mainModel.getSortNamedAttributeMetadata().key, this.#mainModel.getActiveFilterableAttributes());
+                this.#mainModel.setMultiTimeFrameSnapshot(synchronizationModel.tradingPairs);
+                this.#mainModel.appendSignals(synchronizationModel.signals);
+                this.#mainView.screenerSection.setData(sorted);
+                this.#mainView.signalsSection.setData(this.#mainModel.getSignals());
+            }
+            this.#mainView.progressModalView.hide();
+        } catch (err) {
+            this.#mainView.progressModalView.hide();
+            this.#mainView.genericModalView.showError("Error", "Application data sync failure, please restart.", err, () => { });
         }
-        this.#mainView.progressModalView.hide();
     }
 
     private callWorker(method: string, args?: any): Promise<any> {

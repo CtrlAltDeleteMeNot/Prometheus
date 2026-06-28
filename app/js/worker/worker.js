@@ -630,7 +630,7 @@
           Object.freeze(this);
         }
         reportProgress(progress) {
-          return __privateGet(this, _progressCallback).call(this, progress);
+          __privateGet(this, _progressCallback).call(this, progress);
         }
         getUtcNowMilliseconds() {
           return __privateGet(this, _utcNowMs);
@@ -4324,17 +4324,18 @@
               const batchResults = yield Promise.all(batchPairs.map((tp) => {
                 return __privateMethod(this, _FetchOhlcvDataUseCase_instances, fetchOne_fn).call(this, tp, utcNowMs, candlesPerTimeFrame);
               }));
-              for (let j = 0; j < batchResults.length; j++) {
-                const result = batchResults[j];
-                if (!result) continue;
-                results.push(result);
-                const absoluteIndex = i + j;
-                yield requestModel.reportProgress({
-                  currentTradingPair: result.getTradingPair(),
+              const filtered = batchResults.filter((s) => s !== void 0);
+              filtered.forEach((batchResult, idx) => {
+                results.push(batchResult);
+                __privateGet(this, _technicalAnalisysRepository).addDataset(batchResult);
+                __privateGet(this, _technicalAnalisysRepository).initializeIndicatorsWithDatasets(batchResult.getTradingPair());
+                const absoluteIndex = i + idx;
+                requestModel.reportProgress({
+                  currentTradingPair: batchResult.getTradingPair(),
                   currentPairIndex: absoluteIndex + 1,
                   totalPairsCount: tradingPairs.length
                 });
-              }
+              });
             }
             plugins.forEach((plugin) => {
               results.forEach((res) => {
@@ -4354,18 +4355,16 @@
             const methods = __privateGet(this, _exchangeMethodsRegistry).get(
               tradingPair.getExchangeDescriptor()
             );
-            var toReturn = yield methods.createMultiTimeframeOhlcv(
+            const toReturn = yield methods.createMultiTimeframeOhlcv(
               tradingPair,
               utcNowMs,
               candlesPerTimeFrame
             );
-            __privateGet(this, _technicalAnalisysRepository).addDataset(toReturn);
-            __privateGet(this, _technicalAnalisysRepository).initializeIndicatorsWithDatasets(tradingPair);
             return toReturn;
           } catch (err) {
             if (InsufficientOhlcvDataError.isInstance(err)) {
               console.warn(err);
-              return null;
+              return void 0;
             }
             throw err;
           }
@@ -4580,21 +4579,21 @@
         run(requestModel) {
           return __async(this, null, function* () {
             const buffers = Array.from(__privateGet(this, _technicalAnalisysRepository2).getDatasets().values());
-            const parallelCount = requestModel.getParalelRequestsCount();
-            const ts = requestModel.getUtcNowMilliseconds();
+            const nowMillis = requestModel.getUtcNowMilliseconds();
             const shouldSync = buffers.some((buffer) => {
               const nextStart = buffer.getBuffer(TimeFrame.ONE_MINUTE).getStartTime() + TimeFrame.ONE_MINUTE.asMilliseconds();
-              const gap = ts - nextStart;
+              const gap = nowMillis - nextStart;
               return gap > TimeFrame.ONE_MINUTE.asMilliseconds();
             });
+            if (shouldSync === false) {
+              return new SyncOhlcvDataResponse(0, [], []);
+            }
             let tradingPairModels = [];
             let signalModels = [];
-            if (shouldSync === false) {
-              return new SyncOhlcvDataResponse(0, tradingPairModels, signalModels);
-            }
+            const parallelCount = requestModel.getParalelRequestsCount();
             for (let i = 0; i < buffers.length; i += parallelCount) {
               const batch = buffers.slice(i, i + parallelCount);
-              const results = yield Promise.all(batch.map((buffer) => __privateMethod(this, _SyncOhlcvDataUseCase_instances, syncOne_fn).call(this, requestModel, buffer, ts)));
+              const results = yield Promise.all(batch.map((buffer) => __privateMethod(this, _SyncOhlcvDataUseCase_instances, syncOne_fn).call(this, requestModel, buffer, nowMillis)));
               for (let j = 0; j < results.length; j++) {
                 const syncResult = results[j];
                 const tradingPair = syncResult.tradingPair;
@@ -4614,20 +4613,22 @@
             return new SyncOhlcvDataResponse(buffers.length, tradingPairModels, signalModels);
           });
         }
+        shouldSync() {
+        }
         drainSignals(signalModels, requestModel) {
           const plugins = requestModel.getPlugins();
           plugins.forEach((plugin) => {
-            if (plugin instanceof BaseSignalGenerator) {
-              if (plugin.getSignalsCount() > 0) {
-                let drained = plugin.drain();
-                let mapped = drained.map((s) => this.createSingleSignalModel(s, plugin));
-                mapped.forEach((m) => signalModels.push(m));
-              }
+            if (!(plugin instanceof BaseSignalGenerator)) {
+              return;
+            }
+            if (plugin.getSignalsCount() > 0) {
+              const drained = plugin.drain();
+              drained.forEach((m) => signalModels.push(this.createSingleSignalModel(m)));
             }
           });
           signalModels.sort((first, second) => first.timestamp - second.timestamp);
         }
-        createSingleSignalModel(s, plugin) {
+        createSingleSignalModel(s) {
           const tradingPair = s.tradingPair;
           const exchange = tradingPair.getExchangeDescriptor();
           const tradingPairUrl = __privateGet(this, _exchangeMethodsRegistry2).get(exchange).getTradingPairUrl(tradingPair);
@@ -4637,7 +4638,7 @@
             exchange.getName(),
             exchange.getId(),
             tradingPairUrl,
-            plugin.getFriendlyDescription(),
+            s.source.getFriendlyDescription(),
             s.signalDirection,
             s.timeStamp
           );
@@ -4858,11 +4859,11 @@
               __privateGet(this, _settings).parallelRequestsCount,
               nowMs,
               __privateGet(this, _plugins5),
-              (progress) => __async(this, null, function* () {
+              (progress) => {
                 let percent = 0.7 * (progress.currentPairIndex * 100) / progress.totalPairsCount;
                 var message = `${progress.currentPairIndex} / ${progress.totalPairsCount} - Fetched ${progress.currentTradingPair.symbol()} initial data from ${progress.currentTradingPair.getExchangeDescriptor().getName()} ...`;
                 progressCallback(percent, message);
-              })
+              }
             );
             const fetchResponse = yield __privateGet(this, _container).fetchOhlcvDataUseCase.execute(fetchRequest);
             if (fetchResponse.getCount() === 0) {

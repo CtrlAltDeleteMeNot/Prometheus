@@ -1,6 +1,7 @@
 import { MainModel } from '../models/MainModel';
 import { AboutSectionView } from './AboutSectionView';
 import { FilterModalView } from './FilterModalView';
+import { GenericModalView } from './GenericModalView';
 import { ISection } from './ISection';
 import { NavigationView } from './NavigationView';
 import { ProgressModalView } from './ProgressModalView';
@@ -19,6 +20,7 @@ export class MainView {
     navigation: NavigationView;
     sortModalView: SortModalView;
     filterModalView: FilterModalView;
+    genericModalView: GenericModalView;
     progressModalView: ProgressModalView;
     settingsModalView: SettingsModalView;
     sections: readonly ISection[];
@@ -32,10 +34,12 @@ export class MainView {
         this.progressModalView = new ProgressModalView();
         this.aboutSection = new AboutSectionView();
         this.settingsModalView = new SettingsModalView();
+        this.genericModalView = new GenericModalView();
         this.filterModalView = new FilterModalView();
         this.signalsSection = new SignalSectionView();
         this.screenerSection.hide();
         this.navigation.hide();
+        this.genericModalView.hide();
         this.sortModalView.hide();
         this.settingsModalView.hide();
         this.progressModalView.hide();

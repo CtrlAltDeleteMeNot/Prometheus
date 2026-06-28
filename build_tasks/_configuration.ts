@@ -47,6 +47,10 @@ export class Configuration {
         genericImagePath: string;
         outputDir: string;
     };
+    readonly sounds: {
+        inputDir: string;
+        outputDir: string;
+    };
     readonly actionIconsSvgs: {
         inputDir: string;
         lookup: string[];
@@ -106,6 +110,10 @@ export class Configuration {
             outputRegistryTsFile: 'ts_libs/ts_client/views/generated/ActionIconsRegistry.ts',
             outputDir: `${opts.app}img/actions/`,
             relativeUrlPrefix: "/img/actions/"
+        };
+        this.sounds = {
+            inputDir: "sounds/",
+            outputDir: `${opts.app}sounds/`
         };
     }
 

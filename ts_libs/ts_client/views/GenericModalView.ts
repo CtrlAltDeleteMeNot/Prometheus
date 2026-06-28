@@ -3,6 +3,7 @@ import { ViewHelper } from "./ViewHelper";
 export type GenericModalResult = "primary" | "secondary" | "dismiss";
 
 export class GenericModalView {
+
     #root: HTMLElement;
     #title: HTMLElement;
     #body: HTMLElement;
@@ -23,6 +24,36 @@ export class GenericModalView {
         this.#dismiss.onclick = () => this.close("dismiss");
         this.#secondary.onclick = () => this.close("secondary");
         this.#primary.onclick = () => this.close("primary");
+    }
+
+    showError(title: string, message: string, err: unknown, cb: () => void): void {
+        this.#title.textContent = title;
+        this.#primary.textContent = "Done";
+        ViewHelper.toggleVisibilityHidden(this.#secondary, false);
+        this.#secondary.textContent = "";
+
+        this.#body.innerHTML = "";
+        const messageUserFriendly = document.createElement("p");
+        messageUserFriendly.textContent = message;
+        this.#body.appendChild(messageUserFriendly);
+        if (err instanceof Error) {
+
+            const additionalDetails = document.createElement("p");
+            additionalDetails.textContent = `Additional details: ${err.message}.`;
+            this.#body.appendChild(additionalDetails);
+
+            if (err.stack !== undefined) {
+                const stackTrace = document.createElement("p");
+                stackTrace.textContent = `Stack trace: ${err.stack ?? ""}`;
+                this.#body.appendChild(stackTrace);
+            }
+        }
+
+        ViewHelper.setModalState(true);
+        ViewHelper.toggleVisibility(this.#root, true);
+        this.#dismiss.onclick = () => { ViewHelper.toggleVisibility(this.#root, false); cb(); }
+        this.#primary.onclick = () => { ViewHelper.toggleVisibility(this.#root, false); cb(); }
+        this.#secondary.onclick = () => { ViewHelper.toggleVisibility(this.#root, false); cb(); }
     }
 
     public show(

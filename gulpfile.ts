@@ -8,12 +8,13 @@ import { startServer, reloadServer } from './build_tasks/localServerTasks'
 import { htmlClean, htmlGenerate, htmlWatch } from './build_tasks/htmlTasks';
 import { manifestCleanup, manifestGenerate } from './build_tasks/manifestTasks';
 import { imagesClean, imagesGenerate } from './build_tasks/imgTasks';
+import { soundsClean, soundsCopy } from './build_tasks/soundsTask';
 
 const devConfig = developmentConfiguration;
 const releaseConfig = publishConfiguration;
 
-const cleanDev = gulp.parallel(imagesClean(devConfig), htmlClean(devConfig), cssClean(devConfig), jsCleanClient(devConfig), jsCleanWorker(devConfig), manifestCleanup(devConfig));
-const buildDev = gulp.parallel(imagesGenerate(devConfig), manifestGenerate(devConfig), htmlGenerate(devConfig), svgActionIconsRegistryGenerator(devConfig), cryptoIconsRegistryGenerator(devConfig), cssGenerate(devConfig), jsBundleClient(devConfig), jsBundleWorker(devConfig));
+const cleanDev = gulp.parallel(soundsClean(devConfig), imagesClean(devConfig), htmlClean(devConfig), cssClean(devConfig), jsCleanClient(devConfig), jsCleanWorker(devConfig), manifestCleanup(devConfig));
+const buildDev = gulp.parallel(soundsCopy(devConfig), imagesGenerate(devConfig), manifestGenerate(devConfig), htmlGenerate(devConfig), svgActionIconsRegistryGenerator(devConfig), cryptoIconsRegistryGenerator(devConfig), cssGenerate(devConfig), jsBundleClient(devConfig), jsBundleWorker(devConfig));
 const watchDev = gulp.parallel(
   jsWatchClient(devConfig, reloadServer()),
   jsWatchWorker(devConfig, reloadServer()),
@@ -24,7 +25,8 @@ const serveDev = gulp.series(startServer(devConfig), reloadServer(), watchDev)
 
 export const dev = gulp.series(cleanDev, buildDev)
 export const pub = gulp.series(
-  imagesClean(releaseConfig), htmlClean(releaseConfig), cssClean(releaseConfig), jsCleanClient(releaseConfig), jsCleanWorker(releaseConfig), manifestCleanup(releaseConfig),
+  soundsClean(releaseConfig), imagesClean(releaseConfig), htmlClean(releaseConfig), cssClean(releaseConfig), jsCleanClient(releaseConfig), jsCleanWorker(releaseConfig), manifestCleanup(releaseConfig),
+  soundsCopy(releaseConfig),
   imagesGenerate(releaseConfig),
   manifestGenerate(releaseConfig),
   htmlGenerate(releaseConfig),

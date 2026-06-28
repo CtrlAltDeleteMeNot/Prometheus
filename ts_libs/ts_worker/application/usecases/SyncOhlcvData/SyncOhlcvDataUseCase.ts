@@ -31,22 +31,22 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
 
     protected async run(requestModel: SyncOhlcvDataRequest): Promise<SyncOhlcvDataResponse> {
         const buffers = Array.from(this.#technicalAnalisysRepository.getDatasets().values());
-        const parallelCount = requestModel.getParalelRequestsCount();
-        const ts = requestModel.getUtcNowMilliseconds();
+        const nowMillis = requestModel.getUtcNowMilliseconds();
         const shouldSync = buffers.some(buffer => {
             const nextStart = buffer.getBuffer(TimeFrame.ONE_MINUTE).getStartTime() + TimeFrame.ONE_MINUTE.asMilliseconds();
-            const gap = ts - nextStart;
+            const gap = nowMillis - nextStart;
             return gap > TimeFrame.ONE_MINUTE.asMilliseconds();
         });
-        let tradingPairModels: TradingPairModel[] = [];
-        let signalModels: SignalModel[] = [];
         if (shouldSync === false) {
-            return new SyncOhlcvDataResponse(0, tradingPairModels, signalModels);
+            return new SyncOhlcvDataResponse(0, [], []);
         }
 
+        let tradingPairModels: TradingPairModel[] = [];
+        let signalModels: SignalModel[] = [];
+        const parallelCount = requestModel.getParalelRequestsCount();
         for (let i = 0; i < buffers.length; i += parallelCount) {
             const batch = buffers.slice(i, i + parallelCount);
-            const results = await Promise.all(batch.map((buffer) => this.#syncOne(requestModel, buffer, ts)));
+            const results = await Promise.all(batch.map((buffer) => this.#syncOne(requestModel, buffer, nowMillis)));
 
             for (let j = 0; j < results.length; j++) {
                 const syncResult = results[j];
@@ -67,21 +67,26 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
         return new SyncOhlcvDataResponse(buffers.length, tradingPairModels, signalModels);
     }
 
+    private shouldSync(){
+        
+    }
+
     private drainSignals(signalModels: SignalModel[], requestModel: SyncOhlcvDataRequest) {
         const plugins = requestModel.getPlugins();
         plugins.forEach(plugin => {
-            if (plugin instanceof BaseSignalGenerator) {
-                if (plugin.getSignalsCount() > 0) {
-                    let drained = plugin.drain();
-                    let mapped = drained.map(s => this.createSingleSignalModel(s, plugin));
-                    mapped.forEach((m) => signalModels.push(m));
-                }
+            if (!(plugin instanceof BaseSignalGenerator)) {
+                return;
+            }
+
+            if (plugin.getSignalsCount() > 0) {
+                const drained = plugin.drain();
+                drained.forEach((m) => signalModels.push(this.createSingleSignalModel(m)));
             }
         });
-        signalModels.sort((first,second)=>first.timestamp - second.timestamp);
+        signalModels.sort((first, second) => first.timestamp - second.timestamp);
     }
 
-    createSingleSignalModel(s: SignalData, plugin: BaseSignalGenerator): SignalModel {
+    createSingleSignalModel(s: SignalData): SignalModel {
         const tradingPair = s.tradingPair;
         const exchange = tradingPair.getExchangeDescriptor();
         const tradingPairUrl = this.#exchangeMethodsRegistry.get(exchange).getTradingPairUrl(tradingPair);
@@ -91,7 +96,7 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
             exchange.getName(),
             exchange.getId(),
             tradingPairUrl,
-            plugin.getFriendlyDescription(),
+            s.source.getFriendlyDescription(),
             s.signalDirection,
             s.timeStamp
         );

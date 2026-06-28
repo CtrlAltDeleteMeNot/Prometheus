@@ -49,6 +49,17 @@ export class ViewHelper {
         }
     }
 
+    static toggleVisibilityHidden(element: HTMLElement, visible: boolean): void {
+        if (!visible && !element.classList.contains('d-hidden')) {
+            element.classList.add('d-hidden');
+            return;
+        }
+        if(visible && element.classList.contains('d-hidden')){
+            element.classList.remove('d-hidden');
+            return;
+        }
+    }
+
     static isVisible(element: HTMLElement){
        return !element.classList.contains('d-none');
     }

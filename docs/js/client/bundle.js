@@ -91,6 +91,16 @@
             return;
           }
         }
+        static toggleVisibilityHidden(element, visible) {
+          if (!visible && !element.classList.contains("d-hidden")) {
+            element.classList.add("d-hidden");
+            return;
+          }
+          if (visible && element.classList.contains("d-hidden")) {
+            element.classList.remove("d-hidden");
+            return;
+          }
+        }
         static isVisible(element) {
           return !element.classList.contains("d-none");
         }
@@ -290,6 +300,115 @@
     }
   });
 
+  // ts_libs/ts_client/views/GenericModalView.ts
+  var _root3, _title, _body, _dismiss2, _primary, _secondary, _resolver, GenericModalView;
+  var init_GenericModalView = __esm({
+    "ts_libs/ts_client/views/GenericModalView.ts"() {
+      "use strict";
+      init_ViewHelper();
+      GenericModalView = class {
+        constructor() {
+          __privateAdd(this, _root3);
+          __privateAdd(this, _title);
+          __privateAdd(this, _body);
+          __privateAdd(this, _dismiss2);
+          __privateAdd(this, _primary);
+          __privateAdd(this, _secondary);
+          __privateAdd(this, _resolver, null);
+          __privateSet(this, _root3, ViewHelper.getHtmlElementOrThrow("generic-modal"));
+          __privateSet(this, _title, ViewHelper.getHtmlElementOrThrow("generic-modal-title"));
+          __privateSet(this, _body, ViewHelper.getHtmlElementOrThrow("generic-modal-body"));
+          __privateSet(this, _dismiss2, ViewHelper.getButtonOrThrow("generic-modal-close"));
+          __privateSet(this, _primary, ViewHelper.getButtonOrThrow("generic-modal-primary"));
+          __privateSet(this, _secondary, ViewHelper.getButtonOrThrow("generic-modal-secondary"));
+          __privateGet(this, _dismiss2).onclick = () => this.close("dismiss");
+          __privateGet(this, _secondary).onclick = () => this.close("secondary");
+          __privateGet(this, _primary).onclick = () => this.close("primary");
+        }
+        showError(title, message, err, cb) {
+          var _a;
+          __privateGet(this, _title).textContent = title;
+          __privateGet(this, _primary).textContent = "Done";
+          ViewHelper.toggleVisibilityHidden(__privateGet(this, _secondary), false);
+          __privateGet(this, _secondary).textContent = "";
+          __privateGet(this, _body).innerHTML = "";
+          const messageUserFriendly = document.createElement("p");
+          messageUserFriendly.textContent = message;
+          __privateGet(this, _body).appendChild(messageUserFriendly);
+          if (err instanceof Error) {
+            const additionalDetails = document.createElement("p");
+            additionalDetails.textContent = `Additional details: ${err.message}.`;
+            __privateGet(this, _body).appendChild(additionalDetails);
+            if (err.stack !== void 0) {
+              const stackTrace = document.createElement("p");
+              stackTrace.textContent = `Stack trace: ${(_a = err.stack) != null ? _a : ""}`;
+              __privateGet(this, _body).appendChild(stackTrace);
+            }
+          }
+          ViewHelper.setModalState(true);
+          ViewHelper.toggleVisibility(__privateGet(this, _root3), true);
+          __privateGet(this, _dismiss2).onclick = () => {
+            ViewHelper.toggleVisibility(__privateGet(this, _root3), false);
+            cb();
+          };
+          __privateGet(this, _primary).onclick = () => {
+            ViewHelper.toggleVisibility(__privateGet(this, _root3), false);
+            cb();
+          };
+          __privateGet(this, _secondary).onclick = () => {
+            ViewHelper.toggleVisibility(__privateGet(this, _root3), false);
+            cb();
+          };
+        }
+        show(title, body, primaryText = "OK", secondaryText = "Cancel") {
+          __privateGet(this, _title).textContent = title;
+          __privateGet(this, _primary).textContent = primaryText;
+          __privateGet(this, _secondary).textContent = secondaryText;
+          __privateGet(this, _body).innerHTML = "";
+          if (typeof body === "string") {
+            __privateGet(this, _body).textContent = body;
+          } else {
+            __privateGet(this, _body).appendChild(body);
+          }
+          ViewHelper.setModalState(true);
+          ViewHelper.toggleVisibility(__privateGet(this, _root3), true);
+          return new Promise((resolve) => {
+            __privateSet(this, _resolver, resolve);
+          });
+        }
+        confirm(title, message, primaryText = "Confirm", secondaryText = "Cancel") {
+          return __async(this, null, function* () {
+            const result = yield this.show(
+              title,
+              message,
+              primaryText,
+              secondaryText
+            );
+            return result === "primary";
+          });
+        }
+        hide() {
+          this.close("dismiss");
+        }
+        close(result) {
+          ViewHelper.toggleVisibility(__privateGet(this, _root3), false);
+          ViewHelper.setModalState(false);
+          if (__privateGet(this, _resolver)) {
+            __privateGet(this, _resolver).call(this, result);
+            __privateSet(this, _resolver, null);
+          }
+        }
+      };
+      _root3 = new WeakMap();
+      _title = new WeakMap();
+      _body = new WeakMap();
+      _dismiss2 = new WeakMap();
+      _primary = new WeakMap();
+      _secondary = new WeakMap();
+      _resolver = new WeakMap();
+    }
+  });
+
   // ts_libs/ts_worker/application/exports/SortDirection.ts
   var init_SortDirection = __esm({
     "ts_libs/ts_worker/application/exports/SortDirection.ts"() {
@@ -399,39 +518,39 @@
   });
 
   // ts_libs/ts_client/views/ProgressModalView.ts
-  var _root3, _title, _percentText, _percentLine, _body, ProgressModalView;
+  var _root4, _title2, _percentText, _percentLine, _body2, ProgressModalView;
   var init_ProgressModalView = __esm({
     "ts_libs/ts_client/views/ProgressModalView.ts"() {
       "use strict";
       init_ViewHelper();
       ProgressModalView = class {
         constructor() {
-          __privateAdd(this, _root3);
-          __privateAdd(this, _title);
+          __privateAdd(this, _root4);
+          __privateAdd(this, _title2);
           __privateAdd(this, _percentText);
           __privateAdd(this, _percentLine);
-          __privateAdd(this, _body);
-          __privateSet(this, _root3, ViewHelper.getHtmlElementOrThrow("progress-modal"));
-          __privateSet(this, _title, ViewHelper.getHtmlElementOrThrow("progress-modal-title"));
+          __privateAdd(this, _body2);
+          __privateSet(this, _root4, ViewHelper.getHtmlElementOrThrow("progress-modal"));
+          __privateSet(this, _title2, ViewHelper.getHtmlElementOrThrow("progress-modal-title"));
           __privateSet(this, _percentText, ViewHelper.getHtmlElementOrThrow("progress-modal-progress-percent-text"));
           __privateSet(this, _percentLine, ViewHelper.getHtmlElementOrThrow("progress-modal-progress-percent-line"));
-          __privateSet(this, _body, ViewHelper.getHtmlElementOrThrow("progress-modal-body"));
+          __privateSet(this, _body2, ViewHelper.getHtmlElementOrThrow("progress-modal-body"));
         }
         show(title) {
-          __privateGet(this, _title).textContent = title;
-          __privateGet(this, _body).innerHTML = "";
+          __privateGet(this, _title2).textContent = title;
+          __privateGet(this, _body2).innerHTML = "";
           __privateGet(this, _percentText).textContent = "0 %";
           __privateGet(this, _percentLine).style.transform = `scaleX(0)`;
           ViewHelper.setModalState(true);
-          ViewHelper.toggleVisibility(__privateGet(this, _root3), true);
+          ViewHelper.toggleVisibility(__privateGet(this, _root4), true);
         }
         hide() {
-          ViewHelper.toggleVisibility(__privateGet(this, _root3), false);
+          ViewHelper.toggleVisibility(__privateGet(this, _root4), false);
           ViewHelper.setModalState(false);
-          __privateGet(this, _body).innerHTML = "";
+          __privateGet(this, _body2).innerHTML = "";
         }
         get isVisible() {
-          return ViewHelper.isVisible(__privateGet(this, _root3));
+          return ViewHelper.isVisible(__privateGet(this, _root4));
         }
         updateProgress(percent, message) {
           const scale = percent / 100;
@@ -441,19 +560,19 @@
             __privateGet(this, _percentLine).style.transform = `scaleX(${scale})`;
             const paragraph = document.createElement("p");
             paragraph.textContent = message;
-            __privateGet(this, _body).appendChild(paragraph);
-            __privateGet(this, _body).scrollTop = __privateGet(this, _body).scrollHeight;
+            __privateGet(this, _body2).appendChild(paragraph);
+            __privateGet(this, _body2).scrollTop = __privateGet(this, _body2).scrollHeight;
           });
         }
         updateProgressFromWorker(data) {
           this.updateProgress(data.progress, data.message);
         }
       };
-      _root3 = new WeakMap();
-      _title = new WeakMap();
+      _root4 = new WeakMap();
+      _title2 = new WeakMap();
       _percentText = new WeakMap();
       _percentLine = new WeakMap();
-      _body = new WeakMap();
+      _body2 = new WeakMap();
     }
   });
 
@@ -876,7 +995,7 @@
   });
 
   // ts_libs/ts_client/views/ScreenerSectionView.ts
-  var _root4, _screenerGrid, _allData, _currentPage, _pageSize, _loadMoreBtn, _cards, _footer3, _syncButton, _sortButton, _filterButton, _syncRequested, ScreenerSectionView;
+  var _root5, _screenerGrid, _allData, _currentPage, _pageSize, _loadMoreBtn, _cards, _footer3, _syncButton, _sortButton, _filterButton, _syncRequested, ScreenerSectionView;
   var init_ScreenerSectionView = __esm({
     "ts_libs/ts_client/views/ScreenerSectionView.ts"() {
       "use strict";
@@ -885,7 +1004,7 @@
       init_SymbolIconsRegistry();
       ScreenerSectionView = class {
         constructor() {
-          __privateAdd(this, _root4);
+          __privateAdd(this, _root5);
           __privateAdd(this, _screenerGrid);
           __privateAdd(this, _allData, []);
           __privateAdd(this, _currentPage, 1);
@@ -900,7 +1019,7 @@
           __privateAdd(this, _syncRequested);
           this.title = "Screener";
           this.id = "screener";
-          __privateSet(this, _root4, ViewHelper.getHtmlElementOrThrow(this.id));
+          __privateSet(this, _root5, ViewHelper.getHtmlElementOrThrow(this.id));
           __privateSet(this, _screenerGrid, ViewHelper.getHtmlElementOrThrow("screener-grid"));
           __privateSet(this, _loadMoreBtn, ViewHelper.getButtonOrThrow("screener-load-more"));
           __privateSet(this, _footer3, ViewHelper.getHtmlElementOrThrow("footer-screener"));
@@ -1017,11 +1136,11 @@
           });
         }
         show() {
-          ViewHelper.toggleVisibility(__privateGet(this, _root4), true);
+          ViewHelper.toggleVisibility(__privateGet(this, _root5), true);
           ViewHelper.toggleVisibility(__privateGet(this, _footer3), true);
         }
         hide() {
-          ViewHelper.toggleVisibility(__privateGet(this, _root4), false);
+          ViewHelper.toggleVisibility(__privateGet(this, _root5), false);
           ViewHelper.toggleVisibility(__privateGet(this, _footer3), false);
         }
         /**
@@ -1046,7 +1165,7 @@
           __privateGet(this, _filterButton).onclick = callback;
         }
       };
-      _root4 = new WeakMap();
+      _root5 = new WeakMap();
       _screenerGrid = new WeakMap();
       _allData = new WeakMap();
       _currentPage = new WeakMap();
@@ -1062,15 +1181,15 @@
   });
 
   // ts_libs/ts_client/views/SettingsModalView.ts
-  var _root5, _dismiss2, _apply2, _cancel2, _parallelRequestsCount, _maxPairsCount, _exchangeInclusions, _settings, _includeExchangesArea, _onSettingsChanged, SettingsModalView;
+  var _root6, _dismiss3, _apply2, _cancel2, _parallelRequestsCount, _maxPairsCount, _exchangeInclusions, _settings, _includeExchangesArea, _onSettingsChanged, SettingsModalView;
   var init_SettingsModalView = __esm({
     "ts_libs/ts_client/views/SettingsModalView.ts"() {
       "use strict";
       init_ViewHelper();
       SettingsModalView = class {
         constructor() {
-          __privateAdd(this, _root5);
-          __privateAdd(this, _dismiss2);
+          __privateAdd(this, _root6);
+          __privateAdd(this, _dismiss3);
           __privateAdd(this, _apply2);
           __privateAdd(this, _cancel2);
           __privateAdd(this, _parallelRequestsCount);
@@ -1079,15 +1198,15 @@
           __privateAdd(this, _settings);
           __privateAdd(this, _includeExchangesArea);
           __privateAdd(this, _onSettingsChanged, null);
-          __privateSet(this, _root5, ViewHelper.getHtmlElementOrThrow("settings-modal"));
-          __privateSet(this, _dismiss2, ViewHelper.getButtonOrThrow("settings-modal-close"));
+          __privateSet(this, _root6, ViewHelper.getHtmlElementOrThrow("settings-modal"));
+          __privateSet(this, _dismiss3, ViewHelper.getButtonOrThrow("settings-modal-close"));
           __privateSet(this, _apply2, ViewHelper.getButtonOrThrow("settings-modal-apply"));
           __privateSet(this, _cancel2, ViewHelper.getButtonOrThrow("settings-modal-cancel"));
           __privateSet(this, _parallelRequestsCount, ViewHelper.getHtmlInputElementOrThrow("settings-parallel-requests-count"));
           __privateSet(this, _maxPairsCount, ViewHelper.getHtmlInputElementOrThrow("settings-maximum-pairs-count"));
           __privateSet(this, _includeExchangesArea, ViewHelper.getHtmlElementOrThrow("settings-include-exchanges"));
           __privateSet(this, _exchangeInclusions, null);
-          __privateGet(this, _dismiss2).onclick = () => this.hide();
+          __privateGet(this, _dismiss3).onclick = () => this.hide();
           __privateGet(this, _cancel2).onclick = () => this.hide();
           __privateGet(this, _apply2).onclick = () => {
             var _a;
@@ -1142,10 +1261,10 @@
         }
         show() {
           ViewHelper.setModalState(true);
-          ViewHelper.toggleVisibility(__privateGet(this, _root5), true);
+          ViewHelper.toggleVisibility(__privateGet(this, _root6), true);
         }
         hide() {
-          ViewHelper.toggleVisibility(__privateGet(this, _root5), false);
+          ViewHelper.toggleVisibility(__privateGet(this, _root6), false);
           ViewHelper.setModalState(false);
         }
         update(model) {
@@ -1175,8 +1294,8 @@
           });
         }
       };
-      _root5 = new WeakMap();
-      _dismiss2 = new WeakMap();
+      _root6 = new WeakMap();
+      _dismiss3 = new WeakMap();
       _apply2 = new WeakMap();
       _cancel2 = new WeakMap();
       _parallelRequestsCount = new WeakMap();
@@ -1323,7 +1442,7 @@
   });
 
   // ts_libs/ts_client/views/SignalsSectionView.ts
-  var _root6, _footer4, _signalsGrid, _loadMoreBtn2, _cards2, _currentPage2, _pageSize2, _signals, _manualSyncButton, _autoSyncButton, _autoSyncEnabled, _autoSyncTimer, _latestSignalTs, _notificationAudio, _autoSyncButtonText, _autoSyncButtonSubText, _wakeLock, _syncRequested2, _logger2, _SignalSectionView, SignalSectionView;
+  var _root7, _footer4, _signalsGrid, _loadMoreBtn2, _cards2, _currentPage2, _pageSize2, _signals, _manualSyncButton, _autoSyncButton, _autoSyncEnabled, _autoSyncTimer, _latestSignalTs, _notificationAudio, _autoSyncButtonText, _autoSyncButtonSubText, _wakeLock, _syncRequested2, _logger2, _SignalSectionView, SignalSectionView;
   var init_SignalsSectionView = __esm({
     "ts_libs/ts_client/views/SignalsSectionView.ts"() {
       "use strict";
@@ -1334,7 +1453,7 @@
       init_ViewHelper();
       _SignalSectionView = class _SignalSectionView {
         constructor() {
-          __privateAdd(this, _root6);
+          __privateAdd(this, _root7);
           __privateAdd(this, _footer4);
           __privateAdd(this, _signalsGrid);
           __privateAdd(this, _loadMoreBtn2);
@@ -1356,7 +1475,7 @@
           this.id = "signals";
           this.title = "Signals";
           __privateSet(this, _logger2, Logger.create(_SignalSectionView));
-          __privateSet(this, _root6, ViewHelper.getHtmlElementOrThrow("signals"));
+          __privateSet(this, _root7, ViewHelper.getHtmlElementOrThrow("signals"));
           __privateSet(this, _footer4, ViewHelper.getHtmlElementOrThrow("footer-signals"));
           __privateSet(this, _signalsGrid, ViewHelper.getHtmlElementOrThrow("signals-grid"));
           __privateSet(this, _loadMoreBtn2, ViewHelper.getButtonOrThrow("signals-load-more"));
@@ -1372,7 +1491,7 @@
           __privateSet(this, _autoSyncButton, ViewHelper.getButtonOrThrow("footer-signals-button-sync-automatically"));
           __privateGet(this, _autoSyncButton).onclick = () => this.toggleAutoSync();
           __privateSet(this, _autoSyncTimer, void 0);
-          __privateSet(this, _notificationAudio, new Audio("https://dn711000.ca.archive.org/0/items/android-4.1.2-stock-ringtones/ringtones/Seville.mp3"));
+          __privateSet(this, _notificationAudio, new Audio("sounds/Seville.mp3"));
           __privateSet(this, _wakeLock, new WakeLock());
         }
         onTimerCallback() {
@@ -1519,12 +1638,12 @@
           }
         }
         show() {
-          ViewHelper.toggleVisibility(__privateGet(this, _root6), true);
+          ViewHelper.toggleVisibility(__privateGet(this, _root7), true);
           ViewHelper.toggleVisibility(__privateGet(this, _footer4), true);
           this.disableAutosync();
         }
         hide() {
-          ViewHelper.toggleVisibility(__privateGet(this, _root6), false);
+          ViewHelper.toggleVisibility(__privateGet(this, _root7), false);
           ViewHelper.toggleVisibility(__privateGet(this, _footer4), false);
           this.disableAutosync();
         }
@@ -1549,7 +1668,7 @@
           void __privateGet(this, _notificationAudio).play().catch((error) => __privateGet(this, _logger2).warn(error));
         }
       };
-      _root6 = new WeakMap();
+      _root7 = new WeakMap();
       _footer4 = new WeakMap();
       _signalsGrid = new WeakMap();
       _loadMoreBtn2 = new WeakMap();
@@ -1573,7 +1692,7 @@
   });
 
   // ts_libs/ts_client/views/SortModalView.ts
-  var _root7, _dismiss3, _ascending, _descending, _apply3, _fields2, _transientDirection, _transientSortKey, _sortByButtons, _onSortingRulesChanged, SortModalView;
+  var _root8, _dismiss4, _ascending, _descending, _apply3, _fields2, _transientDirection, _transientSortKey, _sortByButtons, _onSortingRulesChanged, SortModalView;
   var init_SortModalView = __esm({
     "ts_libs/ts_client/views/SortModalView.ts"() {
       "use strict";
@@ -1581,8 +1700,8 @@
       init_SortDirection();
       SortModalView = class {
         constructor() {
-          __privateAdd(this, _root7);
-          __privateAdd(this, _dismiss3);
+          __privateAdd(this, _root8);
+          __privateAdd(this, _dismiss4);
           __privateAdd(this, _ascending);
           __privateAdd(this, _descending);
           __privateAdd(this, _apply3);
@@ -1591,8 +1710,8 @@
           __privateAdd(this, _transientSortKey, null);
           __privateAdd(this, _sortByButtons, null);
           __privateAdd(this, _onSortingRulesChanged);
-          __privateSet(this, _root7, ViewHelper.getHtmlElementOrThrow("sort-fields-modal"));
-          __privateSet(this, _dismiss3, ViewHelper.getButtonOrThrow("sort-fields-modal-close"));
+          __privateSet(this, _root8, ViewHelper.getHtmlElementOrThrow("sort-fields-modal"));
+          __privateSet(this, _dismiss4, ViewHelper.getButtonOrThrow("sort-fields-modal-close"));
           __privateSet(this, _apply3, ViewHelper.getButtonOrThrow("sort-fields-modal-apply"));
           __privateSet(this, _ascending, ViewHelper.getButtonOrThrow("sort-fields-modal-ascending"));
           __privateSet(this, _descending, ViewHelper.getButtonOrThrow("sort-fields-modal-descending"));
@@ -1605,7 +1724,7 @@
             __privateGet(this, _ascending).classList.remove("active");
             __privateGet(this, _descending).classList.add("active");
           };
-          __privateGet(this, _dismiss3).onclick = () => this.hide();
+          __privateGet(this, _dismiss4).onclick = () => this.hide();
           __privateGet(this, _apply3).onclick = () => {
             if (this.isAnySortingRuleChanged()) {
               const direction = this.getSortDirectionFromView();
@@ -1669,10 +1788,10 @@
         }
         show() {
           ViewHelper.setModalState(true);
-          ViewHelper.toggleVisibility(__privateGet(this, _root7), true);
+          ViewHelper.toggleVisibility(__privateGet(this, _root8), true);
         }
         hide() {
-          ViewHelper.toggleVisibility(__privateGet(this, _root7), false);
+          ViewHelper.toggleVisibility(__privateGet(this, _root8), false);
           ViewHelper.setModalState(false);
         }
         getSortDirectionFromView() {
@@ -1691,8 +1810,8 @@
           return toReturn;
         }
       };
-      _root7 = new WeakMap();
-      _dismiss3 = new WeakMap();
+      _root8 = new WeakMap();
+      _dismiss4 = new WeakMap();
       _ascending = new WeakMap();
       _descending = new WeakMap();
       _apply3 = new WeakMap();
@@ -1705,19 +1824,19 @@
   });
 
   // ts_libs/ts_client/views/StartSectionView.ts
-  var _root8, _startButton, _settingsButton, StartSectionView;
+  var _root9, _startButton, _settingsButton, StartSectionView;
   var init_StartSectionView = __esm({
     "ts_libs/ts_client/views/StartSectionView.ts"() {
       "use strict";
       init_ViewHelper();
       StartSectionView = class {
         constructor() {
-          __privateAdd(this, _root8);
+          __privateAdd(this, _root9);
           __privateAdd(this, _startButton);
           __privateAdd(this, _settingsButton);
           this.title = "Start";
           this.id = "start";
-          __privateSet(this, _root8, ViewHelper.getHtmlElementOrThrow(this.id));
+          __privateSet(this, _root9, ViewHelper.getHtmlElementOrThrow(this.id));
           __privateSet(this, _startButton, ViewHelper.getButtonOrThrow("start-btn"));
           __privateSet(this, _settingsButton, ViewHelper.getButtonOrThrow("settings-btn"));
         }
@@ -1725,10 +1844,10 @@
           return false;
         }
         show() {
-          __privateGet(this, _root8).classList.remove("d-none");
+          __privateGet(this, _root9).classList.remove("d-none");
         }
         hide() {
-          __privateGet(this, _root8).classList.add("d-none");
+          __privateGet(this, _root9).classList.add("d-none");
         }
         disableActions(disabled) {
           __privateGet(this, _startButton).disabled = disabled;
@@ -1751,7 +1870,7 @@
           }));
         }
       };
-      _root8 = new WeakMap();
+      _root9 = new WeakMap();
       _startButton = new WeakMap();
       _settingsButton = new WeakMap();
     }
@@ -1764,6 +1883,7 @@
       "use strict";
       init_AboutSectionView();
       init_FilterModalView();
+      init_GenericModalView();
       init_NavigationView();
       init_ProgressModalView();
       init_ScreenerSectionView();
@@ -1781,10 +1901,12 @@
           this.progressModalView = new ProgressModalView();
           this.aboutSection = new AboutSectionView();
           this.settingsModalView = new SettingsModalView();
+          this.genericModalView = new GenericModalView();
           this.filterModalView = new FilterModalView();
           this.signalsSection = new SignalSectionView();
           this.screenerSection.hide();
           this.navigation.hide();
+          this.genericModalView.hide();
           this.sortModalView.hide();
           this.settingsModalView.hide();
           this.progressModalView.hide();
@@ -2513,15 +2635,20 @@
         }
         initialize() {
           return __async(this, null, function* () {
-            const rawResponse = yield this.callWorker("init");
-            const settings = ScreenerSettings.deserialize(rawResponse);
             try {
-              settings.reconcile();
+              const rawResponse = yield this.callWorker("init");
+              const settings = ScreenerSettings.deserialize(rawResponse);
+              try {
+                settings.reconcile();
+              } catch (err) {
+                console.log(err);
+              } finally {
+                __privateGet(this, _mainModel).setScreenerSettings(settings);
+                __privateGet(this, _mainView).startSection.disableActions(false);
+              }
             } catch (err) {
-              console.log(err);
-            } finally {
-              __privateGet(this, _mainModel).setScreenerSettings(settings);
-              __privateGet(this, _mainView).startSection.disableActions(false);
+              __privateGet(this, _mainView).genericModalView.showError("Error", "Application initialzation failure, please restart.", err, () => {
+              });
             }
           });
         }
@@ -2533,28 +2660,34 @@
           return __async(this, null, function* () {
             const settings = __privateGet(this, _mainModel).getScreenerSettingsOrThrow();
             __privateGet(this, _mainView).progressModalView.show("Fetching market data ...");
-            const handler = (data) => __privateGet(this, _mainView).progressModalView.updateProgressFromWorker(data);
-            this.on("fetch:progress", handler);
-            const response = yield this.callWorker("fetch", settings.serialize());
-            this.off("fetch:progress", handler);
-            const responseModel = SynchronizationModel.deserialize(response);
-            const sortDirection = 1 /* Descending */;
-            const sortFieldMetadata = settings.sortableAttributes[1];
-            const sorted = _ThinController.doFilteringAndSortingCore(responseModel.tradingPairs, sortDirection, sortFieldMetadata.key, __privateGet(this, _mainModel).getActiveFilterableAttributes());
-            __privateGet(this, _mainModel).appendSignals(responseModel.signals);
-            __privateGet(this, _mainModel).setSortableAttributes(settings.sortableAttributes);
-            __privateGet(this, _mainModel).setFilterableAttributes(settings.filterableAttributes);
-            __privateGet(this, _mainModel).setMultiTimeFrameSnapshot(sorted);
-            __privateGet(this, _mainModel).setSortDirection(sortDirection);
-            __privateGet(this, _mainModel).setSortNamedAttributeMetadata(sortFieldMetadata);
-            __privateGet(this, _mainView).screenerSection.setData(sorted);
-            __privateGet(this, _mainView).signalsSection.setData(__privateGet(this, _mainModel).getSignals());
-            __privateGet(this, _mainView).sortModalView.update(__privateGet(this, _mainModel));
-            __privateGet(this, _mainView).filterModalView.update(__privateGet(this, _mainModel));
-            __privateGet(this, _mainView).progressModalView.hide();
-            __privateGet(this, _mainView).screenerSection.show();
-            __privateGet(this, _mainView).navigation.update(__privateGet(this, _mainModel));
-            __privateGet(this, _mainView).navigation.show();
+            try {
+              const handler = (data) => __privateGet(this, _mainView).progressModalView.updateProgressFromWorker(data);
+              this.on("fetch:progress", handler);
+              const response = yield this.callWorker("fetch", settings.serialize());
+              this.off("fetch:progress", handler);
+              const responseModel = SynchronizationModel.deserialize(response);
+              const sortDirection = 1 /* Descending */;
+              const sortFieldMetadata = settings.sortableAttributes[1];
+              const sorted = _ThinController.doFilteringAndSortingCore(responseModel.tradingPairs, sortDirection, sortFieldMetadata.key, __privateGet(this, _mainModel).getActiveFilterableAttributes());
+              __privateGet(this, _mainModel).appendSignals(responseModel.signals);
+              __privateGet(this, _mainModel).setSortableAttributes(settings.sortableAttributes);
+              __privateGet(this, _mainModel).setFilterableAttributes(settings.filterableAttributes);
+              __privateGet(this, _mainModel).setMultiTimeFrameSnapshot(sorted);
+              __privateGet(this, _mainModel).setSortDirection(sortDirection);
+              __privateGet(this, _mainModel).setSortNamedAttributeMetadata(sortFieldMetadata);
+              __privateGet(this, _mainView).screenerSection.setData(sorted);
+              __privateGet(this, _mainView).signalsSection.setData(__privateGet(this, _mainModel).getSignals());
+              __privateGet(this, _mainView).sortModalView.update(__privateGet(this, _mainModel));
+              __privateGet(this, _mainView).filterModalView.update(__privateGet(this, _mainModel));
+              __privateGet(this, _mainView).progressModalView.hide();
+              __privateGet(this, _mainView).screenerSection.show();
+              __privateGet(this, _mainView).navigation.update(__privateGet(this, _mainModel));
+              __privateGet(this, _mainView).navigation.show();
+            } catch (err) {
+              __privateGet(this, _mainView).progressModalView.hide();
+              __privateGet(this, _mainView).genericModalView.showError("Error", "Application data fetch failure, please restart.", err, () => {
+              });
+            }
           });
         }
         synchronize() {
@@ -2564,19 +2697,25 @@
               return;
             }
             __privateGet(this, _mainView).progressModalView.show("Synchronizing market data ...");
-            const handler = (data) => __privateGet(this, _mainView).progressModalView.updateProgressFromWorker(data);
-            this.on("synchronize:progress", handler);
-            const rawResponse = yield this.callWorker("synchronize", (_a = __privateGet(this, _mainModel).getScreenerSettings()) == null ? void 0 : _a.serialize());
-            this.off("synchronize:progress", handler);
-            const synchronizationModel = SynchronizationModel.deserialize(rawResponse);
-            if (synchronizationModel.tradingPairs.length > 0) {
-              const sorted = _ThinController.doFilteringAndSortingCore(synchronizationModel.tradingPairs, __privateGet(this, _mainModel).getSortDirection(), __privateGet(this, _mainModel).getSortNamedAttributeMetadata().key, __privateGet(this, _mainModel).getActiveFilterableAttributes());
-              __privateGet(this, _mainModel).setMultiTimeFrameSnapshot(synchronizationModel.tradingPairs);
-              __privateGet(this, _mainModel).appendSignals(synchronizationModel.signals);
-              __privateGet(this, _mainView).screenerSection.setData(sorted);
-              __privateGet(this, _mainView).signalsSection.setData(__privateGet(this, _mainModel).getSignals());
+            try {
+              const handler = (data) => __privateGet(this, _mainView).progressModalView.updateProgressFromWorker(data);
+              this.on("synchronize:progress", handler);
+              const rawResponse = yield this.callWorker("synchronize", (_a = __privateGet(this, _mainModel).getScreenerSettings()) == null ? void 0 : _a.serialize());
+              this.off("synchronize:progress", handler);
+              const synchronizationModel = SynchronizationModel.deserialize(rawResponse);
+              if (synchronizationModel.tradingPairs.length > 0) {
+                const sorted = _ThinController.doFilteringAndSortingCore(synchronizationModel.tradingPairs, __privateGet(this, _mainModel).getSortDirection(), __privateGet(this, _mainModel).getSortNamedAttributeMetadata().key, __privateGet(this, _mainModel).getActiveFilterableAttributes());
+                __privateGet(this, _mainModel).setMultiTimeFrameSnapshot(synchronizationModel.tradingPairs);
+                __privateGet(this, _mainModel).appendSignals(synchronizationModel.signals);
+                __privateGet(this, _mainView).screenerSection.setData(sorted);
+                __privateGet(this, _mainView).signalsSection.setData(__privateGet(this, _mainModel).getSignals());
+              }
+              __privateGet(this, _mainView).progressModalView.hide();
+            } catch (err) {
+              __privateGet(this, _mainView).progressModalView.hide();
+              __privateGet(this, _mainView).genericModalView.showError("Error", "Application data sync failure, please restart.", err, () => {
+              });
             }
-            __privateGet(this, _mainView).progressModalView.hide();
           });
         }
         callWorker(method, args) {

@@ -49,7 +49,8 @@ export class SignalSectionView implements ISection {
         this.#autoSyncButton = ViewHelper.getButtonOrThrow('footer-signals-button-sync-automatically');
         this.#autoSyncButton.onclick = () => this.toggleAutoSync();
         this.#autoSyncTimer = undefined;
-        this.#notificationAudio = new Audio('https://dn711000.ca.archive.org/0/items/android-4.1.2-stock-ringtones/ringtones/Seville.mp3');
+        //this.#notificationAudio = new Audio('https://dn711000.ca.archive.org/0/items/android-4.1.2-stock-ringtones/ringtones/Seville.mp3');
+        this.#notificationAudio = new Audio('sounds/Seville.mp3');
         this.#wakeLock = new WakeLock();
     }
 

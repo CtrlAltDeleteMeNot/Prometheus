@@ -8,7 +8,7 @@ export interface FetchOhlcvProgress {
 }
 
 export type FetchOhlcvProgressCallback =
-    (progress: FetchOhlcvProgress) => Promise<void>;
+    (progress: FetchOhlcvProgress) => void;
 
 export class FetchOhlcvDataRequest {
     readonly #tradingPairs: readonly TradingPair[];
@@ -35,8 +35,8 @@ export class FetchOhlcvDataRequest {
         Object.freeze(this);
     }
 
-    reportProgress(progress: FetchOhlcvProgress): Promise<void> {
-        return this.#progressCallback(progress);
+    reportProgress(progress: FetchOhlcvProgress): void {
+        this.#progressCallback(progress);
     }
 
     getUtcNowMilliseconds(): number {
