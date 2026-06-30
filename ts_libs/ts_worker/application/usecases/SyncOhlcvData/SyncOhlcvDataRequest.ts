@@ -1,26 +1,38 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
 import { BasePlugin } from "../../../domain/ta/export/BasePlugin";
 
-export interface SyncOhlcvProgress {
+export interface SyncFetchOhlcvProgress {
     currentTradingPair: TradingPair;
     syncCount: number;
     currentPairIndex: number;
     totalPairsCount: number;
 }
-export type SyncOhlcvProgressCallback =
-    (progress: SyncOhlcvProgress) => Promise<void>;
+
+export interface SyncExecutePluginsProgress {
+    pluginsCount: number;
+    totalPairsCount: number;
+    currentCandleIndex: number;
+    totalCandlesCount: number;
+}
+
+export type SyncFetchOhlcvProgressCallback =
+    (progress: SyncFetchOhlcvProgress) => void;
+export type SyncExecutePluginsProgressCallback =
+    (progress: SyncExecutePluginsProgress) => void;
 
 export class SyncOhlcvDataRequest {
     #paralelRequestsCount: number;
     #utcNowMs: number;
-    #progressCallback: SyncOhlcvProgressCallback;
+    #syncFetchOhlcvProgressCallback: SyncFetchOhlcvProgressCallback;
+    #syncExecutePluginsProgressCallback:SyncExecutePluginsProgressCallback;
     #plugins: readonly BasePlugin[];
 
     constructor(
         plugins: readonly BasePlugin[],
         paralelRequestsCount: number,
         utcNowMs: number,
-        progressCallback: SyncOhlcvProgressCallback
+        syncFetchOhlcvProgressCallback: SyncFetchOhlcvProgressCallback,
+        syncExecutePluginsProgressCallback: SyncExecutePluginsProgressCallback
     ) {
         // Validate input types
         if (paralelRequestsCount <= 0) throw new RangeError("paralelRequestsCount must be > 0");
@@ -28,13 +40,18 @@ export class SyncOhlcvDataRequest {
         this.#plugins = plugins;
         this.#paralelRequestsCount = paralelRequestsCount;
         this.#utcNowMs = utcNowMs;
-        this.#progressCallback = progressCallback;
+        this.#syncFetchOhlcvProgressCallback = syncFetchOhlcvProgressCallback;
+        this.#syncExecutePluginsProgressCallback = syncExecutePluginsProgressCallback;
 
         Object.freeze(this);
     }
 
-    reportProgress(progressData: SyncOhlcvProgress): Promise<void> {
-        return this.#progressCallback(progressData);
+    reportFetchProgress(progressData: SyncFetchOhlcvProgress): void {
+        this.#syncFetchOhlcvProgressCallback(progressData);
+    }
+
+    reportExecutePluginsProgress(progressData: SyncExecutePluginsProgress): void {
+        this.#syncExecutePluginsProgressCallback(progressData);
     }
 
     getUtcNowMilliseconds(): number {

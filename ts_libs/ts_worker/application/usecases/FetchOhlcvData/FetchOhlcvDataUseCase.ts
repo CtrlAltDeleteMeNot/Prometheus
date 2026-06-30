@@ -30,26 +30,33 @@ export class FetchOhlcvDataUseCase extends UseCaseBase<FetchOhlcvDataRequest, Fe
         const results: MultiTimeframeOhlcv[] = [];
         const plugins = requestModel.getPlugins();
 
+        const fetchTotal = tradingPairs.length;
+
         for (let i = 0; i < tradingPairs.length; i += parallelCount) {
             const batchPairs = tradingPairs.slice(i, i + parallelCount);
-            const batchResults = await Promise.all(batchPairs.map((tp) => {
-                return this.#fetchOne(tp, utcNowMs, candlesPerTimeFrame)
+            const batchResults = await Promise.all(batchPairs.map(async (tp, idx) => {
+                const result = await this.#fetchOne(tp, utcNowMs, candlesPerTimeFrame);
+                return result;
             }));
-            const filtered = batchResults.filter(s=>s!==undefined);
+            const filtered = batchResults.filter(s => s !== undefined);
             filtered.forEach((batchResult, idx) => {
                 results.push(batchResult);
                 this.#technicalAnalisysRepository.addDataset(batchResult);
                 this.#technicalAnalisysRepository.initializeIndicatorsWithDatasets(batchResult.getTradingPair());
-                const absoluteIndex = i + idx;
-                requestModel.reportProgress({
+                requestModel.reportFetchOhlcvProgress({
                     currentTradingPair: batchResult.getTradingPair(),
-                    currentPairIndex: absoluteIndex + 1,
-                    totalPairsCount: tradingPairs.length,
+                    currentTradingPairIndex: i + idx,
+                    totalTradingPairsCount: fetchTotal,
                 });
             });
         }
 
-        plugins.forEach(plugin => {
+        plugins.forEach((plugin, pluginIndex) => {
+            requestModel.reportExecutePluginProgress({
+                currentPlugin: plugin,
+                currentPluginIndex: pluginIndex,
+                totalPluginsCount: plugins.length
+            });
             results.forEach(res => {
                 plugin.next(res.getTradingPair(), res.getUpdatedTimeFrames(), res.getBuffer(TimeFrame.ONE_MINUTE).getEndTime());
             });

@@ -91,6 +91,9 @@
 }
 
 
+#progress-modal .modal-body p{
+  white-space: pre-line;
+}
 
 #progress-modal .modal-footer {
   display: flex;

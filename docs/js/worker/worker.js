@@ -609,28 +609,32 @@
   });
 
   // ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest.ts
-  var _tradingPairs, _candlesPerTimeFrame, _parallelRequestsCount, _utcNowMs, _plugins, _progressCallback, FetchOhlcvDataRequest;
+  var _tradingPairs, _candlesPerTimeFrame, _parallelRequestsCount, _utcNowMs, _plugins, _fetchOhlcvProgressCallback, _executePluginProgressCallback, FetchOhlcvDataRequest;
   var init_FetchOhlcvDataRequest = __esm({
     "ts_libs/ts_worker/application/usecases/FetchOhlcvData/FetchOhlcvDataRequest.ts"() {
       "use strict";
       FetchOhlcvDataRequest = class {
-        constructor(tradingPairs, candlesPerTimeFrame, parallelRequestsCount, utcNowMs, plugins, progressCallback) {
+        constructor(tradingPairs, candlesPerTimeFrame, parallelRequestsCount, utcNowMs, plugins, fetchOhlcvProgressCallback, executePluginProgressCallback) {
           __privateAdd(this, _tradingPairs);
           __privateAdd(this, _candlesPerTimeFrame);
           __privateAdd(this, _parallelRequestsCount);
           __privateAdd(this, _utcNowMs);
           __privateAdd(this, _plugins);
-          __privateAdd(this, _progressCallback);
+          __privateAdd(this, _fetchOhlcvProgressCallback);
+          __privateAdd(this, _executePluginProgressCallback);
           __privateSet(this, _tradingPairs, Object.freeze([...tradingPairs]));
           __privateSet(this, _candlesPerTimeFrame, candlesPerTimeFrame);
           __privateSet(this, _parallelRequestsCount, parallelRequestsCount);
           __privateSet(this, _utcNowMs, utcNowMs);
           __privateSet(this, _plugins, plugins);
-          __privateSet(this, _progressCallback, progressCallback);
-          Object.freeze(this);
+          __privateSet(this, _fetchOhlcvProgressCallback, fetchOhlcvProgressCallback);
+          __privateSet(this, _executePluginProgressCallback, executePluginProgressCallback);
         }
-        reportProgress(progress) {
-          __privateGet(this, _progressCallback).call(this, progress);
+        reportFetchOhlcvProgress(progress) {
+          __privateGet(this, _fetchOhlcvProgressCallback).call(this, progress);
+        }
+        reportExecutePluginProgress(progress) {
+          __privateGet(this, _executePluginProgressCallback).call(this, progress);
         }
         getUtcNowMilliseconds() {
           return __privateGet(this, _utcNowMs);
@@ -653,7 +657,8 @@
       _parallelRequestsCount = new WeakMap();
       _utcNowMs = new WeakMap();
       _plugins = new WeakMap();
-      _progressCallback = new WeakMap();
+      _fetchOhlcvProgressCallback = new WeakMap();
+      _executePluginProgressCallback = new WeakMap();
     }
   });
 
@@ -839,25 +844,30 @@
   });
 
   // ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest.ts
-  var _paralelRequestsCount, _utcNowMs2, _progressCallback2, _plugins3, SyncOhlcvDataRequest;
+  var _paralelRequestsCount, _utcNowMs2, _syncFetchOhlcvProgressCallback, _syncExecutePluginsProgressCallback, _plugins3, SyncOhlcvDataRequest;
   var init_SyncOhlcvDataRequest = __esm({
     "ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataRequest.ts"() {
       "use strict";
       SyncOhlcvDataRequest = class {
-        constructor(plugins, paralelRequestsCount, utcNowMs, progressCallback) {
+        constructor(plugins, paralelRequestsCount, utcNowMs, syncFetchOhlcvProgressCallback, syncExecutePluginsProgressCallback) {
           __privateAdd(this, _paralelRequestsCount);
           __privateAdd(this, _utcNowMs2);
-          __privateAdd(this, _progressCallback2);
+          __privateAdd(this, _syncFetchOhlcvProgressCallback);
+          __privateAdd(this, _syncExecutePluginsProgressCallback);
           __privateAdd(this, _plugins3);
           if (paralelRequestsCount <= 0) throw new RangeError("paralelRequestsCount must be > 0");
           __privateSet(this, _plugins3, plugins);
           __privateSet(this, _paralelRequestsCount, paralelRequestsCount);
           __privateSet(this, _utcNowMs2, utcNowMs);
-          __privateSet(this, _progressCallback2, progressCallback);
+          __privateSet(this, _syncFetchOhlcvProgressCallback, syncFetchOhlcvProgressCallback);
+          __privateSet(this, _syncExecutePluginsProgressCallback, syncExecutePluginsProgressCallback);
           Object.freeze(this);
         }
-        reportProgress(progressData) {
-          return __privateGet(this, _progressCallback2).call(this, progressData);
+        reportFetchProgress(progressData) {
+          __privateGet(this, _syncFetchOhlcvProgressCallback).call(this, progressData);
+        }
+        reportExecutePluginsProgress(progressData) {
+          __privateGet(this, _syncExecutePluginsProgressCallback).call(this, progressData);
         }
         getUtcNowMilliseconds() {
           return __privateGet(this, _utcNowMs2);
@@ -871,7 +881,8 @@
       };
       _paralelRequestsCount = new WeakMap();
       _utcNowMs2 = new WeakMap();
-      _progressCallback2 = new WeakMap();
+      _syncFetchOhlcvProgressCallback = new WeakMap();
+      _syncExecutePluginsProgressCallback = new WeakMap();
       _plugins3 = new WeakMap();
     }
   });
@@ -4319,25 +4330,31 @@
             const parallelCount = requestModel.getParallelRequestsCount();
             const results = [];
             const plugins = requestModel.getPlugins();
+            const fetchTotal = tradingPairs.length;
             for (let i = 0; i < tradingPairs.length; i += parallelCount) {
               const batchPairs = tradingPairs.slice(i, i + parallelCount);
-              const batchResults = yield Promise.all(batchPairs.map((tp) => {
-                return __privateMethod(this, _FetchOhlcvDataUseCase_instances, fetchOne_fn).call(this, tp, utcNowMs, candlesPerTimeFrame);
-              }));
+              const batchResults = yield Promise.all(batchPairs.map((tp, idx) => __async(this, null, function* () {
+                const result = yield __privateMethod(this, _FetchOhlcvDataUseCase_instances, fetchOne_fn).call(this, tp, utcNowMs, candlesPerTimeFrame);
+                return result;
+              })));
               const filtered = batchResults.filter((s) => s !== void 0);
               filtered.forEach((batchResult, idx) => {
                 results.push(batchResult);
                 __privateGet(this, _technicalAnalisysRepository).addDataset(batchResult);
                 __privateGet(this, _technicalAnalisysRepository).initializeIndicatorsWithDatasets(batchResult.getTradingPair());
-                const absoluteIndex = i + idx;
-                requestModel.reportProgress({
+                requestModel.reportFetchOhlcvProgress({
                   currentTradingPair: batchResult.getTradingPair(),
-                  currentPairIndex: absoluteIndex + 1,
-                  totalPairsCount: tradingPairs.length
+                  currentTradingPairIndex: i + idx,
+                  totalTradingPairsCount: fetchTotal
                 });
               });
             }
-            plugins.forEach((plugin) => {
+            plugins.forEach((plugin, pluginIndex) => {
+              requestModel.reportExecutePluginProgress({
+                currentPlugin: plugin,
+                currentPluginIndex: pluginIndex,
+                totalPluginsCount: plugins.length
+              });
               results.forEach((res) => {
                 plugin.next(res.getTradingPair(), res.getUpdatedTimeFrames(), res.getBuffer(TimeFrame.ONE_MINUTE).getEndTime());
               });
@@ -4555,7 +4572,7 @@
   });
 
   // ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataUseCase.ts
-  var _exchangeMethodsRegistry2, _technicalAnalisysRepository2, _SyncOhlcvDataUseCase_instances, syncOne_fn, SyncOhlcvDataUseCase;
+  var _exchangeMethodsRegistry2, _technicalAnalisysRepository2, SyncOhlcvDataUseCase;
   var init_SyncOhlcvDataUseCase = __esm({
     "ts_libs/ts_worker/application/usecases/SyncOhlcvData/SyncOhlcvDataUseCase.ts"() {
       "use strict";
@@ -4570,7 +4587,6 @@
       SyncOhlcvDataUseCase = class extends UseCaseBase {
         constructor(technicalAnalisysRepository, exchangeMethodsRegistry) {
           super();
-          __privateAdd(this, _SyncOhlcvDataUseCase_instances);
           __privateAdd(this, _exchangeMethodsRegistry2);
           __privateAdd(this, _technicalAnalisysRepository2);
           __privateSet(this, _exchangeMethodsRegistry2, exchangeMethodsRegistry);
@@ -4579,43 +4595,122 @@
         run(requestModel) {
           return __async(this, null, function* () {
             const buffers = Array.from(__privateGet(this, _technicalAnalisysRepository2).getDatasets().values());
-            const nowMillis = requestModel.getUtcNowMilliseconds();
-            const shouldSync = buffers.some((buffer) => {
-              const nextStart = buffer.getBuffer(TimeFrame.ONE_MINUTE).getStartTime() + TimeFrame.ONE_MINUTE.asMilliseconds();
-              const gap = nowMillis - nextStart;
-              return gap > TimeFrame.ONE_MINUTE.asMilliseconds();
-            });
+            const shouldSync = this.shouldSync(buffers, requestModel);
             if (shouldSync === false) {
               return new SyncOhlcvDataResponse(0, [], []);
             }
-            let tradingPairModels = [];
-            let signalModels = [];
-            const parallelCount = requestModel.getParalelRequestsCount();
-            for (let i = 0; i < buffers.length; i += parallelCount) {
-              const batch = buffers.slice(i, i + parallelCount);
-              const results = yield Promise.all(batch.map((buffer) => __privateMethod(this, _SyncOhlcvDataUseCase_instances, syncOne_fn).call(this, requestModel, buffer, nowMillis)));
-              for (let j = 0; j < results.length; j++) {
-                const syncResult = results[j];
-                const tradingPair = syncResult.tradingPair;
-                const tradingPairIndex = i + j + 1;
-                if (syncResult.tradingPairModel !== void 0) {
-                  tradingPairModels.push(syncResult.tradingPairModel);
-                }
-                yield requestModel.reportProgress({
-                  currentTradingPair: tradingPair,
-                  syncCount: syncResult.syncCount,
-                  currentPairIndex: tradingPairIndex,
-                  totalPairsCount: buffers.length
-                });
-              }
-            }
-            this.drainSignals(signalModels, requestModel);
+            const data = yield this.multiFetch(buffers, requestModel);
+            this.runDataProcessingPipeline(data, requestModel);
+            const signalModels = this.drainSignals(requestModel);
+            const tradingPairModels = this.mapModels(buffers, requestModel);
             return new SyncOhlcvDataResponse(buffers.length, tradingPairModels, signalModels);
           });
         }
-        shouldSync() {
+        mapModels(buffers, requestModel) {
+          const plugins = requestModel.getPlugins();
+          return buffers.map((b) => this.createSingleTradingPairModel(b.getTradingPair(), plugins));
         }
-        drainSignals(signalModels, requestModel) {
+        runDataProcessingPipeline(data, requestModel) {
+          var _a;
+          const tradingPairs = Array.from(data.keys());
+          const plugins = requestModel.getPlugins();
+          const referenceTradingPair = tradingPairs[0];
+          const referenceOhlcvEntriesCount = (_a = data.get(referenceTradingPair)) == null ? void 0 : _a.length;
+          if (referenceOhlcvEntriesCount === void 0) {
+            throw new Error("Pipeline inconsistency, first trading pair has no associated ohlcv items.");
+          }
+          const sameOhlcvEntriesCount = tradingPairs.every((tp, idx) => {
+            var _a2;
+            return referenceOhlcvEntriesCount === ((_a2 = data.get(tp)) == null ? void 0 : _a2.length);
+          });
+          if (false === sameOhlcvEntriesCount) {
+            throw new Error("Pipeline inconsistency, all entries should have same amount of ohlcv items.");
+          }
+          for (let i = 0; i < referenceOhlcvEntriesCount; i++) {
+            requestModel.reportExecutePluginsProgress({
+              currentCandleIndex: i,
+              pluginsCount: plugins.length,
+              totalCandlesCount: referenceOhlcvEntriesCount,
+              totalPairsCount: tradingPairs.length
+            });
+            const updatedByTradingPair = /* @__PURE__ */ new Map();
+            const timestampByTradingPair = /* @__PURE__ */ new Map();
+            for (let j = 0; j < tradingPairs.length; j++) {
+              const tradingPair = tradingPairs[j];
+              const targetEntries = data.get(tradingPair);
+              if (targetEntries === void 0) {
+                throw new Error("Pipeline inconsistency, target does not have any ohlcv items.");
+              }
+              const entry = targetEntries[i];
+              var updatedTimeFrames = __privateGet(this, _technicalAnalisysRepository2).pushUpdate(
+                tradingPair,
+                entry.timeFrame,
+                entry.open,
+                entry.high,
+                entry.low,
+                entry.close,
+                entry.volume,
+                entry.startTime,
+                entry.endTime,
+                entry.isClosed
+              );
+              updatedTimeFrames.forEach((isUpdated, timeFrame) => {
+                if (!isUpdated) {
+                  return;
+                }
+                __privateGet(this, _technicalAnalisysRepository2).updateIndicators(tradingPair, timeFrame);
+              });
+              updatedByTradingPair.set(tradingPair, updatedTimeFrames);
+              timestampByTradingPair.set(tradingPair, entry.endTime);
+            }
+            for (const tradingPair of tradingPairs) {
+              const updatedTimeFrames2 = updatedByTradingPair.get(tradingPair);
+              const entryTs = timestampByTradingPair.get(tradingPair);
+              if (updatedTimeFrames2 === void 0 || entryTs === void 0) {
+                throw new Error("Pipeline inconsistency, missing data for plugin input.");
+              }
+              plugins.forEach((plugin) => {
+                plugin.next(tradingPair, updatedTimeFrames2, entryTs);
+              });
+            }
+          }
+        }
+        multiFetch(buffers, requestModel) {
+          return __async(this, null, function* () {
+            const toReturn = /* @__PURE__ */ new Map();
+            const nowMillis = requestModel.getUtcNowMilliseconds();
+            const parallelCount = requestModel.getParalelRequestsCount();
+            for (let i = 0; i < buffers.length; i += parallelCount) {
+              const batch = buffers.slice(i, i + parallelCount);
+              const tasks = batch.map((b) => this.fetchOneMinuteCandleSticks(b, nowMillis, toReturn));
+              yield Promise.all(tasks);
+              batch.forEach((r, idxBatch) => {
+                var _a, _b;
+                const tp = r.getTradingPair();
+                const count = (_b = (_a = toReturn.get(tp)) == null ? void 0 : _a.length) != null ? _b : 0;
+                requestModel.reportFetchProgress({
+                  currentTradingPair: tp,
+                  syncCount: count,
+                  currentPairIndex: i + idxBatch,
+                  totalPairsCount: buffers.length
+                });
+              });
+            }
+            return toReturn;
+          });
+        }
+        shouldSync(buffers, requestModel) {
+          const oneMinuteAsMilliseconds = TimeFrame.ONE_MINUTE.asMilliseconds();
+          const nowMillis = requestModel.getUtcNowMilliseconds();
+          const shouldSync = buffers.every((buffer) => {
+            const nextStart = buffer.getBuffer(TimeFrame.ONE_MINUTE).getStartTime() + oneMinuteAsMilliseconds;
+            const gap = nowMillis - nextStart;
+            return gap > oneMinuteAsMilliseconds;
+          });
+          return shouldSync;
+        }
+        drainSignals(requestModel) {
+          const toReturn = [];
           const plugins = requestModel.getPlugins();
           plugins.forEach((plugin) => {
             if (!(plugin instanceof BaseSignalGenerator)) {
@@ -4623,13 +4718,14 @@
             }
             if (plugin.getSignalsCount() > 0) {
               const drained = plugin.drain();
-              drained.forEach((m) => signalModels.push(this.createSingleSignalModel(m)));
+              drained.forEach((m) => toReturn.push(this.createSingleSignalModel(m)));
             }
           });
-          signalModels.sort((first, second) => first.timestamp - second.timestamp);
+          toReturn.sort((first, second) => first.timestamp - second.timestamp);
+          return toReturn;
         }
-        createSingleSignalModel(s) {
-          const tradingPair = s.tradingPair;
+        createSingleSignalModel(signalData) {
+          const tradingPair = signalData.tradingPair;
           const exchange = tradingPair.getExchangeDescriptor();
           const tradingPairUrl = __privateGet(this, _exchangeMethodsRegistry2).get(exchange).getTradingPairUrl(tradingPair);
           var model = new SignalModel(
@@ -4638,11 +4734,26 @@
             exchange.getName(),
             exchange.getId(),
             tradingPairUrl,
-            s.source.getFriendlyDescription(),
-            s.signalDirection,
-            s.timeStamp
+            signalData.source.getFriendlyDescription(),
+            signalData.signalDirection,
+            signalData.timeStamp
           );
           return model;
+        }
+        fetchOneMinuteCandleSticks(mtfBuffer, timestamp, storage) {
+          return __async(this, null, function* () {
+            const tradingPair = mtfBuffer.getTradingPair();
+            const exchangeDescriptor = tradingPair.getExchangeDescriptor();
+            const methods = __privateGet(this, _exchangeMethodsRegistry2).get(exchangeDescriptor);
+            const newEntries = yield methods.syncOneMinuteTimeFrame(
+              mtfBuffer,
+              timestamp
+            );
+            if (newEntries === void 0) {
+              throw new Error("No new data available");
+            }
+            storage.set(tradingPair, newEntries);
+          });
         }
         createSingleTradingPairModel(tradingPair, plugins) {
           const exchange = tradingPair.getExchangeDescriptor();
@@ -4667,55 +4778,6 @@
       };
       _exchangeMethodsRegistry2 = new WeakMap();
       _technicalAnalisysRepository2 = new WeakMap();
-      _SyncOhlcvDataUseCase_instances = new WeakSet();
-      syncOne_fn = function(requestModel, mtfBuffer, timeStamp) {
-        return __async(this, null, function* () {
-          const tradingPair = mtfBuffer.getTradingPair();
-          const exchangeDescriptor = tradingPair.getExchangeDescriptor();
-          const methods = __privateGet(this, _exchangeMethodsRegistry2).get(exchangeDescriptor);
-          const plugins = requestModel.getPlugins();
-          const newEntries = yield methods.syncOneMinuteTimeFrame(
-            mtfBuffer,
-            timeStamp
-          );
-          if (newEntries === void 0 || newEntries === null || newEntries.length === 0) {
-            return {
-              tradingPair,
-              tradingPairModel: void 0,
-              syncCount: 0
-            };
-          }
-          for (var entry of newEntries) {
-            var updatedTimeFrames = __privateGet(this, _technicalAnalisysRepository2).pushUpdate(
-              tradingPair,
-              entry.timeFrame,
-              entry.open,
-              entry.high,
-              entry.low,
-              entry.close,
-              entry.volume,
-              entry.startTime,
-              entry.endTime,
-              entry.isClosed
-            );
-            updatedTimeFrames.forEach((isUpdated, timeFrame) => {
-              if (!isUpdated) {
-                return;
-              }
-              __privateGet(this, _technicalAnalisysRepository2).updateIndicators(tradingPair, timeFrame);
-            });
-            plugins.forEach((plugin) => {
-              plugin.next(tradingPair, updatedTimeFrames, entry.endTime);
-            });
-          }
-          let tradingPairModel = this.createSingleTradingPairModel(tradingPair, plugins);
-          return {
-            tradingPair,
-            syncCount: newEntries.length,
-            tradingPairModel
-          };
-        });
-      };
     }
   });
 
@@ -4859,9 +4921,16 @@
               __privateGet(this, _settings).parallelRequestsCount,
               nowMs,
               __privateGet(this, _plugins5),
-              (progress) => {
-                let percent = 0.7 * (progress.currentPairIndex * 100) / progress.totalPairsCount;
-                var message = `${progress.currentPairIndex} / ${progress.totalPairsCount} - Fetched ${progress.currentTradingPair.symbol()} initial data from ${progress.currentTradingPair.getExchangeDescriptor().getName()} ...`;
+              (fetchOhlcvDataProgress) => {
+                let percent = 0.5 * (fetchOhlcvDataProgress.currentTradingPairIndex * 100) / fetchOhlcvDataProgress.totalTradingPairsCount;
+                const message = `Downloading historical candles (${fetchOhlcvDataProgress.currentTradingPairIndex}/${fetchOhlcvDataProgress.totalTradingPairsCount}) 
+ ${fetchOhlcvDataProgress.currentTradingPair.symbol()} from ${fetchOhlcvDataProgress.currentTradingPair.getExchangeDescriptor().getName()}`;
+                progressCallback(percent, message);
+              },
+              (executePluginProgress) => {
+                let percent = 50 + 0.2 * (executePluginProgress.currentPluginIndex * 100) / executePluginProgress.totalPluginsCount;
+                const message = `Analyzing market data (${executePluginProgress.currentPluginIndex}/${executePluginProgress.totalPluginsCount}) 
+ ${executePluginProgress.currentPlugin.getFriendlyDescription()}`;
                 progressCallback(percent, message);
               }
             );
@@ -4874,11 +4943,18 @@
               __privateGet(this, _plugins5),
               __privateGet(this, _settings).parallelRequestsCount,
               syncMs,
-              (progress) => __async(this, null, function* () {
-                let percent = 70 + 0.3 * (progress.currentPairIndex * 100) / progress.totalPairsCount;
-                var message = `${progress.currentPairIndex} / ${progress.totalPairsCount} - Synced ${progress.syncCount} candles for ${progress.currentTradingPair.symbol()} from ${progress.currentTradingPair.getExchangeDescriptor().getName()} ...`;
+              (fetchProgress) => {
+                let percent = 70 + 0.2 * (fetchProgress.currentPairIndex * 100) / fetchProgress.totalPairsCount;
+                const message = `Synchronizing latest candles (${fetchProgress.currentPairIndex}/${fetchProgress.totalPairsCount})
+Downloaded ${fetchProgress.syncCount} new candle${fetchProgress.syncCount === 1 ? "" : "s"} for ${fetchProgress.currentTradingPair.symbol()} from ${fetchProgress.currentTradingPair.getExchangeDescriptor().getName()}`;
                 progressCallback(percent, message);
-              })
+              },
+              (pluginsExecutionProgress) => {
+                let percent = 90 + 0.1 * (pluginsExecutionProgress.currentCandleIndex * 100) / pluginsExecutionProgress.totalCandlesCount;
+                const message = `Analyzing market data (${pluginsExecutionProgress.currentCandleIndex}/${pluginsExecutionProgress.totalCandlesCount})
+Scanning ${pluginsExecutionProgress.totalPairsCount} trading pairs using ${pluginsExecutionProgress.pluginsCount} plugins`;
+                progressCallback(percent, message);
+              }
             );
             const syncResponse = yield __privateGet(this, _container).syncOhlcvDataUseCase.execute(syncRequest);
             var synchronizationModel = new SynchronizationModel(
@@ -4898,11 +4974,18 @@
               __privateGet(this, _plugins5),
               __privateGet(this, _settings).parallelRequestsCount,
               syncMs,
-              (progress) => __async(this, null, function* () {
-                let percent = progress.currentPairIndex * 100 / progress.totalPairsCount;
-                var message = `${progress.currentPairIndex} / ${progress.totalPairsCount} - Synced ${progress.syncCount} candles for ${progress.currentTradingPair.symbol()} from ${progress.currentTradingPair.getExchangeDescriptor().getName()} ...`;
+              (fetchProgress) => {
+                let percent = 0.7 * (fetchProgress.currentPairIndex * 100) / fetchProgress.totalPairsCount;
+                const message = `Synchronizing latest candles (${fetchProgress.currentPairIndex}/${fetchProgress.totalPairsCount})
+Downloaded ${fetchProgress.syncCount} new candle${fetchProgress.syncCount === 1 ? "" : "s"} for ${fetchProgress.currentTradingPair.symbol()} from ${fetchProgress.currentTradingPair.getExchangeDescriptor().getName()}`;
                 progressCallback(percent, message);
-              })
+              },
+              (pluginsExecutionProgress) => {
+                let percent = 70 + 0.3 * (pluginsExecutionProgress.currentCandleIndex * 100) / pluginsExecutionProgress.totalCandlesCount;
+                const message = `Analyzing market data (${pluginsExecutionProgress.currentCandleIndex}/${pluginsExecutionProgress.totalCandlesCount})
+Scanning ${pluginsExecutionProgress.totalPairsCount} trading pairs using ${pluginsExecutionProgress.pluginsCount} plugins`;
+                progressCallback(percent, message);
+              }
             );
             const syncResponse = yield __privateGet(this, _container).syncOhlcvDataUseCase.execute(syncRequest);
             var synchronizationModel = new SynchronizationModel(

@@ -764,6 +764,9 @@ textarea {
 #filter-fields-modal .modal-footer {
   gap: 1rem;
 }
+#progress-modal .modal-body p {
+  white-space: pre-line;
+}
 #progress-modal .modal-footer {
   display: flex;
   flex-direction: column;

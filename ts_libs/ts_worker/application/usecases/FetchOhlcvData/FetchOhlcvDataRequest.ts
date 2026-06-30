@@ -3,12 +3,21 @@ import { BasePlugin } from "../../../domain/ta/export/BasePlugin";
 
 export interface FetchOhlcvProgress {
     currentTradingPair: TradingPair;
-    currentPairIndex: number;
-    totalPairsCount: number;
+    currentTradingPairIndex: number;
+    totalTradingPairsCount: number;
 }
 
-export type FetchOhlcvProgressCallback =
-    (progress: FetchOhlcvProgress) => void;
+
+export interface ExecutePluginProgress {
+    currentPlugin: BasePlugin;
+    currentPluginIndex: number;
+    totalPluginsCount: number;
+}
+
+export type FetchOhlcvProgressCallback = (progress: FetchOhlcvProgress) => void;
+export type ExecutePluginProgressCallback = (progress: ExecutePluginProgress) => void;
+
+
 
 export class FetchOhlcvDataRequest {
     readonly #tradingPairs: readonly TradingPair[];
@@ -16,27 +25,33 @@ export class FetchOhlcvDataRequest {
     readonly #parallelRequestsCount: number;
     readonly #utcNowMs: number;
     readonly #plugins: readonly BasePlugin[];
-    readonly #progressCallback: FetchOhlcvProgressCallback;
+    readonly #fetchOhlcvProgressCallback: FetchOhlcvProgressCallback;
+    readonly #executePluginProgressCallback: ExecutePluginProgressCallback;
+    
     constructor(
         tradingPairs: TradingPair[],
         candlesPerTimeFrame: number,
         parallelRequestsCount: number,
         utcNowMs: number,
         plugins: readonly BasePlugin[],
-        progressCallback: FetchOhlcvProgressCallback
+        fetchOhlcvProgressCallback: FetchOhlcvProgressCallback,
+        executePluginProgressCallback: ExecutePluginProgressCallback
     ) {
         this.#tradingPairs = Object.freeze([...tradingPairs]);
         this.#candlesPerTimeFrame = candlesPerTimeFrame;
         this.#parallelRequestsCount = parallelRequestsCount;
         this.#utcNowMs = utcNowMs;
         this.#plugins = plugins;
-        this.#progressCallback = progressCallback;
-
-        Object.freeze(this);
+        this.#fetchOhlcvProgressCallback = fetchOhlcvProgressCallback;
+        this.#executePluginProgressCallback = executePluginProgressCallback;
     }
 
-    reportProgress(progress: FetchOhlcvProgress): void {
-        this.#progressCallback(progress);
+    reportFetchOhlcvProgress(progress: FetchOhlcvProgress): void {
+        this.#fetchOhlcvProgressCallback(progress);
+    }
+
+    reportExecutePluginProgress(progress: ExecutePluginProgress): void {
+        this.#executePluginProgressCallback(progress);
     }
 
     getUtcNowMilliseconds(): number {
