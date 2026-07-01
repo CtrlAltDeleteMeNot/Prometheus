@@ -4017,9 +4017,12 @@
       MomentumRecoverySignalGenerator = class extends BaseSignalGenerator {
         constructor() {
           super();
+          this.topGainersCount = 10;
           this.fastCrossoverThreshold = 5;
+          this.rsiSlopeMax = 95;
           this.rsiParamsFast = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
           this.smaParamsFast = this.useSmaIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(200), Source.CLOSE);
+          this.rsiParamsSlopeFilter = this.useRsiIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(2), Source.CLOSE);
           this.smaParamsTrendFilter = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
           this.gainersFilter = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, Period.fromUnknown(30), Source.CLOSE);
         }
@@ -4037,6 +4040,9 @@
           if (false === this.isFastRsiCrossover(tradingPair, updatedTimeFrames)) {
             return;
           }
+          if (false === this.isHigherTimeFrameRsiSlopingUp(tradingPair)) {
+            return;
+          }
           if (false === this.isUptrend(tradingPair, this.smaParamsFast)) {
             return;
           }
@@ -4044,6 +4050,16 @@
             return;
           }
           this.emit(tradingPair, "BULLISH" /* BULLISH */, ts);
+        }
+        isHigherTimeFrameRsiSlopingUp(tradingPair) {
+          const indicator = this.findIndicator(tradingPair, this.rsiParamsSlopeFilter);
+          if (indicator.getValuesCount() < 2) {
+            return false;
+          }
+          const previous = this.getIndicatorValue(indicator, 1);
+          const current = this.getIndicatorValue(indicator, 0);
+          const acceptable = previous.getValue() <= current.getValue() && current.getValue() < this.rsiSlopeMax;
+          return acceptable;
         }
         isUptrend(tradingPair, smaParameters) {
           const sma = this.getIndicatorNumericValue(tradingPair, smaParameters);
@@ -4092,7 +4108,7 @@
                 percentChange: (_a = this.getIndicatorNumericValue(pair, this.gainersFilter)) != null ? _a : Number.NEGATIVE_INFINITY
               };
             }).sort((a, b) => b.percentChange - a.percentChange);
-            ranked.slice(0, 5).forEach((x) => top.add(x.pair));
+            ranked.slice(0, this.topGainersCount).forEach((x) => top.add(x.pair));
           });
           this.topGainers = top;
           this.topGainersUpdatedAt = ts;
