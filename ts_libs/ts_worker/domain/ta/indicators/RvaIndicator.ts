@@ -6,6 +6,7 @@ import { Period } from "../core/Period";
 import { Indicator, IndicatorOutput, IndicatorParameters } from "./Indicator";
 import { RollingSimpleMovingAverage } from "../core/RollingSimpleMovingAverage";
 import { Source } from "../core/Source";
+import { IndicatorAccessor } from "../export/IndicatorAccessor";
 
 /** RVA output container: volume SMA + relative value */
 export class RvaIndicatorOutput extends IndicatorOutput {
@@ -33,7 +34,7 @@ export class RvaIndicatorOutput extends IndicatorOutput {
 }
 
 /** RVA parameters */
-export class RvaIndicatorParameters extends IndicatorParameters<RvaIndicatorOutput> {
+export class RvaIndicatorParameters extends IndicatorParameters {
     public readonly timeFrame: TimeFrame;
     public readonly period: Period;
     public readonly source: Source;
@@ -81,7 +82,7 @@ export class RvaIndicatorParameters extends IndicatorParameters<RvaIndicatorOutp
 }
 
 /** RVA indicator */
-export class RvaIndicator extends Indicator<RvaIndicatorOutput> {
+export class RvaIndicator extends Indicator<RvaIndicatorParameters, RvaIndicatorOutput> {
 
     private readonly mtf: MultiTimeframeOhlcv;
     private readonly rolling: RollingSimpleMovingAverage;
@@ -132,7 +133,11 @@ export class RvaIndicator extends Indicator<RvaIndicatorOutput> {
 
 
     /** Call when a new candle is available */
-    update(): void {
+    update(timeFrame: TimeFrame): void {
+        const thisTf = this.getParameters().getTimeFrame();
+        if (timeFrame != thisTf) {
+            return;
+        }
         const candle = this.mtf
             .getBuffer(this.getParameters().getTimeFrame())
             .getCandle();
@@ -154,7 +159,7 @@ export class RvaIndicator extends Indicator<RvaIndicatorOutput> {
         const pendingCandle = this.mtf.getBuffer(this.getParameters().getTimeFrame()).getPendingCandle();
         const pendingVolume = pendingCandle.volume;
 
-         if (!Number.isFinite(pendingVolume)) {
+        if (!Number.isFinite(pendingVolume)) {
             throw new RangeError("RVA value cannot be computed due to pending value issues.");
         }
         const closedVolumeSma = this.getValue().getVolumeSma();
@@ -171,3 +176,5 @@ export class RvaIndicator extends Indicator<RvaIndicatorOutput> {
         return this.history.getSize();
     }
 }
+
+export class RvaAccessor extends IndicatorAccessor<RvaIndicatorParameters, RvaIndicatorOutput> { }

@@ -13,6 +13,7 @@ import { DailyPendingRvaExtractor } from "./numeric_extractors/DailyPendingRvaEx
 import { DailyPriceChangeExtractor } from "./numeric_extractors/DailyPriceChangeExtractor";
 import { DailyRvaExtractor } from "./numeric_extractors/DailyRvaExtractor";
 import { ThirtyDayPercentChangeExtractor } from "./numeric_extractors/ThirtyDayPercentChangeExtractor";
+import { HighVolumeInsideCompressedDonchian } from "./signal_generators/HighVolumeInsideCompressedDonchian";
 import { MomentumRecoverySignalGenerator } from "./signal_generators/MomentumRecoverySignalGenerator";
 
 export class PluginManager {
@@ -64,7 +65,8 @@ export class PluginManager {
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
-        new MomentumRecoverySignalGenerator()
+        new MomentumRecoverySignalGenerator(),
+        new HighVolumeInsideCompressedDonchian()
     ];
 
     get sortableAttributes(): readonly NamedAttributeMetadata[] {

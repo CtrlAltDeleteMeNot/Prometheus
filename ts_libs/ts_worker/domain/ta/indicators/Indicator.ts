@@ -1,30 +1,25 @@
 import { MultiTimeframeOhlcv } from "../../values/MultiTimeframeOhlcv";
 import { TimeFrame } from "../../values/TimeFrame";
-import { Period } from "../core/Period";
-import { Source } from "../core/Source";
 
-export abstract class IndicatorParameters<T extends IndicatorOutput> {
+export abstract class IndicatorOutput {}
+export interface IndicatorRuntime {
+    getId(): string;
+    getParameters(): IndicatorParameters;
+
+    update(timeFrame: TimeFrame): void;
+    isReady(): boolean;
+
+    getValue(n?: number): IndicatorOutput;
+    getPendingValue(): IndicatorOutput;
+    getValuesCount(): number;
+}
+
+export abstract class IndicatorParameters{
     /** @returns {string} */
     abstract getId(): string;
 
     /** @returns {string} */
     abstract getDescription(): string;
-
-    /** @returns {TimeFrame} */
-    abstract getTimeFrame(): TimeFrame;
-
-    /** @returns {Period} */
-    abstract getPeriod(): Period;
-
-    /** @returns {Source} */
-    abstract getSource(): Source;
-
-    /**
-     * @param buffer MultiTimeframeOhlcv
-     * @returns Indicator
-     */
-    abstract createUsing(buffer: MultiTimeframeOhlcv): Indicator<T>;
-
     /**
      * Compare parameters by identifier
      * @param other unknown
@@ -39,20 +34,27 @@ export abstract class IndicatorParameters<T extends IndicatorOutput> {
             return false;
         }
     }
+    abstract createUsing(
+        buffer: MultiTimeframeOhlcv
+    ): IndicatorRuntime;
 }
 
-export class IndicatorOutput {
 
-}
 
-export abstract class Indicator<T extends IndicatorOutput> {
-    protected readonly parameters: IndicatorParameters<T>;
 
-    constructor(parameters: IndicatorParameters<T>) {
+export abstract class Indicator<TParameters extends IndicatorParameters, TOutput extends IndicatorOutput> implements IndicatorRuntime {
+    protected readonly parameters: TParameters;
+
+    protected constructor(parameters: TParameters) {
+        if (!(parameters instanceof IndicatorParameters)) {
+            throw new TypeError(
+                "Invalid indicator parameters"
+            );
+        }
         this.parameters = parameters;
     }
 
-    getParameters(): IndicatorParameters<T> {
+    getParameters(): TParameters {
         return this.parameters;
     }
 
@@ -60,9 +62,10 @@ export abstract class Indicator<T extends IndicatorOutput> {
         return this.parameters.getId();
     }
 
+    abstract update(timeFrame: TimeFrame): void;
     abstract isReady(): boolean;
-    abstract update(): void;
-    abstract getValue(n?: number): T;
-    abstract getPendingValue(): T;
+    abstract getValue(n?: number): TOutput;
+    abstract getPendingValue(): TOutput;
     abstract getValuesCount(): number;
 }
+

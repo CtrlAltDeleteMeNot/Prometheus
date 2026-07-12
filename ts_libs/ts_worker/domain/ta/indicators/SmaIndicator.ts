@@ -4,8 +4,10 @@ import { TimeFrame } from "../../values/TimeFrame";
 import { MutableFloat } from "../core/MutableFloat";
 import { Period } from "../core/Period";
 import { Source } from "../core/Source";
-import { Indicator, IndicatorOutput, IndicatorParameters } from "./Indicator";
+import { Indicator, IndicatorOutput, IndicatorParameters, IndicatorRuntime } from "./Indicator";
 import { RollingSimpleMovingAverage } from "../core/RollingSimpleMovingAverage";
+import { IndicatorAccessor } from "../export/IndicatorAccessor";
+import { TradingPair } from "../../entities/TradingPair";
 
 /** SMA output container */
 export class SmaIndicatorOutput extends IndicatorOutput {
@@ -26,7 +28,7 @@ export class SmaIndicatorOutput extends IndicatorOutput {
 }
 
 /** SMA parameters */
-export class SmaIndicatorParameters extends IndicatorParameters<SmaIndicatorOutput> {
+export class SmaIndicatorParameters extends IndicatorParameters {
     public readonly timeFrame: TimeFrame;
     public readonly period: Period;
     public readonly source: Source;
@@ -74,7 +76,7 @@ export class SmaIndicatorParameters extends IndicatorParameters<SmaIndicatorOutp
 }
 
 /** SMA indicator */
-export class SmaIndicator extends Indicator<SmaIndicatorOutput> {
+export class SmaIndicator extends Indicator<SmaIndicatorParameters, SmaIndicatorOutput> {
 
     private readonly mtf: MultiTimeframeOhlcv;
     private readonly rolling: RollingSimpleMovingAverage;
@@ -108,9 +110,13 @@ export class SmaIndicator extends Indicator<SmaIndicatorOutput> {
         this.history.push(sample => sample.update(computed));
     }
 
-    update(): void {
+    update(timeFrame: TimeFrame): void {
+        const thisTf = this.getParameters().getTimeFrame();
+        if (timeFrame != thisTf) {
+            return;
+        }
         const candle = this.mtf
-            .getBuffer(this.getParameters().getTimeFrame())
+            .getBuffer(thisTf)
             .getCandle();
 
         const extracted = this.getParameters().getSource().extract(candle);
@@ -131,3 +137,5 @@ export class SmaIndicator extends Indicator<SmaIndicatorOutput> {
         throw new Error("Method not implemented.");
     }
 }
+
+export class SmaAccessor extends IndicatorAccessor<SmaIndicatorParameters, SmaIndicatorOutput> { }

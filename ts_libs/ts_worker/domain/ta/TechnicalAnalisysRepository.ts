@@ -4,11 +4,11 @@ import { MultiTimeframeOhlcv } from "../values/MultiTimeframeOhlcv";
 import { TimeFrame } from "../values/TimeFrame";
 import { Source } from "./core/Source";
 import { IPluginContext } from "./export/BasePlugin";
-import { Indicator, IndicatorOutput, IndicatorParameters } from "./indicators/Indicator";
+import { IndicatorOutput, IndicatorParameters, IndicatorRuntime } from "./indicators/Indicator";
 
 export class TechnicalAnalisysRepository implements IPluginContext {
-    private indicators: Map<TradingPair, Indicator<any>[]>;
-    private indicatorParameters: IndicatorParameters<any>[];
+    private indicators: Map<TradingPair, IndicatorRuntime[]>;
+    private indicatorParameters: IndicatorParameters[];
     private datasets: Map<TradingPair, MultiTimeframeOhlcv>;
 
     public constructor() {
@@ -67,7 +67,7 @@ export class TechnicalAnalisysRepository implements IPluginContext {
 
     public getIndicators(
         tradingPair: TradingPair
-    ): Indicator<any>[] {
+    ): IndicatorRuntime[] {
         const list = this.indicators.get(tradingPair);
         if (!list) {
             throw new Error(`No indicator found for: ${tradingPair.getId()}`);
@@ -86,7 +86,7 @@ export class TechnicalAnalisysRepository implements IPluginContext {
     }
 
     public addIndicatorParameters(
-        indicatorParams: IndicatorParameters<any>
+        indicatorParams: IndicatorParameters
     ): boolean {
         const exists = this.indicatorParameters.some(ind =>
             ind.equals(indicatorParams)
@@ -101,8 +101,8 @@ export class TechnicalAnalisysRepository implements IPluginContext {
 
     public findIndicator(
         tradingPair: TradingPair,
-        indicatorParams: IndicatorParameters<any>
-    ): Indicator<any> {
+        indicatorParams: IndicatorParameters
+    ): IndicatorRuntime {
 
         const list = this.getIndicators(tradingPair);
         const found = list.find(ind =>
@@ -121,11 +121,7 @@ export class TechnicalAnalisysRepository implements IPluginContext {
         timeFrame: TimeFrame
     ): void {
         const list = this.getIndicators(tradingPair);
-        list.forEach(ind => {
-            if (ind.getParameters().getTimeFrame() === timeFrame) {
-                ind.update();
-            }
-        });
+        list.forEach(ind => ind.update(timeFrame));
     }
 
 
@@ -147,15 +143,15 @@ export class TechnicalAnalisysRepository implements IPluginContext {
         return source.extract(tfBuffer.getPendingCandle());
     }
 
-    getIndicatorValue(indicator: Indicator<any>, position: number): IndicatorOutput {
+    getIndicatorValue(indicator: IndicatorRuntime, position: number): IndicatorOutput {
         return indicator.getValue(position);
     }
 
-    getPendingIndicatorValue(indicator: Indicator<any>): IndicatorOutput {
+    getPendingIndicatorValue(indicator: IndicatorRuntime): IndicatorOutput {
         return indicator.getPendingValue();
     }
 
-    isIndicatorReady(indicator: Indicator<any>): boolean {
+    isIndicatorReady(indicator: IndicatorRuntime): boolean {
         return indicator.isReady();
     }
 }

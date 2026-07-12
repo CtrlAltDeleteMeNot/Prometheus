@@ -183,7 +183,7 @@ export class ThinController {
             this.#mainView.navigation.show();
         } catch (err) {
             this.#mainView.progressModalView.hide();
-            this.#mainView.genericModalView.showError("Error", "Application data fetch failure, please restart.", err, () => { });
+            this.#mainView.genericModalView.showError("Error", "Application data fetch failure, please restart.", err, () => { this.restartApp(); });
         }
     }
 
@@ -208,8 +208,16 @@ export class ThinController {
             this.#mainView.progressModalView.hide();
         } catch (err) {
             this.#mainView.progressModalView.hide();
-            this.#mainView.genericModalView.showError("Error", "Application data sync failure, please restart.", err, () => { });
+            this.#mainView.genericModalView.showError("Error", "Application data sync failure, please restart.", err, () => { this.restartApp(); });
         }
+    }
+
+    private restartApp(): void {
+        // Dispose resources if needed
+        this.#worker.terminate();
+
+        // Reload the PWA
+        window.location.reload();
     }
 
     private callWorker(method: string, args?: any): Promise<any> {

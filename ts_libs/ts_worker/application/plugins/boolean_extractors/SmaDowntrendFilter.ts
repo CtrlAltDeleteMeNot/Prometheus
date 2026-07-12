@@ -1,43 +1,41 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
 import { Period } from "../../../domain/ta/core/Period";
 import { Source } from "../../../domain/ta/core/Source";
-import { SmaIndicatorOutput, SmaIndicatorParameters } from "../../../domain/ta/indicators/SmaIndicator";
+import { SmaAccessor, SmaIndicatorOutput, SmaIndicatorParameters } from "../../../domain/ta/indicators/SmaIndicator";
 import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseFilterableAttributeExtractor } from "../BaseFilterableAttributeExtractor";
 
 export class SmaDowntrendFilter extends BaseFilterableAttributeExtractor {
     
-    smaParameters: SmaIndicatorParameters;
+    sma: SmaAccessor;
     public constructor(period: Period, timeFrame: TimeFrame) {
         super();
-        this.smaParameters = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
+        this.sma = this.useSmaIndicator(timeFrame, period, Source.CLOSE);
     }
     public getId(): string {
-        return `close.under.${this.smaParameters.getId()}`;
+        return `close.under.${this.sma.getParameters().getId()}`;
     }
     public getFriendlyDescription(): string {
-        return `Downtrend: ${this.smaParameters.getDescription()} > Close`;
+        return `Downtrend: ${this.sma.getParameters().getDescription()} > Close`;
     }
     public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>, ts: number): void {
-        if (false === this.wasUpdated(updatedTimeFrames, this.smaParameters.getTimeFrame())) {
+        if (false === this.wasUpdated(updatedTimeFrames, this.sma.getParameters().getTimeFrame())) {
             return;
         }
         this.updateBooleanAttribute(tradingPair);
     }
 
     private updateBooleanAttribute(tradingPair: TradingPair) {
-        const close = this.getOhlcvData(tradingPair, Source.CLOSE, this.smaParameters.getTimeFrame(), 0);
-        const smaIndicator = this.findIndicator(tradingPair, this.smaParameters);
-        const smaIndicatorReady = this.isIndicatorReady(smaIndicator);
-        if (!smaIndicatorReady) {
-            return;
-        }
-        const smaIndicatorOutput = this.getIndicatorValue(smaIndicator, 0) as SmaIndicatorOutput;
+        const tf = this.sma.getParameters().getTimeFrame();
+        const close = this.close(tradingPair, tf);
         if (close === undefined) {
             return;
         }
-
-        const isDowntrend = close < smaIndicatorOutput.getValue();
+        const isReady = this.sma.isReady(tradingPair);
+        if (!isReady) {
+            return;
+        }
+        const isDowntrend = close < this.sma.get(tradingPair).getValue();
         this.setValue(tradingPair, isDowntrend);
     }
 

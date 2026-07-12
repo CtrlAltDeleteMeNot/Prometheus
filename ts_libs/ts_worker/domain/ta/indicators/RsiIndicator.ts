@@ -7,6 +7,7 @@ import { Source } from "../core/Source"
 import { Indicator, IndicatorOutput, IndicatorParameters } from "./Indicator"
 import { RelativeStrengthIndex } from "../core/RelativeStrengthIndex"
 import { OhlcvEntry } from "../../values/OhlcvEntry";
+import { IndicatorAccessor } from "../export/IndicatorAccessor";
 
 export class RsiIndicatorOutput extends IndicatorOutput {
     #value: MutableFloat;
@@ -25,7 +26,7 @@ export class RsiIndicatorOutput extends IndicatorOutput {
     }
 }
 
-export class RsiIndicatorParameters extends IndicatorParameters<RsiIndicatorOutput> {
+export class RsiIndicatorParameters extends IndicatorParameters {
     
     
     public readonly timeFrame: TimeFrame;
@@ -87,7 +88,7 @@ export class RsiIndicatorParameters extends IndicatorParameters<RsiIndicatorOutp
 
 
 
-export class RsiIndicator extends Indicator<RsiIndicatorOutput> {
+export class RsiIndicator extends Indicator<RsiIndicatorParameters, RsiIndicatorOutput> {
     
     private readonly mtf: MultiTimeframeOhlcv;
     private readonly rolling: RelativeStrengthIndex;
@@ -127,7 +128,11 @@ export class RsiIndicator extends Indicator<RsiIndicatorOutput> {
         this.history.push(sample => sample.update(computed));
     }
 
-    update(): void {
+    update(timeFrame: TimeFrame): void {
+        const thisTf = this.getParameters().getTimeFrame();
+        if (timeFrame != thisTf) {
+            return;
+        }
         const candle = this.mtf
             .getBuffer(this.getParameters().getTimeFrame())
             .getCandle();
@@ -148,3 +153,6 @@ export class RsiIndicator extends Indicator<RsiIndicatorOutput> {
         throw new Error("Method not implemented.");
     }
 }
+
+
+export class RsiAccessor extends IndicatorAccessor<RsiIndicatorParameters, RsiIndicatorOutput> {}

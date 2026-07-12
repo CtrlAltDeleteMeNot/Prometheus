@@ -1,22 +1,21 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
 import { Period } from "../../../domain/ta/core/Period";
 import { Source } from "../../../domain/ta/core/Source";
-import { PctChangeIndicatorParameters } from "../../../domain/ta/indicators/PctChangeIndicator";
-import { RsiIndicator, RsiIndicatorOutput, RsiIndicatorParameters } from "../../../domain/ta/indicators/RsiIndicator";
-import { SmaIndicatorParameters } from "../../../domain/ta/indicators/SmaIndicator";
+import { PctChangeAccessor } from "../../../domain/ta/indicators/PctChangeIndicator";
+import { RsiAccessor } from "../../../domain/ta/indicators/RsiIndicator";
+import { SmaAccessor } from "../../../domain/ta/indicators/SmaIndicator";
 import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { SignalDirection } from "../../exports/SignalModel";
 import { BaseSignalGenerator } from "../BaseSignalGenerator";
 
 export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
-
-    rsiParamsFast: RsiIndicatorParameters;
-    rsiParamsSlopeFilter: RsiIndicatorParameters;
+    rsiFast: RsiAccessor;
+    rsiSlopeFilter: RsiAccessor;
     fastCrossoverThreshold: number;
     rsiSlopeMax: number;
-    smaParamsTrendFilter: SmaIndicatorParameters;
-    smaParamsFast: SmaIndicatorParameters;
-    gainersFilter: PctChangeIndicatorParameters;
+    smaTrendFilter: SmaAccessor;
+    smaFast: SmaAccessor;
+    gainersFilter: PctChangeAccessor;
     topGainers: Set<TradingPair> | undefined;
     topGainersUpdatedAt: number | undefined;
     topGainersCount: number;
@@ -25,15 +24,15 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
         this.topGainersCount = 10;
         this.fastCrossoverThreshold = 5;
         this.rsiSlopeMax = 95;
-        this.rsiParamsFast = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
-        this.smaParamsFast = this.useSmaIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(200), Source.CLOSE);
-        this.rsiParamsSlopeFilter = this.useRsiIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(2), Source.CLOSE);
-        this.smaParamsTrendFilter = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
+        this.rsiFast = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
+        this.smaFast = this.useSmaIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(200), Source.CLOSE);
+        this.rsiSlopeFilter = this.useRsiIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(2), Source.CLOSE);
+        this.smaTrendFilter = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
         this.gainersFilter = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, Period.fromUnknown(30), Source.CLOSE);
     }
 
     public getId(): string {
-        return `rsi.crossover.treshold.signal.${this.rsiParamsFast.getId()} X ${this.fastCrossoverThreshold}`;
+        return `rsi.crossover.signal.${this.rsiFast.getParameters().getId()}.${this.fastCrossoverThreshold}`;
     }
 
     public getFriendlyDescription(): string {
@@ -51,11 +50,11 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
         if (false === this.isHigherTimeFrameRsiSlopingUp(tradingPair)) {
             return;
         }
-        if (false === this.isUptrend(tradingPair, this.smaParamsFast)) {
+        if (false === this.isUptrend(tradingPair, this.smaFast)) {
             return;
         }
 
-        if (false === this.isUptrend(tradingPair, this.smaParamsTrendFilter)) {
+        if (false === this.isUptrend(tradingPair, this.smaTrendFilter)) {
             return;
         }
 
@@ -63,22 +62,23 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
     }
 
     isHigherTimeFrameRsiSlopingUp(tradingPair: TradingPair) {
-        const indicator = this.findIndicator(tradingPair, this.rsiParamsSlopeFilter) as RsiIndicator;
-        if (indicator.getValuesCount() < 2) {
+        if (this.rsiSlopeFilter.getValuesCount(tradingPair) < 2) {
             return false;
         }
-        const previous = this.getIndicatorValue(indicator, 1) as RsiIndicatorOutput;
-        const current = this.getIndicatorValue(indicator, 0) as RsiIndicatorOutput;
-
+        const previous = this.rsiSlopeFilter.get(tradingPair, 1);
+        const current = this.rsiSlopeFilter.get(tradingPair, 0);
         const acceptable =
             previous.getValue() <= current.getValue() &&
             current.getValue() < this.rsiSlopeMax;
         return acceptable;
     }
 
-    isUptrend(tradingPair: TradingPair, smaParameters: SmaIndicatorParameters): boolean {
-        const sma = this.getIndicatorNumericValue(tradingPair, smaParameters);
-        const close = this.close(tradingPair, smaParameters.getTimeFrame());
+    isUptrend(tradingPair: TradingPair, smaAccessor: SmaAccessor): boolean {
+        if (!smaAccessor.isReady(tradingPair)) {
+            return false;
+        }
+        const sma = smaAccessor.get(tradingPair).getValue();
+        const close = this.close(tradingPair, smaAccessor.getParameters().getTimeFrame());
         if (sma === undefined || close === undefined) {
             return false;
         }
@@ -86,21 +86,19 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
     }
 
     isFastRsiCrossover(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>): boolean {
-        if (false === this.wasUpdated(updatedTimeFrames, this.rsiParamsFast.getTimeFrame())) {
+        if (false === this.wasUpdated(updatedTimeFrames, this.rsiFast.getParameters().getTimeFrame())) {
             return false;
         }
-        const indicatorFast = this.findIndicator(tradingPair, this.rsiParamsFast) as RsiIndicator;
-        if (indicatorFast.getValuesCount() < 2) {
+        if (this.rsiFast.getValuesCount(tradingPair) < 2) {
             return false;
         }
-
-        const previousFast = this.getIndicatorValue(indicatorFast, 1) as RsiIndicatorOutput;
-        const currentFast = this.getIndicatorValue(indicatorFast, 0) as RsiIndicatorOutput;
-
+        
+        const previousFast = this.rsiFast.get(tradingPair, 1).getValue();
+        const currentFast = this.rsiFast.get(tradingPair, 0).getValue();
 
         const crossedUp =
-            previousFast.getValue() <= this.fastCrossoverThreshold &&
-            currentFast.getValue() > this.fastCrossoverThreshold;
+            previousFast <= this.fastCrossoverThreshold &&
+            currentFast > this.fastCrossoverThreshold;
         return crossedUp;
     }
 
@@ -110,7 +108,7 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
         if (this.topGainersUpdatedAt === ts) {
             return;
         }
-        if (false === this.wasUpdated(updatedTimeFrames, this.gainersFilter.getTimeFrame())) {
+        if (false === this.wasUpdated(updatedTimeFrames, this.gainersFilter.getParameters().getTimeFrame())) {
             return;
         }
         const grouped = new Map<number, TradingPair[]>();
@@ -133,9 +131,7 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
             const ranked = pairs
                 .map(pair => ({
                     pair,
-                    percentChange:
-                        this.getIndicatorNumericValue(pair, this.gainersFilter)
-                        ?? Number.NEGATIVE_INFINITY
+                    percentChange: this.gainersFilter.isReady(pair) ? this.gainersFilter.get(pair).getValue() : Number.NEGATIVE_INFINITY
                 }))
                 .sort((a, b) => b.percentChange - a.percentChange);
 

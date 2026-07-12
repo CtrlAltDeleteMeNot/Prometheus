@@ -1,15 +1,15 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
 import { Period } from "../../../domain/ta/core/Period";
-import { RvaIndicator, RvaIndicatorParameters } from "../../../domain/ta/indicators/RvaIndicator";
+import { RvaAccessor, RvaIndicator, RvaIndicatorParameters } from "../../../domain/ta/indicators/RvaIndicator";
 import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseSortableAttributeExtractor } from "../BaseSortableAttributeExtractor";
 
 export class DailyRvaExtractor extends BaseSortableAttributeExtractor {
 
-    private params: RvaIndicatorParameters;
+    private rva: RvaAccessor;
     public constructor() {
         super();
-        this.params = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
+        this.rva = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
     }
 
     public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>, ts: number): void {
@@ -20,11 +20,11 @@ export class DailyRvaExtractor extends BaseSortableAttributeExtractor {
     }
 
     private findAndStoreRva(tradingPair: TradingPair) {
-        const indicator = this.findIndicator(tradingPair, this.params) as RvaIndicator;
-        if (false === indicator.isReady()) {
+        const isReady = this.rva.isReady(tradingPair);
+        if (!isReady) {
             return;
         }
-        let relativeValue = indicator.getValue().getRelativeValue();
+        let relativeValue = this.rva.get(tradingPair).getRelativeValue();
         this.setValue(tradingPair, relativeValue);
     }
 
@@ -33,7 +33,7 @@ export class DailyRvaExtractor extends BaseSortableAttributeExtractor {
     }
 
     public getFriendlyDescription(): string {
-        return this.params.getDescription();
+        return this.rva.getParameters().getDescription();
     }
 
     public getId(): string {

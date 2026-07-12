@@ -7,6 +7,7 @@ import { Source } from "../core/Source"
 import { Indicator, IndicatorOutput, IndicatorParameters } from "./Indicator"
 import { OhlcvEntry } from "../../values/OhlcvEntry";
 import { PeriodPercentChange } from "../core/PeriodPercentChange";
+import { IndicatorAccessor } from "../export/IndicatorAccessor";
 
 export class PctChangeIndicatorOutput extends IndicatorOutput {
     #value: MutableFloat;
@@ -25,9 +26,7 @@ export class PctChangeIndicatorOutput extends IndicatorOutput {
     }
 }
 
-export class PctChangeIndicatorParameters extends IndicatorParameters<PctChangeIndicatorOutput> {
-
-
+export class PctChangeIndicatorParameters extends IndicatorParameters {
     public readonly timeFrame: TimeFrame;
     public readonly period: Period;
     public readonly source: Source;
@@ -82,8 +81,8 @@ export class PctChangeIndicatorParameters extends IndicatorParameters<PctChangeI
 
 
 
-export class PctChangeIndicator extends Indicator<PctChangeIndicatorOutput> {
-    
+export class PctChangeIndicator extends Indicator<PctChangeIndicatorParameters, PctChangeIndicatorOutput> {
+
     private readonly mtf: MultiTimeframeOhlcv;
     private readonly history: RingBuffer<PctChangeIndicatorOutput>;
     private readonly impl: PeriodPercentChange;
@@ -122,7 +121,11 @@ export class PctChangeIndicator extends Indicator<PctChangeIndicatorOutput> {
         }
     }
 
-    update(): void {
+    update(timeFrame: TimeFrame): void {
+        const thisTf = this.getParameters().getTimeFrame();
+        if (timeFrame != thisTf) {
+            return;
+        }
         const candle = this.mtf
             .getBuffer(this.getParameters().getTimeFrame())
             .getCandle();
@@ -143,3 +146,5 @@ export class PctChangeIndicator extends Indicator<PctChangeIndicatorOutput> {
         throw new Error("Method not implemented.");
     }
 }
+
+export class PctChangeAccessor extends IndicatorAccessor<PctChangeIndicatorParameters,PctChangeIndicatorOutput> {}

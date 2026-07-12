@@ -2686,6 +2686,7 @@
             } catch (err) {
               __privateGet(this, _mainView).progressModalView.hide();
               __privateGet(this, _mainView).genericModalView.showError("Error", "Application data fetch failure, please restart.", err, () => {
+                this.restartApp();
               });
             }
           });
@@ -2714,9 +2715,14 @@
             } catch (err) {
               __privateGet(this, _mainView).progressModalView.hide();
               __privateGet(this, _mainView).genericModalView.showError("Error", "Application data sync failure, please restart.", err, () => {
+                this.restartApp();
               });
             }
           });
+        }
+        restartApp() {
+          __privateGet(this, _worker).terminate();
+          window.location.reload();
         }
         callWorker(method, args) {
           const id = ++__privateWrapper(this, _id)._;
