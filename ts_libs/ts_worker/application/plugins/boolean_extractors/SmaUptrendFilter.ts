@@ -19,17 +19,11 @@ export class SmaUptrendFilter extends BaseFilterableAttributeExtractor {
     }
 
     private updateBooleanAttribute(tradingPair: TradingPair): void {
-        const tf = this.sma.getParameters().getTimeFrame();
-        const close = this.close(tradingPair, tf);
-        if (close === undefined) {
-            return;
-        }
         const isReady = this.sma.isReady(tradingPair);
         if (!isReady) {
             return;
         }
-
-        const isUptrend = close > this.sma.get(tradingPair).getValue();
+        const isUptrend = this.sma.isUptrend(tradingPair);
         this.setValue(tradingPair, isUptrend);
     }
 

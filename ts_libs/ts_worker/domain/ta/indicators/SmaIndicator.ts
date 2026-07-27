@@ -136,6 +136,85 @@ export class SmaIndicator extends Indicator<SmaIndicatorParameters, SmaIndicator
     getPendingValue(): SmaIndicatorOutput {
         throw new Error("Method not implemented.");
     }
+
+
+    isBelowClose(n: number = 0): boolean {
+        const sourceTf = this.getParameters().getTimeFrame();
+        if (n < 0 || n >= this.getValuesCount()) {
+            throw new RangeError("SMA value not available");
+        }
+        const price = this.mtf.getBuffer(sourceTf).getClose(n);
+        const value = this.getValue(n).getValue();
+        return price > value;
+    }
+
+    isAboveClose(n: number = 0): boolean {
+        const sourceTf = this.getParameters().getTimeFrame();
+        if (n < 0 || n >= this.getValuesCount()) {
+            throw new RangeError("SMA value not available");
+        }
+        const price = this.mtf.getBuffer(sourceTf).getClose(n);
+        const value = this.getValue(n).getValue();
+        return price < value;
+    }
+
+    getSlopeAngle(nBarsAgo: number = 0, distance: number = 1): number {
+        if (!Number.isInteger(distance) || distance < 1) {
+            throw new RangeError(
+                `Distance must be a positive integer, got ${distance}`
+            );
+        }
+        if (nBarsAgo < 0 || nBarsAgo >= this.history.getSize()) {
+            throw new Error("nBarsAgo must be between 0 and history size");
+        }
+        if (nBarsAgo + distance >= this.history.getSize()) {
+            throw new RangeError("Not enough data to compute slope");
+        }
+
+        const nBarsAgoValue = this.getValue(nBarsAgo).getValue();
+        const nPlusDistanceBarsAgoValue = this.getValue(nBarsAgo + distance).getValue();
+        const deltaY = nBarsAgoValue - nPlusDistanceBarsAgoValue
+        const deltaX = distance;
+        const slopeRadians = Math.atan(deltaY / deltaX);
+        const slopeDegrees = slopeRadians * (180 / Math.PI);
+        return slopeDegrees;
+    }
 }
 
-export class SmaAccessor extends IndicatorAccessor<SmaIndicatorParameters, SmaIndicatorOutput> { }
+export class SmaAccessor extends IndicatorAccessor<SmaIndicatorParameters, SmaIndicatorOutput> {
+    findIndicatorOrThrow(aTp: TradingPair): SmaIndicator {
+        const indicator = this.plugin.findIndicator(aTp, this.getParameters());
+        if (!(indicator instanceof SmaIndicator)) throw new Error("Indicator is not a SmaIndicator");
+        return indicator;
+    }
+
+    isUptrend(aTp: TradingPair, n: number = 0): boolean {
+        const smaIndicator = this.findIndicatorOrThrow(aTp);
+        return smaIndicator.isBelowClose(n) && smaIndicator.getSlopeAngle(n, 1) > 0;
+    }
+
+    isDowntrend(aTp: TradingPair, n: number = 0): boolean {
+        const smaIndicator = this.findIndicatorOrThrow(aTp);
+        return smaIndicator.isAboveClose(n) && smaIndicator.getSlopeAngle(n, 1) < 0;
+    }
+
+    isCrossover(tp: TradingPair, another: SmaAccessor): boolean {
+        if (another.getValuesCount(tp) < 2 || this.getValuesCount(tp) < 2) {
+            return false;
+        }
+        const previous = this.get(tp, 1).getValue() <= another.get(tp, 1).getValue();
+        const current = this.get(tp, 0).getValue() > another.get(tp, 0).getValue();
+        const toReturn = previous === true && current === true;
+        return toReturn;
+    }
+
+    isCrossunder(tp: TradingPair, another: SmaAccessor): boolean {
+        if (another.getValuesCount(tp) < 2 || this.getValuesCount(tp) < 2) {
+            return false;
+        }
+        const previous = this.get(tp, 1).getValue() >= another.get(tp, 1).getValue();
+        const current = this.get(tp, 0).getValue() < another.get(tp, 0).getValue();
+        const toReturn = previous === true && current === true;
+        return toReturn;
+    }
+}

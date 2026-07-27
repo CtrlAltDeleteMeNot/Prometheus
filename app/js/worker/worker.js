@@ -1422,9 +1422,9 @@
           this.capacity = capacity;
           this.pointer = 0;
           this.size = 0;
-          if (capacity <= 0) {
+          if (!Number.isInteger(capacity) || capacity <= 0) {
             throw new RangeError(
-              `Capacity must be greater than zero, got ${capacity}`
+              `Capacity must be a positive integer, got ${capacity}`
             );
           }
           this.buffer = new Array(capacity);
@@ -1465,6 +1465,9 @@
          * @param n - 0 = last inserted, 1 = previous item
          */
         get(n = 0) {
+          if (!Number.isInteger(n)) {
+            throw new TypeError(`Index must be an integer, got ${n}`);
+          }
           if (n < 0 || n >= this.size) {
             throw new RangeError(`Invalid index ${n}, buffer size is ${this.size}`);
           }
@@ -3695,6 +3698,44 @@
         getPendingValue() {
           throw new Error("Method not implemented.");
         }
+        isBelowClose(n = 0) {
+          const sourceTf = this.getParameters().getTimeFrame();
+          if (n < 0 || n >= this.getValuesCount()) {
+            throw new RangeError("SMA value not available");
+          }
+          const price = this.mtf.getBuffer(sourceTf).getClose(n);
+          const value = this.getValue(n).getValue();
+          return price > value;
+        }
+        isAboveClose(n = 0) {
+          const sourceTf = this.getParameters().getTimeFrame();
+          if (n < 0 || n >= this.getValuesCount()) {
+            throw new RangeError("SMA value not available");
+          }
+          const price = this.mtf.getBuffer(sourceTf).getClose(n);
+          const value = this.getValue(n).getValue();
+          return price < value;
+        }
+        getSlopeAngle(nBarsAgo = 0, distance = 1) {
+          if (!Number.isInteger(distance) || distance < 1) {
+            throw new RangeError(
+              `Distance must be a positive integer, got ${distance}`
+            );
+          }
+          if (nBarsAgo < 0 || nBarsAgo >= this.history.getSize()) {
+            throw new Error("nBarsAgo must be between 0 and history size");
+          }
+          if (nBarsAgo + distance >= this.history.getSize()) {
+            throw new RangeError("Not enough data to compute slope");
+          }
+          const nBarsAgoValue = this.getValue(nBarsAgo).getValue();
+          const nPlusDistanceBarsAgoValue = this.getValue(nBarsAgo + distance).getValue();
+          const deltaY = nBarsAgoValue - nPlusDistanceBarsAgoValue;
+          const deltaX = distance;
+          const slopeRadians = Math.atan(deltaY / deltaX);
+          const slopeDegrees = slopeRadians * (180 / Math.PI);
+          return slopeDegrees;
+        }
       };
       _SmaIndicator_instances = new WeakSet();
       computeCore_fn5 = function(value) {
@@ -3703,6 +3744,37 @@
         this.history.push((sample) => sample.update(computed));
       };
       SmaAccessor = class extends IndicatorAccessor {
+        findIndicatorOrThrow(aTp) {
+          const indicator = this.plugin.findIndicator(aTp, this.getParameters());
+          if (!(indicator instanceof SmaIndicator)) throw new Error("Indicator is not a SmaIndicator");
+          return indicator;
+        }
+        isUptrend(aTp, n = 0) {
+          const smaIndicator = this.findIndicatorOrThrow(aTp);
+          return smaIndicator.isBelowClose(n) && smaIndicator.getSlopeAngle(n, 1) > 0;
+        }
+        isDowntrend(aTp, n = 0) {
+          const smaIndicator = this.findIndicatorOrThrow(aTp);
+          return smaIndicator.isAboveClose(n) && smaIndicator.getSlopeAngle(n, 1) < 0;
+        }
+        isCrossover(tp, another) {
+          if (another.getValuesCount(tp) < 2 || this.getValuesCount(tp) < 2) {
+            return false;
+          }
+          const previous = this.get(tp, 1).getValue() <= another.get(tp, 1).getValue();
+          const current = this.get(tp, 0).getValue() > another.get(tp, 0).getValue();
+          const toReturn = previous === true && current === true;
+          return toReturn;
+        }
+        isCrossunder(tp, another) {
+          if (another.getValuesCount(tp) < 2 || this.getValuesCount(tp) < 2) {
+            return false;
+          }
+          const previous = this.get(tp, 1).getValue() >= another.get(tp, 1).getValue();
+          const current = this.get(tp, 0).getValue() < another.get(tp, 0).getValue();
+          const toReturn = previous === true && current === true;
+          return toReturn;
+        }
       };
     }
   });
@@ -3979,16 +4051,11 @@
           this.updateBooleanAttribute(tradingPair);
         }
         updateBooleanAttribute(tradingPair) {
-          const tf = this.sma.getParameters().getTimeFrame();
-          const close = this.close(tradingPair, tf);
-          if (close === void 0) {
-            return;
-          }
           const isReady = this.sma.isReady(tradingPair);
           if (!isReady) {
             return;
           }
-          const isDowntrend = close < this.sma.get(tradingPair).getValue();
+          const isDowntrend = this.sma.isDowntrend(tradingPair);
           this.setValue(tradingPair, isDowntrend);
         }
       };
@@ -4014,16 +4081,11 @@
           return `Uptrend: ${this.sma.getParameters().getDescription()} < Close`;
         }
         updateBooleanAttribute(tradingPair) {
-          const tf = this.sma.getParameters().getTimeFrame();
-          const close = this.close(tradingPair, tf);
-          if (close === void 0) {
-            return;
-          }
           const isReady = this.sma.isReady(tradingPair);
           if (!isReady) {
             return;
           }
-          const isUptrend = close > this.sma.get(tradingPair).getValue();
+          const isUptrend = this.sma.isUptrend(tradingPair);
           this.setValue(tradingPair, isUptrend);
         }
         next(tradingPair, updatedTimeFrames, ts) {
@@ -4248,155 +4310,6 @@
     }
   });
 
-  // ts_libs/ts_worker/application/plugins/signal_generators/HighVolumeInsideCompressedDonchian.ts
-  var HighVolumeInsideCompressedDonchian;
-  var init_HighVolumeInsideCompressedDonchian = __esm({
-    "ts_libs/ts_worker/application/plugins/signal_generators/HighVolumeInsideCompressedDonchian.ts"() {
-      "use strict";
-      init_Period();
-      init_Source();
-      init_TimeFrame();
-      init_SignalModel();
-      init_BaseSignalGenerator();
-      HighVolumeInsideCompressedDonchian = class extends BaseSignalGenerator {
-        constructor() {
-          super();
-          this.rvaThreshold = 4;
-          this.sma50 = this.useSmaIndicator(
-            TimeFrame.ONE_HOUR,
-            Period.fromUnknown(50),
-            Source.CLOSE
-          );
-          this.sma200Trend = this.useSmaIndicator(
-            TimeFrame.FOUR_HOURS,
-            Period.fromUnknown(200),
-            Source.CLOSE
-          );
-          this.donchian20 = this.useDonchianChannelsIndicator(
-            TimeFrame.ONE_HOUR,
-            Period.fromUnknown(20)
-          );
-          this.rva21 = this.useRvaIndicator(
-            TimeFrame.ONE_MINUTE,
-            Period.fromUnknown(21)
-          );
-          this.rva89 = this.useRvaIndicator(
-            TimeFrame.ONE_MINUTE,
-            Period.fromUnknown(89)
-          );
-          this.rva200 = this.useRvaIndicator(
-            TimeFrame.ONE_MINUTE,
-            Period.fromUnknown(200)
-          );
-        }
-        getId() {
-          return [
-            "donchian.high-volume-up",
-            this.sma50.getParameters().getId(),
-            this.donchian20.getParameters().getId(),
-            this.rva21.getParameters().getId(),
-            this.rva89.getParameters().getId(),
-            this.rva200.getParameters().getId(),
-            this.rvaThreshold
-          ].join(".");
-        }
-        getFriendlyDescription() {
-          return "Bullish one-minute volume expansion inside the upper half of an hourly Donchian channel whose upper band remains below the hourly SMA 50.";
-        }
-        next(tradingPair, updatedTimeFrames, nowTs) {
-          if (!this.wasUpdated(updatedTimeFrames, TimeFrame.ONE_MINUTE)) {
-            return;
-          }
-          if (!this.areIndicatorsReady(tradingPair)) {
-            return;
-          }
-          if (!this.isLongTermBullTrend(tradingPair)) {
-            return;
-          }
-          if (!this.isDonchianBelowSma50(tradingPair)) {
-            return;
-          }
-          if (!this.isHighVolumeUp(tradingPair)) {
-            return;
-          }
-          if (!this.isInsideUpperDonchianHalf(tradingPair)) {
-            return;
-          }
-          this.emit(
-            tradingPair,
-            "BULLISH" /* BULLISH */,
-            nowTs
-          );
-        }
-        areIndicatorsReady(tradingPair) {
-          return this.sma50.isReady(tradingPair) && this.sma200Trend.isReady(tradingPair) && this.donchian20.isReady(tradingPair) && this.rva21.isReady(tradingPair) && this.rva89.isReady(tradingPair) && this.rva200.isReady(tradingPair);
-        }
-        isLongTermBullTrend(tradingPair) {
-          if (!this.sma200Trend.isReady(tradingPair)) {
-            return false;
-          }
-          const sma200 = this.sma200Trend.get(tradingPair).getValue();
-          const close = this.close(
-            tradingPair,
-            TimeFrame.ONE_MINUTE
-          );
-          if (sma200 === void 0 || close === void 0) {
-            return false;
-          }
-          return close > sma200;
-        }
-        /**
-         * The complete hourly Donchian range must remain below SMA 50.
-         */
-        isDonchianBelowSma50(tradingPair) {
-          const sma50 = this.sma50.get(tradingPair).getValue();
-          const donchianUpper = this.donchian20.get(tradingPair).getHigh();
-          return donchianUpper < sma50;
-        }
-        /**
-         * The one-minute trigger candle must be bullish and all three
-         * relative-volume readings must be at least the configured threshold.
-         */
-        isHighVolumeUp(tradingPair) {
-          const open = this.open(
-            tradingPair,
-            TimeFrame.ONE_MINUTE
-          );
-          const close = this.close(
-            tradingPair,
-            TimeFrame.ONE_MINUTE
-          );
-          if (open === void 0 || close === void 0) {
-            return false;
-          }
-          const rva21 = this.rva21.get(tradingPair).getRelativeValue();
-          const rva89 = this.rva89.get(tradingPair).getRelativeValue();
-          const rva200 = this.rva200.get(tradingPair).getRelativeValue();
-          const tripleRvaPassed = rva21 >= this.rvaThreshold && rva89 >= this.rvaThreshold && rva200 >= this.rvaThreshold;
-          const bullishCandle = close > open;
-          return tripleRvaPassed && bullishCandle;
-        }
-        /**
-         * The one-minute close must be above the hourly Donchian midpoint
-         * but still below its upper band.
-         */
-        isInsideUpperDonchianHalf(tradingPair) {
-          const close = this.close(
-            tradingPair,
-            TimeFrame.ONE_MINUTE
-          );
-          if (close === void 0) {
-            return false;
-          }
-          const donchian = this.donchian20.get(tradingPair);
-          const middle = donchian.getMiddle();
-          const upper = donchian.getHigh();
-          return close > middle && close < upper;
-        }
-      };
-    }
-  });
-
   // ts_libs/ts_worker/application/plugins/signal_generators/MomentumRecoverySignalGenerator.ts
   var MomentumRecoverySignalGenerator;
   var init_MomentumRecoverySignalGenerator = __esm({
@@ -4412,10 +4325,8 @@
           super();
           this.topGainersCount = 10;
           this.fastCrossoverThreshold = 5;
-          this.rsiSlopeMax = 95;
           this.rsiFast = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
           this.smaFast = this.useSmaIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(200), Source.CLOSE);
-          this.rsiSlopeFilter = this.useRsiIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(2), Source.CLOSE);
           this.smaTrendFilter = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
           this.gainersFilter = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, Period.fromUnknown(30), Source.CLOSE);
         }
@@ -4433,9 +4344,6 @@
           if (false === this.isFastRsiCrossover(tradingPair, updatedTimeFrames)) {
             return;
           }
-          if (false === this.isHigherTimeFrameRsiSlopingUp(tradingPair)) {
-            return;
-          }
           if (false === this.isUptrend(tradingPair, this.smaFast)) {
             return;
           }
@@ -4444,25 +4352,11 @@
           }
           this.emit(tradingPair, "BULLISH" /* BULLISH */, ts);
         }
-        isHigherTimeFrameRsiSlopingUp(tradingPair) {
-          if (this.rsiSlopeFilter.getValuesCount(tradingPair) < 2) {
-            return false;
-          }
-          const previous = this.rsiSlopeFilter.get(tradingPair, 1);
-          const current = this.rsiSlopeFilter.get(tradingPair, 0);
-          const acceptable = previous.getValue() <= current.getValue() && current.getValue() < this.rsiSlopeMax;
-          return acceptable;
-        }
         isUptrend(tradingPair, smaAccessor) {
           if (!smaAccessor.isReady(tradingPair)) {
             return false;
           }
-          const sma = smaAccessor.get(tradingPair).getValue();
-          const close = this.close(tradingPair, smaAccessor.getParameters().getTimeFrame());
-          if (sma === void 0 || close === void 0) {
-            return false;
-          }
-          return sma < close;
+          return smaAccessor.isUptrend(tradingPair);
         }
         isFastRsiCrossover(tradingPair, updatedTimeFrames) {
           if (false === this.wasUpdated(updatedTimeFrames, this.rsiFast.getParameters().getTimeFrame())) {
@@ -4532,7 +4426,6 @@
       init_DailyPriceChangeExtractor();
       init_DailyRvaExtractor();
       init_ThirtyDayPercentChangeExtractor();
-      init_HighVolumeInsideCompressedDonchian();
       init_MomentumRecoverySignalGenerator();
       _PluginManager = class _PluginManager {
         constructor() {
@@ -4590,8 +4483,8 @@
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
-        new MomentumRecoverySignalGenerator(),
-        new HighVolumeInsideCompressedDonchian()
+        new MomentumRecoverySignalGenerator()
+        //new HighVolumeInsideCompressedDonchian()
       ];
       PluginManager = _PluginManager;
     }

@@ -5,8 +5,8 @@ import { BasePlugin } from "./BasePlugin";
 export class IndicatorAccessor<TParams extends IndicatorParameters, TOutput extends IndicatorOutput> {
 
     constructor(
-        private readonly plugin: BasePlugin,
-        private readonly params: TParams
+        protected readonly plugin: BasePlugin,
+        protected readonly params: TParams
     ) { }
 
     get(

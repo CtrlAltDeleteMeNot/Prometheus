@@ -1,37 +1,52 @@
-name: Prometheus Config
+##################################
+#ollama pull qwen2.5-coder:7b
+#ollama pull qwen2.5-coder:1.5b
+#ollama pull nomic-embed-text
+##################################
+name: Local Pirate Config
 version: 1.0.0
 schema: v1
-
 models:
   - name: Main
     provider: ollama
-    model: qwen3-coder:30b 
+    model: qwen2.5-coder:7b
+    request_options:
+      keep_alive: 0 
     roles:
       - chat
   
   - name: Edit
     provider: ollama
-    model: deepseek-coder:6.7b
+    model: qwen2.5-coder:7b
+    request_options:
+      keep_alive: 0 
     roles:
       - edit
 
   - name: Apply
     provider: ollama
-    model: deepseek-coder:6.7b
+    model: qwen2.5-coder:7b
+    request_options:
+      keep_alive: 0 
     roles:
       - apply
   
   - name: Fast Autocomplete
     provider: ollama
-    model: qwen2.5-coder:3b
+    model: qwen2.5-coder:1.5b
+    request_options:
+      keep_alive: "10m" 
     roles:
       - autocomplete
 
   - name: Nomic Embed
     provider: ollama
     model: nomic-embed-text:latest
+    request_options:
+      keep_alive: 0 
     roles:
       - embed
+
 
 rules:
   - Give concise responses

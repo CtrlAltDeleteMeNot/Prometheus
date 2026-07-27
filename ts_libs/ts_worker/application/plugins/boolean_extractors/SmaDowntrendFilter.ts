@@ -1,7 +1,7 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
 import { Period } from "../../../domain/ta/core/Period";
 import { Source } from "../../../domain/ta/core/Source";
-import { SmaAccessor, SmaIndicatorOutput, SmaIndicatorParameters } from "../../../domain/ta/indicators/SmaIndicator";
+import { SmaAccessor } from "../../../domain/ta/indicators/SmaIndicator";
 import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { BaseFilterableAttributeExtractor } from "../BaseFilterableAttributeExtractor";
 
@@ -26,16 +26,11 @@ export class SmaDowntrendFilter extends BaseFilterableAttributeExtractor {
     }
 
     private updateBooleanAttribute(tradingPair: TradingPair) {
-        const tf = this.sma.getParameters().getTimeFrame();
-        const close = this.close(tradingPair, tf);
-        if (close === undefined) {
-            return;
-        }
         const isReady = this.sma.isReady(tradingPair);
         if (!isReady) {
             return;
         }
-        const isDowntrend = close < this.sma.get(tradingPair).getValue();
+        const isDowntrend = this.sma.isDowntrend(tradingPair);
         this.setValue(tradingPair, isDowntrend);
     }
 

@@ -10,11 +10,12 @@ export class RingBuffer<T> {
         private readonly capacity: number,
         factoryOrArray: (() => T) | T[]
     ) {
-        if (capacity <= 0) {
+        if (!Number.isInteger(capacity) || capacity <= 0) {
             throw new RangeError(
-                `Capacity must be greater than zero, got ${capacity}`
+                `Capacity must be a positive integer, got ${capacity}`
             );
         }
+
         this.buffer = new Array<T>(capacity);
 
         if (Array.isArray(factoryOrArray)) {
@@ -59,6 +60,9 @@ export class RingBuffer<T> {
      * @param n - 0 = last inserted, 1 = previous item
      */
     get(n = 0): T {
+        if (!Number.isInteger(n)) {
+            throw new TypeError(`Index must be an integer, got ${n}`);
+        }
         if (n < 0 || n >= this.size) {
             throw new RangeError(`Invalid index ${n}, buffer size is ${this.size}`);
         }

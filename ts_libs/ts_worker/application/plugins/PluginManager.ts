@@ -66,7 +66,7 @@ export class PluginManager {
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
         new MomentumRecoverySignalGenerator(),
-        new HighVolumeInsideCompressedDonchian()
+        //new HighVolumeInsideCompressedDonchian()
     ];
 
     get sortableAttributes(): readonly NamedAttributeMetadata[] {

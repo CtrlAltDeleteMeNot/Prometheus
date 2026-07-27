@@ -10,9 +10,7 @@ import { BaseSignalGenerator } from "../BaseSignalGenerator";
 
 export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
     rsiFast: RsiAccessor;
-    rsiSlopeFilter: RsiAccessor;
     fastCrossoverThreshold: number;
-    rsiSlopeMax: number;
     smaTrendFilter: SmaAccessor;
     smaFast: SmaAccessor;
     gainersFilter: PctChangeAccessor;
@@ -23,10 +21,8 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
         super();
         this.topGainersCount = 10;
         this.fastCrossoverThreshold = 5;
-        this.rsiSlopeMax = 95;
         this.rsiFast = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
         this.smaFast = this.useSmaIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(200), Source.CLOSE);
-        this.rsiSlopeFilter = this.useRsiIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(2), Source.CLOSE);
         this.smaTrendFilter = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
         this.gainersFilter = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, Period.fromUnknown(30), Source.CLOSE);
     }
@@ -47,13 +43,9 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
         if (false === this.isFastRsiCrossover(tradingPair, updatedTimeFrames)) {
             return;
         }
-        if (false === this.isHigherTimeFrameRsiSlopingUp(tradingPair)) {
-            return;
-        }
         if (false === this.isUptrend(tradingPair, this.smaFast)) {
             return;
         }
-
         if (false === this.isUptrend(tradingPair, this.smaTrendFilter)) {
             return;
         }
@@ -61,28 +53,11 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
         this.emit(tradingPair, SignalDirection.BULLISH, ts);
     }
 
-    isHigherTimeFrameRsiSlopingUp(tradingPair: TradingPair) {
-        if (this.rsiSlopeFilter.getValuesCount(tradingPair) < 2) {
-            return false;
-        }
-        const previous = this.rsiSlopeFilter.get(tradingPair, 1);
-        const current = this.rsiSlopeFilter.get(tradingPair, 0);
-        const acceptable =
-            previous.getValue() <= current.getValue() &&
-            current.getValue() < this.rsiSlopeMax;
-        return acceptable;
-    }
-
     isUptrend(tradingPair: TradingPair, smaAccessor: SmaAccessor): boolean {
         if (!smaAccessor.isReady(tradingPair)) {
             return false;
         }
-        const sma = smaAccessor.get(tradingPair).getValue();
-        const close = this.close(tradingPair, smaAccessor.getParameters().getTimeFrame());
-        if (sma === undefined || close === undefined) {
-            return false;
-        }
-        return sma < close;
+        return smaAccessor.isUptrend(tradingPair);
     }
 
     isFastRsiCrossover(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>): boolean {
