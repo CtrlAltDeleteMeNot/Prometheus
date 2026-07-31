@@ -4323,31 +4323,33 @@
       MomentumRecoverySignalGenerator = class extends BaseSignalGenerator {
         constructor() {
           super();
-          this.topGainersCount = 10;
+          this.rsiSmaLen = 3;
           this.fastCrossoverThreshold = 5;
-          this.rsiFast = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
-          this.smaFast = this.useSmaIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(200), Source.CLOSE);
-          this.smaTrendFilter = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
-          this.gainersFilter = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, Period.fromUnknown(30), Source.CLOSE);
+          this.rsi = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
+          this.smaFast = this.useSmaIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(200), Source.CLOSE);
+          this.smaSlow = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
+          this.id = [
+            "momentum-recovery",
+            this.rsi.getParameters().getId(),
+            `rsi-sma-${this.rsiSmaLen}`,
+            `threshold-${this.fastCrossoverThreshold}`
+          ].join(".");
+          this.friendlyDescription = `Bullish ${this.rsi.getParameters().getDescription()} recovery during a strong uptrend.`;
         }
         getId() {
-          return `rsi.crossover.signal.${this.rsiFast.getParameters().getId()}.${this.fastCrossoverThreshold}`;
+          return this.id;
         }
         getFriendlyDescription() {
-          return "Bullish pullback recovery on a top 30-day momentum performer.";
+          return this.friendlyDescription;
         }
         next(tradingPair, updatedTimeFrames, ts) {
-          this.updateTopPairs(updatedTimeFrames, ts);
-          if (false === this.isTopGainer(tradingPair)) {
-            return;
-          }
           if (false === this.isFastRsiCrossover(tradingPair, updatedTimeFrames)) {
             return;
           }
           if (false === this.isUptrend(tradingPair, this.smaFast)) {
             return;
           }
-          if (false === this.isUptrend(tradingPair, this.smaTrendFilter)) {
+          if (false === this.isUptrend(tradingPair, this.smaSlow)) {
             return;
           }
           this.emit(tradingPair, "BULLISH" /* BULLISH */, ts);
@@ -4359,50 +4361,28 @@
           return smaAccessor.isUptrend(tradingPair);
         }
         isFastRsiCrossover(tradingPair, updatedTimeFrames) {
-          if (false === this.wasUpdated(updatedTimeFrames, this.rsiFast.getParameters().getTimeFrame())) {
+          if (false === this.wasUpdated(updatedTimeFrames, this.rsi.getParameters().getTimeFrame())) {
             return false;
           }
-          if (this.rsiFast.getValuesCount(tradingPair) < 2) {
+          if (this.rsi.getValuesCount(tradingPair) < this.rsiSmaLen + 1) {
             return false;
           }
-          const previousFast = this.rsiFast.get(tradingPair, 1).getValue();
-          const currentFast = this.rsiFast.get(tradingPair, 0).getValue();
-          const crossedUp = previousFast <= this.fastCrossoverThreshold && currentFast > this.fastCrossoverThreshold;
-          return crossedUp;
+          const previousFast = this.rsi.get(tradingPair, 1).getValue();
+          const currentFast = this.rsi.get(tradingPair, 0).getValue();
+          const rsiCrossedAboveTreshold = previousFast <= this.fastCrossoverThreshold && currentFast > this.fastCrossoverThreshold;
+          if (!rsiCrossedAboveTreshold) {
+            return false;
+          }
+          const previousRsiSma = this.getRsiSma(tradingPair, 1, this.rsiSmaLen);
+          const rsiSmaWasBelowTreshold = previousRsiSma < this.fastCrossoverThreshold;
+          return rsiSmaWasBelowTreshold && rsiCrossedAboveTreshold;
         }
-        updateTopPairs(updatedTimeFrames, ts) {
-          if (this.topGainersUpdatedAt === ts) {
-            return;
+        getRsiSma(tradingPair, startIndex, period) {
+          let sum = 0;
+          for (let index = startIndex; index < startIndex + period; index++) {
+            sum += this.rsi.get(tradingPair, index).getValue();
           }
-          if (false === this.wasUpdated(updatedTimeFrames, this.gainersFilter.getParameters().getTimeFrame())) {
-            return;
-          }
-          const grouped = /* @__PURE__ */ new Map();
-          this.getTradingPairs().forEach((pair) => {
-            const exchangeId = pair.getExchangeDescriptor().getId();
-            let list = grouped.get(exchangeId);
-            if (!list) {
-              list = [];
-              grouped.set(exchangeId, list);
-            }
-            list.push(pair);
-          });
-          const top = /* @__PURE__ */ new Set();
-          grouped.forEach((pairs) => {
-            const ranked = pairs.map((pair) => ({
-              pair,
-              percentChange: this.gainersFilter.isReady(pair) ? this.gainersFilter.get(pair).getValue() : Number.NEGATIVE_INFINITY
-            })).sort((a, b) => b.percentChange - a.percentChange);
-            ranked.slice(0, this.topGainersCount).forEach((x) => top.add(x.pair));
-          });
-          this.topGainers = top;
-          this.topGainersUpdatedAt = ts;
-        }
-        isTopGainer(tradingPair) {
-          if (this.topGainers === void 0) {
-            return false;
-          }
-          return this.topGainers.has(tradingPair);
+          return sum / period;
         }
       };
     }

@@ -1,7 +1,6 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
 import { Period } from "../../../domain/ta/core/Period";
 import { Source } from "../../../domain/ta/core/Source";
-import { PctChangeAccessor } from "../../../domain/ta/indicators/PctChangeIndicator";
 import { RsiAccessor } from "../../../domain/ta/indicators/RsiIndicator";
 import { SmaAccessor } from "../../../domain/ta/indicators/SmaIndicator";
 import { TimeFrame } from "../../../domain/values/TimeFrame";
@@ -9,44 +8,46 @@ import { SignalDirection } from "../../exports/SignalModel";
 import { BaseSignalGenerator } from "../BaseSignalGenerator";
 
 export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
-    rsiFast: RsiAccessor;
+    rsi: RsiAccessor;
+    rsiSmaLen: number;
     fastCrossoverThreshold: number;
-    smaTrendFilter: SmaAccessor;
+    smaSlow: SmaAccessor;
     smaFast: SmaAccessor;
-    gainersFilter: PctChangeAccessor;
-    topGainers: Set<TradingPair> | undefined;
-    topGainersUpdatedAt: number | undefined;
-    topGainersCount: number;
+    id:string;
+    friendlyDescription: string;
     public constructor() {
         super();
-        this.topGainersCount = 10;
+        this.rsiSmaLen = 3;
         this.fastCrossoverThreshold = 5;
-        this.rsiFast = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
-        this.smaFast = this.useSmaIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(200), Source.CLOSE);
-        this.smaTrendFilter = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
-        this.gainersFilter = this.usePercentChangeIndicator(TimeFrame.ONE_DAY, Period.fromUnknown(30), Source.CLOSE);
+        this.rsi = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
+        this.smaFast = this.useSmaIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(200), Source.CLOSE);
+        this.smaSlow = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
+        this.id = [
+            "momentum-recovery",
+            this.rsi.getParameters().getId(),
+            `rsi-sma-${this.rsiSmaLen}`,
+            `threshold-${this.fastCrossoverThreshold}`,
+        ].join(".");
+        this.friendlyDescription = `Bullish ${this.rsi.getParameters().getDescription()} recovery during a strong uptrend.`;
     }
 
     public getId(): string {
-        return `rsi.crossover.signal.${this.rsiFast.getParameters().getId()}.${this.fastCrossoverThreshold}`;
+        return this.id;
     }
 
     public getFriendlyDescription(): string {
-        return "Bullish pullback recovery on a top 30-day momentum performer.";
+        return this.friendlyDescription;
     }
 
     public next(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, ts: number): void {
-        this.updateTopPairs(updatedTimeFrames, ts);
-        if (false === this.isTopGainer(tradingPair)) {
-            return;
-        }
+
         if (false === this.isFastRsiCrossover(tradingPair, updatedTimeFrames)) {
             return;
         }
         if (false === this.isUptrend(tradingPair, this.smaFast)) {
             return;
         }
-        if (false === this.isUptrend(tradingPair, this.smaTrendFilter)) {
+        if (false === this.isUptrend(tradingPair, this.smaSlow)) {
             return;
         }
 
@@ -61,66 +62,40 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
     }
 
     isFastRsiCrossover(tradingPair: TradingPair, updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>): boolean {
-        if (false === this.wasUpdated(updatedTimeFrames, this.rsiFast.getParameters().getTimeFrame())) {
+        if (false === this.wasUpdated(updatedTimeFrames, this.rsi.getParameters().getTimeFrame())) {
             return false;
         }
-        if (this.rsiFast.getValuesCount(tradingPair) < 2) {
+        if (this.rsi.getValuesCount(tradingPair) < this.rsiSmaLen + 1) {
             return false;
         }
-        
-        const previousFast = this.rsiFast.get(tradingPair, 1).getValue();
-        const currentFast = this.rsiFast.get(tradingPair, 0).getValue();
 
-        const crossedUp =
+        const previousFast = this.rsi.get(tradingPair, 1).getValue();
+        const currentFast = this.rsi.get(tradingPair, 0).getValue();
+
+        const rsiCrossedAboveTreshold =
             previousFast <= this.fastCrossoverThreshold &&
             currentFast > this.fastCrossoverThreshold;
-        return crossedUp;
-    }
-
-
-
-    private updateTopPairs(updatedTimeFrames: ReadonlyMap<TimeFrame, boolean>, ts: number) {
-        if (this.topGainersUpdatedAt === ts) {
-            return;
-        }
-        if (false === this.wasUpdated(updatedTimeFrames, this.gainersFilter.getParameters().getTimeFrame())) {
-            return;
-        }
-        const grouped = new Map<number, TradingPair[]>();
-
-        this.getTradingPairs().forEach(pair => {
-            const exchangeId = pair.getExchangeDescriptor().getId();
-
-            let list = grouped.get(exchangeId);
-            if (!list) {
-                list = [];
-                grouped.set(exchangeId, list);
-            }
-
-            list.push(pair);
-        });
-
-        const top = new Set<TradingPair>();
-
-        grouped.forEach(pairs => {
-            const ranked = pairs
-                .map(pair => ({
-                    pair,
-                    percentChange: this.gainersFilter.isReady(pair) ? this.gainersFilter.get(pair).getValue() : Number.NEGATIVE_INFINITY
-                }))
-                .sort((a, b) => b.percentChange - a.percentChange);
-
-            ranked.slice(0, this.topGainersCount).forEach(x => top.add(x.pair));
-        });
-
-        this.topGainers = top;
-        this.topGainersUpdatedAt = ts;
-    }
-
-    private isTopGainer(tradingPair: TradingPair) {
-        if (this.topGainers === undefined) {
+        if (!rsiCrossedAboveTreshold) {
             return false;
         }
-        return this.topGainers.has(tradingPair);
+        const previousRsiSma = this.getRsiSma(tradingPair, 1, this.rsiSmaLen);
+        const rsiSmaWasBelowTreshold =
+            previousRsiSma < this.fastCrossoverThreshold;
+
+        return rsiSmaWasBelowTreshold && rsiCrossedAboveTreshold;
+    }
+
+    private getRsiSma(
+        tradingPair: TradingPair,
+        startIndex: number,
+        period: number,
+    ): number {
+        let sum = 0;
+
+        for (let index = startIndex; index < startIndex + period; index++) {
+            sum += this.rsi.get(tradingPair, index).getValue();
+        }
+
+        return sum / period;
     }
 }
