@@ -55,7 +55,8 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
     }
 
     isUptrend(tradingPair: TradingPair, smaAccessor: SmaAccessor): boolean {
-        if (!smaAccessor.isReady(tradingPair)) {
+        const isReady = smaAccessor.getValuesCount(tradingPair) > 2;
+        if (!isReady) {
             return false;
         }
         return smaAccessor.isUptrend(tradingPair);

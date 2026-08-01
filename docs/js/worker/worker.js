@@ -4051,7 +4051,7 @@
           this.updateBooleanAttribute(tradingPair);
         }
         updateBooleanAttribute(tradingPair) {
-          const isReady = this.sma.isReady(tradingPair);
+          const isReady = this.sma.getValuesCount(tradingPair) > 2;
           if (!isReady) {
             return;
           }
@@ -4081,7 +4081,7 @@
           return `Uptrend: ${this.sma.getParameters().getDescription()} < Close`;
         }
         updateBooleanAttribute(tradingPair) {
-          const isReady = this.sma.isReady(tradingPair);
+          const isReady = this.sma.getValuesCount(tradingPair) > 2;
           if (!isReady) {
             return;
           }
@@ -4355,7 +4355,8 @@
           this.emit(tradingPair, "BULLISH" /* BULLISH */, ts);
         }
         isUptrend(tradingPair, smaAccessor) {
-          if (!smaAccessor.isReady(tradingPair)) {
+          const isReady = smaAccessor.getValuesCount(tradingPair) > 2;
+          if (!isReady) {
             return false;
           }
           return smaAccessor.isUptrend(tradingPair);

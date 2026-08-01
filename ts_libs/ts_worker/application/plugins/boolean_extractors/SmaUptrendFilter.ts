@@ -19,7 +19,7 @@ export class SmaUptrendFilter extends BaseFilterableAttributeExtractor {
     }
 
     private updateBooleanAttribute(tradingPair: TradingPair): void {
-        const isReady = this.sma.isReady(tradingPair);
+        const isReady = this.sma.getValuesCount(tradingPair) > 2;
         if (!isReady) {
             return;
         }
