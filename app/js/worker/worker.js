@@ -460,7 +460,7 @@
     "ts_libs/ts_worker/application/exports/SignalModel.ts"() {
       "use strict";
       SignalModel = class _SignalModel {
-        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, exchangeUrl, description, direction, timestamp) {
+        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, exchangeUrl, description, direction, timestamp, entryPrice, stopLossPrice, takeProfitLevels) {
           this.baseAsset = baseAsset;
           this.quoteAsset = quoteAsset;
           this.exchangeName = exchangeName;
@@ -469,6 +469,9 @@
           this.description = description;
           this.direction = direction;
           this.timestamp = timestamp;
+          this.entryPrice = entryPrice;
+          this.stopLossPrice = stopLossPrice;
+          this.takeProfitLevels = takeProfitLevels;
         }
         serialize() {
           return {
@@ -479,7 +482,10 @@
             exchangeUrl: this.exchangeUrl,
             description: this.description,
             direction: this.direction,
-            timestamp: this.timestamp
+            timestamp: this.timestamp,
+            entryPrice: this.entryPrice,
+            stopLossPrice: this.stopLossPrice,
+            takeProfitLevels: this.takeProfitLevels
           };
         }
         static deserialize(dto) {
@@ -491,7 +497,10 @@
             dto.exchangeUrl,
             dto.description,
             dto.direction,
-            dto.timestamp
+            dto.timestamp,
+            dto.entryPrice,
+            dto.stopLossPrice,
+            dto.takeProfitLevels
           );
         }
       };
@@ -3043,6 +3052,23 @@
         });
       };
       DonchianChannelsAccessor = class extends IndicatorAccessor {
+        findIndicatorOrThrow(aTp) {
+          const indicator = this.plugin.findIndicator(aTp, this.getParameters());
+          if (!(indicator instanceof DonchianChannelsIndicator)) throw new Error("Indicator is not a DonchianChannelsIndicator");
+          return indicator;
+        }
+        getHigh(aTp, n = 0) {
+          const indicator = this.findIndicatorOrThrow(aTp);
+          return indicator.getValue(n).getHigh();
+        }
+        getLow(aTp, n = 0) {
+          const indicator = this.findIndicatorOrThrow(aTp);
+          return indicator.getValue(n).getLow();
+        }
+        getMiddle(aTp, n = 0) {
+          const indicator = this.findIndicatorOrThrow(aTp);
+          return indicator.getValue(n).getMiddle();
+        }
       };
     }
   });
@@ -4290,12 +4316,13 @@
           super(...arguments);
           this.signals = [];
         }
-        emit(tradingPair, signalDirection, timeStamp) {
+        emit(tradingPair, signalDirection, timeStamp, orderDetails) {
           this.signals.push({
             tradingPair,
             signalDirection,
             source: this,
-            timeStamp
+            timeStamp,
+            orderDetails
           });
         }
         drain() {
@@ -4325,6 +4352,7 @@
           super();
           this.rsiSmaLen = 3;
           this.fastCrossoverThreshold = 5;
+          this.don = this.useDonchianChannelsIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(10));
           this.rsi = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
           this.smaFast = this.useSmaIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(200), Source.CLOSE);
           this.smaSlow = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
@@ -4352,7 +4380,7 @@
           if (false === this.isUptrend(tradingPair, this.smaSlow)) {
             return;
           }
-          this.emit(tradingPair, "BULLISH" /* BULLISH */, ts);
+          this.emit(tradingPair, "BULLISH" /* BULLISH */, ts, this.makeOrderDetails(tradingPair));
         }
         isUptrend(tradingPair, smaAccessor) {
           const isReady = smaAccessor.getValuesCount(tradingPair) > 2;
@@ -4384,6 +4412,23 @@
             sum += this.rsi.get(tradingPair, index).getValue();
           }
           return sum / period;
+        }
+        makeOrderDetails(tradingPair) {
+          const high = this.don.getHigh(tradingPair);
+          const low = this.don.getLow(tradingPair);
+          const maxDecimals = Math.max((high.toString().split(".")[1] || []).length, (low.toString().split(".")[1] || []).length);
+          const unit = high - low;
+          const tp1 = this.tr(high + unit, maxDecimals);
+          const tp2 = this.tr(high + unit + unit, maxDecimals);
+          const tp3 = this.tr(high + unit + unit + unit, maxDecimals);
+          return {
+            entryPrice: high,
+            stopLossPrice: low,
+            takeProfitLevels: [tp1, tp2, tp3]
+          };
+        }
+        tr(num, decimals) {
+          return parseFloat(num.toFixed(decimals));
         }
       };
     }
@@ -5008,6 +5053,7 @@
           return toReturn;
         }
         createSingleSignalModel(signalData) {
+          var _a, _b, _c;
           const tradingPair = signalData.tradingPair;
           const exchange = tradingPair.getExchangeDescriptor();
           const tradingPairUrl = __privateGet(this, _exchangeMethodsRegistry2).get(exchange).getTradingPairUrl(tradingPair);
@@ -5019,7 +5065,10 @@
             tradingPairUrl,
             signalData.source.getFriendlyDescription(),
             signalData.signalDirection,
-            signalData.timeStamp
+            signalData.timeStamp,
+            (_a = signalData.orderDetails) == null ? void 0 : _a.entryPrice,
+            (_b = signalData.orderDetails) == null ? void 0 : _b.stopLossPrice,
+            (_c = signalData.orderDetails) == null ? void 0 : _c.takeProfitLevels
           );
           return model;
         }

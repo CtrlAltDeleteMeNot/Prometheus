@@ -176,7 +176,10 @@ export class SyncOhlcvDataUseCase extends UseCaseBase<SyncOhlcvDataRequest, Sync
             tradingPairUrl,
             signalData.source.getFriendlyDescription(),
             signalData.signalDirection,
-            signalData.timeStamp
+            signalData.timeStamp,
+            signalData.orderDetails?.entryPrice,
+            signalData.orderDetails?.stopLossPrice,
+            signalData.orderDetails?.takeProfitLevels
         );
         return model;
     }

@@ -1,24 +1,27 @@
 import { TradingPair } from "../../../domain/entities/TradingPair";
 import { Period } from "../../../domain/ta/core/Period";
 import { Source } from "../../../domain/ta/core/Source";
+import { DonchianChannelsAccessor } from "../../../domain/ta/indicators/DonchianChannels";
 import { RsiAccessor } from "../../../domain/ta/indicators/RsiIndicator";
 import { SmaAccessor } from "../../../domain/ta/indicators/SmaIndicator";
 import { TimeFrame } from "../../../domain/values/TimeFrame";
 import { SignalDirection } from "../../exports/SignalModel";
-import { BaseSignalGenerator } from "../BaseSignalGenerator";
+import { BaseSignalGenerator, OrderDetails } from "../BaseSignalGenerator";
 
 export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
     rsi: RsiAccessor;
+    don: DonchianChannelsAccessor;
     rsiSmaLen: number;
     fastCrossoverThreshold: number;
     smaSlow: SmaAccessor;
     smaFast: SmaAccessor;
-    id:string;
+    id: string;
     friendlyDescription: string;
     public constructor() {
         super();
         this.rsiSmaLen = 3;
         this.fastCrossoverThreshold = 5;
+        this.don = this.useDonchianChannelsIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(10));
         this.rsi = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
         this.smaFast = this.useSmaIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(200), Source.CLOSE);
         this.smaSlow = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
@@ -51,7 +54,7 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
             return;
         }
 
-        this.emit(tradingPair, SignalDirection.BULLISH, ts);
+        this.emit(tradingPair, SignalDirection.BULLISH, ts, this.makeOrderDetails(tradingPair));
     }
 
     isUptrend(tradingPair: TradingPair, smaAccessor: SmaAccessor): boolean {
@@ -98,5 +101,28 @@ export class MomentumRecoverySignalGenerator extends BaseSignalGenerator {
         }
 
         return sum / period;
+    }
+
+    private makeOrderDetails(
+        tradingPair: TradingPair
+    ): OrderDetails {
+        const high = this.don.getHigh(tradingPair);
+        const low = this.don.getLow(tradingPair);
+        const maxDecimals = Math.max((high.toString().split('.')[1] || []).length, (low.toString().split('.')[1] || []).length);
+
+        
+        const unit = high - low;
+        const tp1 = this.tr(high + unit, maxDecimals);
+        const tp2 = this.tr(high + unit + unit, maxDecimals);
+        const tp3 = this.tr(high + unit + unit + unit, maxDecimals);
+        return {
+            entryPrice: high,
+            stopLossPrice: low,
+            takeProfitLevels: [tp1, tp2, tp3]
+        };
+    }
+
+    private tr(num:number,decimals:number):number{
+        return parseFloat(num.toFixed(decimals));
     }
 }

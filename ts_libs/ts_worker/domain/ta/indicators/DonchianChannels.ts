@@ -1,3 +1,4 @@
+import { TradingPair } from "../../entities/TradingPair";
 import { RingBuffer } from "../../util/RingBuffer";
 import { MultiTimeframeOhlcv } from "../../values/MultiTimeframeOhlcv";
 import { TimeFrame } from "../../values/TimeFrame";
@@ -252,4 +253,25 @@ export class DonchianChannelsIndicator
     }
 }
 
-export class DonchianChannelsAccessor extends IndicatorAccessor<DonchianChannelsIndicatorParameters, DonchianChannelsIndicatorOutput> { }
+export class DonchianChannelsAccessor extends IndicatorAccessor<DonchianChannelsIndicatorParameters, DonchianChannelsIndicatorOutput> {
+    findIndicatorOrThrow(aTp: TradingPair): DonchianChannelsIndicator {
+        const indicator = this.plugin.findIndicator(aTp, this.getParameters());
+        if (!(indicator instanceof DonchianChannelsIndicator)) throw new Error("Indicator is not a DonchianChannelsIndicator");
+        return indicator;
+    }
+
+    getHigh(aTp: TradingPair, n: number = 0): number {
+        const indicator = this.findIndicatorOrThrow(aTp);
+        return indicator.getValue(n).getHigh();
+    }
+
+    getLow(aTp: TradingPair, n: number = 0): number {
+        const indicator = this.findIndicatorOrThrow(aTp);
+        return indicator.getValue(n).getLow();
+    }
+
+    getMiddle(aTp: TradingPair, n: number = 0): number {
+        const indicator = this.findIndicatorOrThrow(aTp);
+        return indicator.getValue(n).getMiddle();
+    }
+}

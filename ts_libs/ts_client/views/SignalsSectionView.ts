@@ -26,7 +26,7 @@ export class SignalSectionView implements ISection {
     #autoSyncButtonText: HTMLSpanElement;
     #autoSyncButtonSubText: HTMLSpanElement;
     #wakeLock: WakeLock;
-    #syncRequested: (()=>Promise<void>)|undefined;
+    #syncRequested: (() => Promise<void>) | undefined;
     #logger: TaggedLogger;
 
     constructor() {
@@ -103,7 +103,7 @@ export class SignalSectionView implements ISection {
     /**
     * Bind a callback to the sync button
     */
-    bindSynchronizationRequested(callback: () =>  Promise<void>): void {
+    bindSynchronizationRequested(callback: () => Promise<void>): void {
         this.#syncRequested = callback;
     }
 
@@ -148,6 +148,7 @@ export class SignalSectionView implements ISection {
     }
 
     private generateCardInner(signalModel: SignalModel): HTMLDivElement {
+        //console.log('generateCardInner', signalModel);
         const inner = document.createElement("div");
         inner.classList.add("signal-card__inner");
 
@@ -194,7 +195,16 @@ export class SignalSectionView implements ISection {
         const description = document.createElement("div");
         description.classList.add("signal-card__description");
         description.textContent = signalModel.description;
-
+        if (signalModel.entryPrice !== undefined) {
+            description.textContent += ` Entry price is ${signalModel.entryPrice}.`
+        }
+        if (signalModel.stopLossPrice !== undefined) {
+            description.textContent += ` Stop loss is ${signalModel.stopLossPrice}.`
+        }
+        if (signalModel.takeProfitLevels !== undefined) {
+            const takeProfitString = signalModel.takeProfitLevels.join(', ');
+            description.textContent += ` Take profit levels are ${takeProfitString}.`;
+        }
         const footer = document.createElement("div");
         footer.classList.add("signal-card__footer");
 
@@ -249,7 +259,7 @@ export class SignalSectionView implements ISection {
         this.disableAutosync();
     }
 
-    private disableAutosync(){
+    private disableAutosync() {
         this.#autoSyncEnabled = false;
         this.onAutosyncChanged();
     }

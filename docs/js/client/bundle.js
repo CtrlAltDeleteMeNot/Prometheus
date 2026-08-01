@@ -1313,7 +1313,7 @@
     "ts_libs/ts_worker/application/exports/SignalModel.ts"() {
       "use strict";
       SignalModel = class _SignalModel {
-        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, exchangeUrl, description, direction, timestamp) {
+        constructor(baseAsset, quoteAsset, exchangeName, exchangeId, exchangeUrl, description, direction, timestamp, entryPrice, stopLossPrice, takeProfitLevels) {
           this.baseAsset = baseAsset;
           this.quoteAsset = quoteAsset;
           this.exchangeName = exchangeName;
@@ -1322,6 +1322,9 @@
           this.description = description;
           this.direction = direction;
           this.timestamp = timestamp;
+          this.entryPrice = entryPrice;
+          this.stopLossPrice = stopLossPrice;
+          this.takeProfitLevels = takeProfitLevels;
         }
         serialize() {
           return {
@@ -1332,7 +1335,10 @@
             exchangeUrl: this.exchangeUrl,
             description: this.description,
             direction: this.direction,
-            timestamp: this.timestamp
+            timestamp: this.timestamp,
+            entryPrice: this.entryPrice,
+            stopLossPrice: this.stopLossPrice,
+            takeProfitLevels: this.takeProfitLevels
           };
         }
         static deserialize(dto) {
@@ -1344,7 +1350,10 @@
             dto.exchangeUrl,
             dto.description,
             dto.direction,
-            dto.timestamp
+            dto.timestamp,
+            dto.entryPrice,
+            dto.stopLossPrice,
+            dto.takeProfitLevels
           );
         }
       };
@@ -1605,6 +1614,16 @@
           const description = document.createElement("div");
           description.classList.add("signal-card__description");
           description.textContent = signalModel.description;
+          if (signalModel.entryPrice !== void 0) {
+            description.textContent += ` Entry price is ${signalModel.entryPrice}.`;
+          }
+          if (signalModel.stopLossPrice !== void 0) {
+            description.textContent += ` Stop loss is ${signalModel.stopLossPrice}.`;
+          }
+          if (signalModel.takeProfitLevels !== void 0) {
+            const takeProfitString = signalModel.takeProfitLevels.join(", ");
+            description.textContent += ` Take profit levels are ${takeProfitString}.`;
+          }
           const footer = document.createElement("div");
           footer.classList.add("signal-card__footer");
           const time = document.createElement("span");

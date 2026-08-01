@@ -15,6 +15,9 @@ export type SignalModelDto = {
     description: string;    // "RSI crossed back above 30 with elevated volume."
     direction: SignalDirection;
     timestamp: number;
+    entryPrice?: number;
+    stopLossPrice?: number,
+    takeProfitLevels?: number[]
 };
 
 export class SignalModel implements ISerializable<SignalModelDto> {
@@ -26,7 +29,10 @@ export class SignalModel implements ISerializable<SignalModelDto> {
         public readonly exchangeUrl: string,
         public readonly description: string,
         public readonly direction: SignalDirection,
-        public readonly timestamp: number
+        public readonly timestamp: number,
+        public readonly entryPrice?: number,
+        public readonly stopLossPrice?: number,
+        public readonly takeProfitLevels?: number[]
     ) { }
 
     public serialize(): SignalModelDto {
@@ -38,7 +44,10 @@ export class SignalModel implements ISerializable<SignalModelDto> {
             exchangeUrl: this.exchangeUrl,
             description: this.description,
             direction: this.direction,
-            timestamp: this.timestamp
+            timestamp: this.timestamp,
+            entryPrice:this.entryPrice,
+            stopLossPrice:this.stopLossPrice,
+            takeProfitLevels: this.takeProfitLevels
         };
     }
 
@@ -51,7 +60,10 @@ export class SignalModel implements ISerializable<SignalModelDto> {
             dto.exchangeUrl,
             dto.description,
             dto.direction,
-            dto.timestamp
+            dto.timestamp,
+            dto.entryPrice,
+            dto.stopLossPrice,
+            dto.takeProfitLevels
         );
     }
 };
