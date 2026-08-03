@@ -4337,32 +4337,33 @@
     }
   });
 
-  // ts_libs/ts_worker/application/plugins/signal_generators/MomentumRecoverySignalGenerator.ts
-  var MomentumRecoverySignalGenerator;
-  var init_MomentumRecoverySignalGenerator = __esm({
-    "ts_libs/ts_worker/application/plugins/signal_generators/MomentumRecoverySignalGenerator.ts"() {
+  // ts_libs/ts_worker/application/plugins/signal_generators/PotentialRecoverySignalGenerator.ts
+  var PotentialRecoverySignalGenerator;
+  var init_PotentialRecoverySignalGenerator = __esm({
+    "ts_libs/ts_worker/application/plugins/signal_generators/PotentialRecoverySignalGenerator.ts"() {
       "use strict";
       init_Period();
       init_Source();
       init_TimeFrame();
       init_SignalModel();
       init_BaseSignalGenerator();
-      MomentumRecoverySignalGenerator = class extends BaseSignalGenerator {
+      PotentialRecoverySignalGenerator = class extends BaseSignalGenerator {
         constructor() {
           super();
-          this.rsiSmaLen = 3;
-          this.fastCrossoverThreshold = 5;
-          this.don = this.useDonchianChannelsIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(10));
-          this.rsi = this.useRsiIndicator(TimeFrame.FIVE_MINUTES, Period.fromUnknown(2), Source.CLOSE);
-          this.smaFast = this.useSmaIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(200), Source.CLOSE);
-          this.smaSlow = this.useSmaIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(200), Source.CLOSE);
+          this.rsiThreshold = 5;
+          this.don = this.useDonchianChannelsIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(5));
+          this.rsi = this.useRsiIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(2), Source.CLOSE);
+          this.smaFast = this.useSmaIndicator(TimeFrame.ONE_MINUTE, Period.fromUnknown(20), Source.CLOSE);
+          this.smaSlow = this.useSmaIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(5), Source.CLOSE);
           this.id = [
-            "momentum-recovery",
+            "potential-recovery",
             this.rsi.getParameters().getId(),
-            `rsi-sma-${this.rsiSmaLen}`,
-            `threshold-${this.fastCrossoverThreshold}`
+            `rsi-threshold-${this.rsiThreshold}`,
+            this.smaFast.getParameters().getId(),
+            this.smaSlow.getParameters().getId(),
+            this.don.getParameters().getId()
           ].join(".");
-          this.friendlyDescription = `Bullish ${this.rsi.getParameters().getDescription()} recovery during a strong uptrend.`;
+          this.friendlyDescription = "Bullish potential recovery when the 1-minute SMA20 crosses above the 1-hour SMA5 while the 4-hour RSI(2) is below 5.";
         }
         getId() {
           return this.id;
@@ -4371,61 +4372,79 @@
           return this.friendlyDescription;
         }
         next(tradingPair, updatedTimeFrames, ts) {
-          if (false === this.isFastRsiCrossover(tradingPair, updatedTimeFrames)) {
+          if (false === this.isDonchianReady(tradingPair)) {
             return;
           }
-          if (false === this.isUptrend(tradingPair, this.smaFast)) {
+          if (false === this.isOversold(tradingPair)) {
             return;
           }
-          if (false === this.isUptrend(tradingPair, this.smaSlow)) {
+          if (false === this.isSmaRecoveryCrossover(tradingPair, updatedTimeFrames)) {
             return;
           }
           this.emit(tradingPair, "BULLISH" /* BULLISH */, ts, this.makeOrderDetails(tradingPair));
         }
-        isUptrend(tradingPair, smaAccessor) {
-          const isReady = smaAccessor.getValuesCount(tradingPair) > 2;
-          if (!isReady) {
+        isSmaRecoveryCrossover(tradingPair, updatedTimeFrames) {
+          const fastTimeFrame = this.smaFast.getParameters().getTimeFrame();
+          const slowTimeFrame = this.smaSlow.getParameters().getTimeFrame();
+          if (!this.wasUpdated(updatedTimeFrames, fastTimeFrame)) {
             return false;
           }
-          return smaAccessor.isUptrend(tradingPair);
+          if (this.smaFast.getValuesCount(tradingPair) < 2) {
+            return false;
+          }
+          if (this.smaSlow.getValuesCount(tradingPair) < 1) {
+            return false;
+          }
+          const slowWasUpdated = this.wasUpdated(
+            updatedTimeFrames,
+            slowTimeFrame
+          );
+          if (slowWasUpdated && this.smaSlow.getValuesCount(tradingPair) < 2) {
+            return false;
+          }
+          const previousFast = this.smaFast.get(tradingPair, 1).getValue();
+          const currentFast = this.smaFast.get(tradingPair, 0).getValue();
+          const previousSlow = this.smaSlow.get(tradingPair, slowWasUpdated ? 1 : 0).getValue();
+          const currentSlow = this.smaSlow.get(tradingPair, 0).getValue();
+          return previousFast <= previousSlow && currentFast > currentSlow && previousFast < currentFast;
         }
-        isFastRsiCrossover(tradingPair, updatedTimeFrames) {
-          if (false === this.wasUpdated(updatedTimeFrames, this.rsi.getParameters().getTimeFrame())) {
-            return false;
-          }
-          if (this.rsi.getValuesCount(tradingPair) < this.rsiSmaLen + 1) {
-            return false;
-          }
-          const previousFast = this.rsi.get(tradingPair, 1).getValue();
-          const currentFast = this.rsi.get(tradingPair, 0).getValue();
-          const rsiCrossedAboveTreshold = previousFast <= this.fastCrossoverThreshold && currentFast > this.fastCrossoverThreshold;
-          if (!rsiCrossedAboveTreshold) {
-            return false;
-          }
-          const previousRsiSma = this.getRsiSma(tradingPair, 1, this.rsiSmaLen);
-          const rsiSmaWasBelowTreshold = previousRsiSma < this.fastCrossoverThreshold;
-          return rsiSmaWasBelowTreshold && rsiCrossedAboveTreshold;
+        isDonchianReady(tradingPair) {
+          return this.don.isReady(tradingPair);
         }
-        getRsiSma(tradingPair, startIndex, period) {
-          let sum = 0;
-          for (let index = startIndex; index < startIndex + period; index++) {
-            sum += this.rsi.get(tradingPair, index).getValue();
+        isOversold(tradingPair) {
+          if (!this.rsi.isReady(tradingPair)) {
+            return false;
           }
-          return sum / period;
+          return this.rsi.get(tradingPair, 0).getValue() < this.rsiThreshold;
         }
         makeOrderDetails(tradingPair) {
-          const high = this.don.getHigh(tradingPair);
-          const low = this.don.getLow(tradingPair);
-          const maxDecimals = Math.max((high.toString().split(".")[1] || []).length, (low.toString().split(".")[1] || []).length);
-          const unit = high - low;
-          const tp1 = this.tr(high + unit, maxDecimals);
-          const tp2 = this.tr(high + unit + unit, maxDecimals);
-          const tp3 = this.tr(high + unit + unit + unit, maxDecimals);
+          const donchianHigh = this.don.getHigh(tradingPair);
+          const stopLoss = this.don.getLow(tradingPair);
+          const entryValue = this.getOhlcvData(tradingPair, Source.CLOSE, TimeFrame.ONE_MINUTE, 0);
+          if (entryValue === void 0 || !Number.isFinite(entryValue) || !Number.isFinite(stopLoss) || !Number.isFinite(donchianHigh)) {
+            return void 0;
+          }
+          if (stopLoss >= entryValue) {
+            return void 0;
+          }
+          const decimals = Math.max(this.countDecimals(entryValue), this.countDecimals(stopLoss), this.countDecimals(donchianHigh));
+          const risk = entryValue - stopLoss;
           return {
-            entryPrice: high,
-            stopLossPrice: low,
-            takeProfitLevels: [tp1, tp2, tp3]
+            entryPrice: entryValue,
+            stopLossPrice: this.tr(stopLoss, decimals),
+            takeProfitLevels: [
+              this.tr(entryValue + risk, decimals),
+              this.tr(entryValue + risk * 2, decimals),
+              this.tr(entryValue + risk * 3, decimals)
+            ]
           };
+        }
+        countDecimals(n) {
+          var _a, _b;
+          if (n === void 0 || !Number.isFinite(n)) {
+            return 0;
+          }
+          return (_b = (_a = n.toString().split(".")[1]) == null ? void 0 : _a.length) != null ? _b : 0;
         }
         tr(num, decimals) {
           return parseFloat(num.toFixed(decimals));
@@ -4452,7 +4471,7 @@
       init_DailyPriceChangeExtractor();
       init_DailyRvaExtractor();
       init_ThirtyDayPercentChangeExtractor();
-      init_MomentumRecoverySignalGenerator();
+      init_PotentialRecoverySignalGenerator();
       _PluginManager = class _PluginManager {
         constructor() {
           this._plugins = [..._PluginManager.DefaultPlugins];
@@ -4509,7 +4528,7 @@
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
-        new MomentumRecoverySignalGenerator()
+        new PotentialRecoverySignalGenerator()
         //new HighVolumeInsideCompressedDonchian()
       ];
       PluginManager = _PluginManager;
