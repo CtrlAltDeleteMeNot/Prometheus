@@ -4337,33 +4337,61 @@
     }
   });
 
-  // ts_libs/ts_worker/application/plugins/signal_generators/PotentialRecoverySignalGenerator.ts
-  var PotentialRecoverySignalGenerator;
-  var init_PotentialRecoverySignalGenerator = __esm({
-    "ts_libs/ts_worker/application/plugins/signal_generators/PotentialRecoverySignalGenerator.ts"() {
+  // ts_libs/ts_worker/application/plugins/signal_generators/HighVolumeDonchianCompressionSignalGenerator.ts
+  var HighVolumeDonchianCompressionSignalGenerator;
+  var init_HighVolumeDonchianCompressionSignalGenerator = __esm({
+    "ts_libs/ts_worker/application/plugins/signal_generators/HighVolumeDonchianCompressionSignalGenerator.ts"() {
       "use strict";
       init_Period();
       init_Source();
       init_TimeFrame();
       init_SignalModel();
       init_BaseSignalGenerator();
-      PotentialRecoverySignalGenerator = class extends BaseSignalGenerator {
+      HighVolumeDonchianCompressionSignalGenerator = class extends BaseSignalGenerator {
         constructor() {
           super();
-          this.rsiThreshold = 5;
-          this.don = this.useDonchianChannelsIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(5));
-          this.rsi = this.useRsiIndicator(TimeFrame.FOUR_HOURS, Period.fromUnknown(2), Source.CLOSE);
-          this.smaFast = this.useSmaIndicator(TimeFrame.ONE_MINUTE, Period.fromUnknown(20), Source.CLOSE);
-          this.smaSlow = this.useSmaIndicator(TimeFrame.ONE_HOUR, Period.fromUnknown(5), Source.CLOSE);
+          this.rvaThreshold = 4;
+          this.donchian5m = this.useDonchianChannelsIndicator(
+            TimeFrame.FIVE_MINUTES,
+            Period.fromUnknown(20)
+          );
+          this.donchian15m = this.useDonchianChannelsIndicator(
+            TimeFrame.FIFTEEN_MINUTES,
+            Period.fromUnknown(20)
+          );
+          this.donchian1h = this.useDonchianChannelsIndicator(
+            TimeFrame.ONE_HOUR,
+            Period.fromUnknown(20)
+          );
+          this.sma200_1h = this.useSmaIndicator(
+            TimeFrame.ONE_HOUR,
+            Period.fromUnknown(200),
+            Source.CLOSE
+          );
+          this.rva21_1m = this.useRvaIndicator(
+            TimeFrame.ONE_MINUTE,
+            Period.fromUnknown(21)
+          );
+          this.rva89_1m = this.useRvaIndicator(
+            TimeFrame.ONE_MINUTE,
+            Period.fromUnknown(89)
+          );
+          this.rva200_1m = this.useRvaIndicator(
+            TimeFrame.ONE_MINUTE,
+            Period.fromUnknown(200)
+          );
           this.id = [
-            "potential-recovery",
-            this.rsi.getParameters().getId(),
-            `rsi-threshold-${this.rsiThreshold}`,
-            this.smaFast.getParameters().getId(),
-            this.smaSlow.getParameters().getId(),
-            this.don.getParameters().getId()
+            "high-volume-donchian-compression",
+            this.donchian5m.getParameters().getId(),
+            this.donchian15m.getParameters().getId(),
+            this.donchian1h.getParameters().getId(),
+            this.sma200_1h.getParameters().getId(),
+            this.rva21_1m.getParameters().getId(),
+            this.rva89_1m.getParameters().getId(),
+            this.rva200_1m.getParameters().getId(),
+            `rva-threshold-${this.rvaThreshold}`
           ].join(".");
-          this.friendlyDescription = "Bullish potential recovery when the 1-minute SMA20 crosses above the 1-hour SMA5 while the 4-hour RSI(2) is below 5.";
+          this.friendlyDescription = "Bullish one-minute high-volume expansion while price is above the hourly SMA200, the 15-minute Donchian high remains below the hourly Donchian midpoint, and the 5-minute Donchian midpoint is above the 15-minute midpoint.";
         }
         getId() {
           return this.id;
@@ -4372,70 +4400,138 @@
           return this.friendlyDescription;
         }
         next(tradingPair, updatedTimeFrames, ts) {
-          if (false === this.isDonchianReady(tradingPair)) {
+          if (!this.wasUpdated(updatedTimeFrames, TimeFrame.ONE_MINUTE)) {
             return;
           }
-          if (false === this.isOversold(tradingPair)) {
+          if (!this.areIndicatorsReady(tradingPair)) {
             return;
           }
-          if (false === this.isSmaRecoveryCrossover(tradingPair, updatedTimeFrames)) {
+          if (!this.hasTripleRvaSpike(tradingPair)) {
             return;
           }
-          this.emit(tradingPair, "BULLISH" /* BULLISH */, ts, this.makeOrderDetails(tradingPair));
-        }
-        isSmaRecoveryCrossover(tradingPair, updatedTimeFrames) {
-          const fastTimeFrame = this.smaFast.getParameters().getTimeFrame();
-          const slowTimeFrame = this.smaSlow.getParameters().getTimeFrame();
-          if (!this.wasUpdated(updatedTimeFrames, fastTimeFrame)) {
-            return false;
+          if (!this.isPriceAboveHourlySma200(tradingPair)) {
+            return;
           }
-          if (this.smaFast.getValuesCount(tradingPair) < 2) {
-            return false;
+          if (!this.isMediumDonchianCompressedBelowHourlyMid(tradingPair)) {
+            return;
           }
-          if (this.smaSlow.getValuesCount(tradingPair) < 1) {
-            return false;
+          if (!this.isFastDonchianLeading(tradingPair)) {
+            return;
           }
-          const slowWasUpdated = this.wasUpdated(
-            updatedTimeFrames,
-            slowTimeFrame
+          const orderDetails = this.makeOrderDetails(tradingPair);
+          if (orderDetails === void 0) {
+            return;
+          }
+          this.emit(
+            tradingPair,
+            "BULLISH" /* BULLISH */,
+            ts,
+            orderDetails
           );
-          if (slowWasUpdated && this.smaSlow.getValuesCount(tradingPair) < 2) {
+        }
+        areIndicatorsReady(tradingPair) {
+          return this.donchian5m.isReady(tradingPair) && this.donchian15m.isReady(tradingPair) && this.donchian1h.isReady(tradingPair) && this.sma200_1h.isReady(tradingPair) && this.rva21_1m.isReady(tradingPair) && this.rva89_1m.isReady(tradingPair) && this.rva200_1m.isReady(tradingPair);
+        }
+        /**
+         * Pine:
+         *
+         * rva1m
+         *
+         * RVA21, RVA89 and RVA200 must all be >= 4.
+         */
+        hasTripleRvaSpike(tradingPair) {
+          const rva21 = this.rva21_1m.get(tradingPair).getRelativeValue();
+          const rva89 = this.rva89_1m.get(tradingPair).getRelativeValue();
+          const rva200 = this.rva200_1m.get(tradingPair).getRelativeValue();
+          return rva21 >= this.rvaThreshold && rva89 >= this.rvaThreshold && rva200 >= this.rvaThreshold;
+        }
+        /**
+         * Pine:
+         *
+         * close > sma3
+         *
+         * sma3 = SMA(200, 1H)
+         */
+        isPriceAboveHourlySma200(tradingPair) {
+          const close = this.close(
+            tradingPair,
+            TimeFrame.ONE_MINUTE
+          );
+          if (close === void 0) {
             return false;
           }
-          const previousFast = this.smaFast.get(tradingPair, 1).getValue();
-          const currentFast = this.smaFast.get(tradingPair, 0).getValue();
-          const previousSlow = this.smaSlow.get(tradingPair, slowWasUpdated ? 1 : 0).getValue();
-          const currentSlow = this.smaSlow.get(tradingPair, 0).getValue();
-          return previousFast <= previousSlow && currentFast > currentSlow && previousFast < currentFast;
+          const sma200 = this.sma200_1h.get(tradingPair).getValue();
+          return close > sma200;
         }
-        isDonchianReady(tradingPair) {
-          return this.don.isReady(tradingPair);
+        /**
+         * Pine:
+         *
+         * high2 < mid3
+         *
+         * high2 = Donchian(20, 15m).high
+         * mid3  = Donchian(20, 1h).middle
+         */
+        isMediumDonchianCompressedBelowHourlyMid(tradingPair) {
+          const donchian15m = this.donchian15m.get(tradingPair);
+          const donchian1h = this.donchian1h.get(tradingPair);
+          const mediumHigh = donchian15m.getHigh();
+          const hourlyMiddle = donchian1h.getMiddle();
+          return mediumHigh < hourlyMiddle;
         }
-        isOversold(tradingPair) {
-          if (!this.rsi.isReady(tradingPair)) {
-            return false;
-          }
-          return this.rsi.get(tradingPair, 0).getValue() < this.rsiThreshold;
+        /**
+         * Pine:
+         *
+         * mid1 > mid2
+         *
+         * mid1 = Donchian(20, 5m).middle
+         * mid2 = Donchian(20, 15m).middle
+         */
+        isFastDonchianLeading(tradingPair) {
+          const donchian5m = this.donchian5m.get(tradingPair);
+          const donchian15m = this.donchian15m.get(tradingPair);
+          const fastMiddle = donchian5m.getMiddle();
+          const mediumMiddle = donchian15m.getMiddle();
+          return fastMiddle > mediumMiddle;
         }
+        /**
+         * Entry:
+         * current 1m close
+         *
+         * Stop:
+         * Donchian(20, 15m) low
+         *
+         * Targets:
+         * 1R / 2R / 3R
+         */
         makeOrderDetails(tradingPair) {
-          const donchianHigh = this.don.getHigh(tradingPair);
-          const stopLoss = this.don.getLow(tradingPair);
-          const entryValue = this.getOhlcvData(tradingPair, Source.CLOSE, TimeFrame.ONE_MINUTE, 0);
-          if (entryValue === void 0 || !Number.isFinite(entryValue) || !Number.isFinite(stopLoss) || !Number.isFinite(donchianHigh)) {
+          const entryPrice = this.getOhlcvData(
+            tradingPair,
+            Source.CLOSE,
+            TimeFrame.ONE_MINUTE,
+            0
+          );
+          const stopLoss = this.donchian1h.get(tradingPair).getLow();
+          if (entryPrice === void 0 || !Number.isFinite(entryPrice) || !Number.isFinite(stopLoss)) {
             return void 0;
           }
-          if (stopLoss >= entryValue) {
+          if (stopLoss >= entryPrice) {
             return void 0;
           }
-          const decimals = Math.max(this.countDecimals(entryValue), this.countDecimals(stopLoss), this.countDecimals(donchianHigh));
-          const risk = entryValue - stopLoss;
+          const risk = entryPrice - stopLoss;
+          if (!Number.isFinite(risk) || risk <= 0) {
+            return void 0;
+          }
+          const decimals = Math.max(
+            this.countDecimals(entryPrice),
+            this.countDecimals(stopLoss)
+          );
           return {
-            entryPrice: entryValue,
+            entryPrice: this.tr(entryPrice, decimals),
             stopLossPrice: this.tr(stopLoss, decimals),
             takeProfitLevels: [
-              this.tr(entryValue + risk, decimals),
-              this.tr(entryValue + risk * 2, decimals),
-              this.tr(entryValue + risk * 3, decimals)
+              this.tr(entryPrice + risk, decimals),
+              this.tr(entryPrice + risk * 2, decimals),
+              this.tr(entryPrice + risk * 3, decimals)
             ]
           };
         }
@@ -4471,7 +4567,7 @@
       init_DailyPriceChangeExtractor();
       init_DailyRvaExtractor();
       init_ThirtyDayPercentChangeExtractor();
-      init_PotentialRecoverySignalGenerator();
+      init_HighVolumeDonchianCompressionSignalGenerator();
       _PluginManager = class _PluginManager {
         constructor() {
           this._plugins = [..._PluginManager.DefaultPlugins];
@@ -4528,7 +4624,8 @@
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
-        new PotentialRecoverySignalGenerator()
+        new HighVolumeDonchianCompressionSignalGenerator()
+        //new PotentialRecoverySignalGenerator(),
         //new HighVolumeInsideCompressedDonchian()
       ];
       PluginManager = _PluginManager;
