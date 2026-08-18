@@ -19,12 +19,24 @@ export interface IPluginContext {
     getIndicatorValue(indicator: IndicatorRuntime, position: number): IndicatorOutput;
     getPendingIndicatorValue(indicator: IndicatorRuntime): IndicatorOutput;
     isIndicatorReady(indicator: IndicatorRuntime): boolean;
+    forEachOhlcv(
+        tradingPair: TradingPair,
+        timeframe: TimeFrame,
+        callback: (
+            position: number,
+            startTs: number,
+            open: number,
+            high: number,
+            low: number,
+            close: number,
+            volume: number,
+        ) => void,
+    ): void;
 }
 
 
 
 export abstract class BasePlugin implements IPluginContext {
-
 
     private ctx: IPluginContext | undefined;
     private readonly indicatorParameters: IndicatorParameters[] = [];
@@ -153,6 +165,46 @@ export abstract class BasePlugin implements IPluginContext {
             timeFrame,
             position
         );
+    }
+
+    forEachOhlcv(tradingPair: TradingPair, timeframe: TimeFrame, callback: (
+        position: number,
+        startTs: number,
+        open: number,
+        high: number,
+        low: number,
+        close: number,
+        volume: number
+    ) => void): void {
+        if (this.ctx === undefined) {
+            throw new Error("Context is not defined");
+        }
+        this.ctx.forEachOhlcv(tradingPair, timeframe, callback);
+    }
+
+    protected roundToPrecision(
+        num: number,
+        pricePrecision: number,
+    ): number {
+        return parseFloat(num.toFixed(pricePrecision));
+    }
+
+    protected inferPricePrecision(tp: TradingPair): number {
+        if (this.ctx === undefined) {
+            throw new Error("Context is not defined");
+        }
+        let decimals = 0;
+        this.forEachOhlcv(tp, TimeFrame.ONE_MINUTE, (_position, _startTs, open, high, low, close, _volume) => {
+            decimals = Math.max(
+                decimals,
+                open.toString().split(".")[1]?.length ?? 0,
+                high.toString().split(".")[1]?.length ?? 0,
+                low.toString().split(".")[1]?.length ?? 0,
+                close.toString().split(".")[1]?.length ?? 0,
+            );
+        });
+
+        return decimals;
     }
 
 }

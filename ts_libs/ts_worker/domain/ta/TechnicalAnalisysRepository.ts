@@ -17,6 +17,7 @@ export class TechnicalAnalisysRepository implements IPluginContext {
         this.indicatorParameters = [];
     }
 
+
     public pushUpdate(
         tradingPair: TradingPair,
         timeFrame: TimeFrame,
@@ -137,6 +138,15 @@ export class TechnicalAnalisysRepository implements IPluginContext {
         let tfBuffer = dataset.getBuffer(timeframe);
         return source.extract(tfBuffer.getCandle(position));
     }
+
+    forEachOhlcv(tradingPair: TradingPair, timeframe: TimeFrame, callback: (position: number, startTs:number, open: number, high: number, low: number, close: number, volume: number) => void): void {
+        let dataset = this.getDataset(tradingPair);
+        let tfBuffer = dataset.getBuffer(timeframe);
+        tfBuffer.stream((pos, candle) => {
+            callback(pos, candle.startTime, candle.open, candle.high, candle.low, candle.close, candle.volume);
+        });
+    }
+
     getOhlcvPendingData(tradingPair: TradingPair, source: Source, timeframe: TimeFrame): number | undefined {
         let dataset = this.getDataset(tradingPair);
         let tfBuffer = dataset.getBuffer(timeframe);
