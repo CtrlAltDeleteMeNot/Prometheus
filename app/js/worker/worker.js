@@ -3080,37 +3080,12 @@
     }
   });
 
-  // ts_libs/ts_worker/domain/ta/core/MathContext.ts
-  var _MathContext, MathContext;
-  var init_MathContext = __esm({
-    "ts_libs/ts_worker/domain/ta/core/MathContext.ts"() {
-      "use strict";
-      _MathContext = class _MathContext {
-        /**
-         * Round a number to the defined scale
-         * @param value - The number to round
-         * @returns The rounded number
-         */
-        static roundToScale(value) {
-          if (typeof value !== "number" || !Number.isFinite(value)) {
-            throw new TypeError("value must be a finite number");
-          }
-          return Math.round(value * _MathContext.SCALE) / _MathContext.SCALE;
-        }
-      };
-      /** Scaling factor */
-      _MathContext.SCALE = 1e8;
-      MathContext = _MathContext;
-    }
-  });
-
   // ts_libs/ts_worker/domain/ta/core/PeriodPercentChange.ts
   var PeriodPercentChange;
   var init_PeriodPercentChange = __esm({
     "ts_libs/ts_worker/domain/ta/core/PeriodPercentChange.ts"() {
       "use strict";
       init_RingBuffer();
-      init_MathContext();
       init_MutableFloat();
       init_Period();
       PeriodPercentChange = class {
@@ -3135,7 +3110,7 @@
             return void 0;
           }
           const pctChange = (current - oldest) / oldest * 100;
-          return MathContext.roundToScale(pctChange);
+          return pctChange;
         }
       };
     }
@@ -3265,7 +3240,6 @@
       "use strict";
       init_MutableFloat();
       init_RingBuffer();
-      init_MathContext();
       init_Period();
       RollingSimpleMovingAverage = class {
         constructor(period) {
@@ -3289,7 +3263,7 @@
             return null;
           }
           let computedValue = this.sum / this.period.getValue();
-          return MathContext.roundToScale(computedValue);
+          return computedValue;
         }
         isReady() {
           return this.buffer.getSize() === this.period.getValue();
@@ -3305,7 +3279,6 @@
       "use strict";
       init_Period();
       init_RollingSimpleMovingAverage();
-      init_MathContext();
       RelativeStrengthIndex = class {
         constructor(period, useWilderSmoothing = true) {
           this.prev = null;
@@ -3351,7 +3324,7 @@
           }
           const rs = this.avgGain / this.avgLoss;
           const rsi = 100 - 100 / (1 + rs);
-          return MathContext.roundToScale(rsi);
+          return rsi;
         }
         isReady() {
           return this.avgGain !== null;
@@ -4371,38 +4344,45 @@
     }
   });
 
-  // ts_libs/ts_worker/application/plugins/signal_generators/CompressionReversalSignalGenerator.ts
-  var CompressionReversalSignalGenerator;
-  var init_CompressionReversalSignalGenerator = __esm({
-    "ts_libs/ts_worker/application/plugins/signal_generators/CompressionReversalSignalGenerator.ts"() {
+  // ts_libs/ts_worker/application/plugins/signal_generators/DonchianRecoverySignalGenerator.ts
+  var DonchianRecoverySignalGenerator;
+  var init_DonchianRecoverySignalGenerator = __esm({
+    "ts_libs/ts_worker/application/plugins/signal_generators/DonchianRecoverySignalGenerator.ts"() {
       "use strict";
       init_Period();
       init_Source();
       init_TimeFrame();
       init_SignalModel();
       init_BaseSignalGenerator();
-      CompressionReversalSignalGenerator = class extends BaseSignalGenerator {
+      DonchianRecoverySignalGenerator = class extends BaseSignalGenerator {
         constructor() {
           super();
           this.signalTimeFrame = TimeFrame.ONE_MINUTE;
           this.armTimeFrame = TimeFrame.ONE_HOUR;
           this.rsiArmThreshold = 30;
+          /**
+           * Pairs for which hourly RSI has crossed below the arm threshold.
+           */
           this.armedPairs = /* @__PURE__ */ new WeakSet();
+          /**
+           * Previous Donchian state, needed to detect the exact moment
+           * when Don6 Low separates upward from Don20 Low.
+           */
           this.previousDonchianState = /* @__PURE__ */ new WeakMap();
-          this.stopLossByPair = /* @__PURE__ */ new WeakMap();
+          /**
+           * Don20 Low levels captured on each valid post-arm separation.
+           *
+           * Example:
+           *
+           * [10.00, 10.40]
+           *
+           * means the second structural separation happened at a higher
+           * Don20 Low than the first.
+           */
+          this.separationLevelsByPair = /* @__PURE__ */ new WeakMap();
           this.rsi14 = this.useRsiIndicator(
             this.armTimeFrame,
             Period.fromUnknown(14),
-            Source.CLOSE
-          );
-          this.sma89 = this.useSmaIndicator(
-            this.signalTimeFrame,
-            Period.fromUnknown(89),
-            Source.CLOSE
-          );
-          this.sma200 = this.useSmaIndicator(
-            this.signalTimeFrame,
-            Period.fromUnknown(200),
             Source.CLOSE
           );
           this.don6 = this.useDonchianChannelsIndicator(
@@ -4414,15 +4394,13 @@
             Period.fromUnknown(20)
           );
           this.id = [
-            "armed-compression-recovery",
+            "donchian-recovery",
             this.rsi14.getParameters().getId(),
             `rsi-arm-${this.rsiArmThreshold}`,
-            this.sma89.getParameters().getId(),
-            this.sma200.getParameters().getId(),
             this.don6.getParameters().getId(),
             this.don20.getParameters().getId()
           ].join(".");
-          this.friendlyDescription = "Catching the turn before the trend knows it.";
+          this.friendlyDescription = "RSI exhaustion followed by rising Donchian structural lows.";
         }
         getId() {
           return this.id;
@@ -4443,11 +4421,6 @@
           }
           const previous = this.previousDonchianState.get(tradingPair);
           const current = this.getCurrentDonchianState(tradingPair);
-          this.captureStopLossOnLowSeparation(
-            tradingPair,
-            current,
-            previous
-          );
           this.previousDonchianState.set(
             tradingPair,
             current
@@ -4455,21 +4428,32 @@
           if (!this.armedPairs.has(tradingPair)) {
             return;
           }
-          if (!this.isSmaCompression(tradingPair)) {
+          if (previous === void 0) {
             return;
           }
-          if (!this.isDonchianHighSeparationDown(current, previous)) {
+          if (!this.isDonchianLowSeparation(current, previous)) {
+            return;
+          }
+          const separationLevels = this.getSeparationLevels(tradingPair);
+          separationLevels.push(current.don20Low);
+          if (separationLevels.length < 2) {
+            return;
+          }
+          const previousSeparation = separationLevels[separationLevels.length - 2];
+          const currentSeparation = separationLevels[separationLevels.length - 1];
+          if (currentSeparation <= previousSeparation) {
             return;
           }
           const orderDetails = this.makeOrderDetails(
             tradingPair,
-            current
+            current,
+            previousSeparation,
+            currentSeparation
           );
           if (orderDetails === void 0) {
             return;
           }
-          this.armedPairs.delete(tradingPair);
-          this.stopLossByPair.delete(tradingPair);
+          this.resetState(tradingPair);
           this.emit(
             tradingPair,
             "BULLISH" /* BULLISH */,
@@ -4477,6 +4461,9 @@
             orderDetails
           );
         }
+        // ========================================================================
+        // RSI ARM
+        // ========================================================================
         updateArmedState(tradingPair, updatedTimeFrames) {
           if (!this.wasUpdated(updatedTimeFrames, this.armTimeFrame)) {
             return;
@@ -4487,70 +4474,78 @@
           const previousRsi = this.rsi14.get(tradingPair, 1).getValue();
           const currentRsi = this.rsi14.get(tradingPair, 0).getValue();
           const crossedUnder = previousRsi >= this.rsiArmThreshold && currentRsi < this.rsiArmThreshold;
-          if (crossedUnder) {
-            this.armedPairs.add(tradingPair);
+          if (!crossedUnder) {
+            return;
           }
+          this.armedPairs.add(tradingPair);
+          this.separationLevelsByPair.set(tradingPair, []);
         }
+        // ========================================================================
+        // INDICATOR READINESS
+        // ========================================================================
         areIndicatorsReady(tradingPair) {
-          return this.sma89.getValuesCount(tradingPair) >= 2 && this.sma200.getValuesCount(tradingPair) >= 2 && this.don6.isReady(tradingPair) && this.don20.isReady(tradingPair);
+          return this.don6.isReady(tradingPair) && this.don20.isReady(tradingPair);
         }
-        isSmaCompression(tradingPair) {
-          const previousSma89 = this.sma89.get(tradingPair, 1).getValue();
-          const currentSma89 = this.sma89.get(tradingPair, 0).getValue();
-          const previousSma200 = this.sma200.get(tradingPair, 1).getValue();
-          const currentSma200 = this.sma200.get(tradingPair, 0).getValue();
-          return currentSma89 < currentSma200 && currentSma89 > previousSma89 && currentSma200 < previousSma200;
-        }
-        captureStopLossOnLowSeparation(tradingPair, current, previous) {
-          if (previous === void 0) {
-            return;
-          }
-          if (!this.rsi14.isReady(tradingPair)) {
-            return;
-          }
-          const currentRsi = this.rsi14.get(tradingPair, 0).getValue();
-          if (currentRsi >= this.rsiArmThreshold) {
-            return;
-          }
+        // ========================================================================
+        // DONCHIAN SEPARATION
+        // ========================================================================
+        isDonchianLowSeparation(current, previous) {
           const wereCoincident = previous.don6Low === previous.don20Low;
-          const separated = current.don20Low < current.don6Low;
-          if (wereCoincident && separated) {
-            this.stopLossByPair.set(
+          const areSeparated = current.don6Low > current.don20Low;
+          return wereCoincident && areSeparated;
+        }
+        // ========================================================================
+        // SEPARATION LEVELS
+        // ========================================================================
+        getSeparationLevels(tradingPair) {
+          let levels = this.separationLevelsByPair.get(tradingPair);
+          if (levels === void 0) {
+            levels = [];
+            this.separationLevelsByPair.set(
               tradingPair,
-              current.don20Low
+              levels
             );
           }
+          return levels;
         }
-        isDonchianHighSeparationDown(current, previous) {
-          if (previous === void 0) {
-            return false;
-          }
-          return current.don20High > current.don6High && previous.don6High === previous.don20High;
-        }
+        // ========================================================================
+        // CURRENT DONCHIAN STATE
+        // ========================================================================
         getCurrentDonchianState(tradingPair) {
           const don6 = this.don6.get(tradingPair);
           const don20 = this.don20.get(tradingPair);
           return {
-            don6High: don6.getHigh(),
-            don20High: don20.getHigh(),
             don6Low: don6.getLow(),
-            don20Low: don20.getLow()
+            don20Low: don20.getLow(),
+            don20High: don20.getHigh()
           };
         }
-        makeOrderDetails(tradingPair, current) {
-          const stopLoss = this.stopLossByPair.get(tradingPair);
-          if (stopLoss === void 0) {
-            return void 0;
-          }
+        // ========================================================================
+        // ORDER
+        // ========================================================================
+        makeOrderDetails(tradingPair, current, previousSeparation, currentSeparation) {
+          const stopLoss = previousSeparation;
           const entryPrice = current.don20High;
-          if (!Number.isFinite(entryPrice) || !Number.isFinite(stopLoss) || stopLoss >= entryPrice) {
+          if (!Number.isFinite(entryPrice) || !Number.isFinite(stopLoss) || !Number.isFinite(currentSeparation) || stopLoss >= entryPrice) {
             return void 0;
           }
-          const donchianWidth = entryPrice - stopLoss;
+          const risk = entryPrice - stopLoss;
+          if (risk <= 0) {
+            return void 0;
+          }
           const precision = this.inferPricePrecision(tradingPair);
-          const tp1 = this.roundToPrecision(entryPrice + donchianWidth, precision);
-          const tp2 = this.roundToPrecision(tp1 + donchianWidth, precision);
-          const tp3 = this.roundToPrecision(tp2 + donchianWidth, precision);
+          const tp1 = this.roundToPrecision(
+            entryPrice + risk,
+            precision
+          );
+          const tp2 = this.roundToPrecision(
+            entryPrice + risk * 2,
+            precision
+          );
+          const tp3 = this.roundToPrecision(
+            entryPrice + risk * 3,
+            precision
+          );
           return {
             entryPrice,
             stopLossPrice: stopLoss,
@@ -4560,6 +4555,13 @@
               tp3
             ]
           };
+        }
+        // ========================================================================
+        // RESET
+        // ========================================================================
+        resetState(tradingPair) {
+          this.armedPairs.delete(tradingPair);
+          this.separationLevelsByPair.delete(tradingPair);
         }
       };
     }
@@ -4583,7 +4585,7 @@
       init_DailyPriceChangeExtractor();
       init_DailyRvaExtractor();
       init_ThirtyDayPercentChangeExtractor();
-      init_CompressionReversalSignalGenerator();
+      init_DonchianRecoverySignalGenerator();
       _PluginManager = class _PluginManager {
         constructor() {
           this._plugins = [..._PluginManager.DefaultPlugins];
@@ -4640,7 +4642,9 @@
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
-        new CompressionReversalSignalGenerator()
+        new RsiOversoldFilter(Period.fromUnknown(14), TimeFrame.ONE_HOUR, 30),
+        new RsiOverboughtFilter(Period.fromUnknown(14), TimeFrame.ONE_HOUR, 70),
+        new DonchianRecoverySignalGenerator()
         //new PotentialRecoverySignalGenerator(),
         //new HighVolumeInsideCompressedDonchian()
       ];

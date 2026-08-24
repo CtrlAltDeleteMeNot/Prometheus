@@ -69,7 +69,7 @@ export class RelativeStrengthIndex {
 
         const rs = this.avgGain! / this.avgLoss!;
         const rsi = 100 - (100 / (1 + rs));
-        return MathContext.roundToScale(rsi);
+        return rsi;
     }
 
     isReady(): boolean {

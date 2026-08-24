@@ -30,7 +30,7 @@ export class RollingSimpleMovingAverage {
             return null;
         }
         let computedValue = this.sum / this.period.getValue();
-        return MathContext.roundToScale(computedValue);
+        return computedValue;
     }
 
     isReady(): boolean {

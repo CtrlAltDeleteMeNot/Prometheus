@@ -13,7 +13,7 @@ import { DailyPendingRvaExtractor } from "./numeric_extractors/DailyPendingRvaEx
 import { DailyPriceChangeExtractor } from "./numeric_extractors/DailyPriceChangeExtractor";
 import { DailyRvaExtractor } from "./numeric_extractors/DailyRvaExtractor";
 import { ThirtyDayPercentChangeExtractor } from "./numeric_extractors/ThirtyDayPercentChangeExtractor";
-import { CompressionReversalSignalGenerator } from "./signal_generators/CompressionReversalSignalGenerator";
+import { DonchianRecoverySignalGenerator } from "./signal_generators/DonchianRecoverySignalGenerator";
 import { HighVolumeDonchianCompressionSignalGenerator } from "./signal_generators/HighVolumeDonchianCompressionSignalGenerator";
 import { HighVolumeInsideCompressedDonchian } from "./signal_generators/HighVolumeInsideCompressedDonchian";
 import { PotentialRecoverySignalGenerator } from "./signal_generators/PotentialRecoverySignalGenerator";
@@ -67,7 +67,11 @@ export class PluginManager {
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIFTEEN_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.FIVE_MINUTES, 95),
         new RsiOverboughtFilter(Period.fromUnknown(2), TimeFrame.ONE_MINUTE, 95),
-        new CompressionReversalSignalGenerator()
+
+        new RsiOversoldFilter(Period.fromUnknown(14), TimeFrame.ONE_HOUR, 30),
+        new RsiOverboughtFilter(Period.fromUnknown(14), TimeFrame.ONE_HOUR, 70),
+
+        new DonchianRecoverySignalGenerator()
         //new PotentialRecoverySignalGenerator(),
         //new HighVolumeInsideCompressedDonchian()
     ];

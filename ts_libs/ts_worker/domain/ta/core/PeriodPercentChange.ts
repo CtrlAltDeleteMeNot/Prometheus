@@ -28,7 +28,7 @@ export class PeriodPercentChange {
             return undefined;
         }
         const pctChange = ((current - oldest) / oldest) * 100;
-        return MathContext.roundToScale(pctChange);
+        return pctChange;
 
     }
 }
