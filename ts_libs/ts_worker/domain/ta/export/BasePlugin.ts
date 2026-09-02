@@ -2,6 +2,7 @@ import { TradingPair } from "../../entities/TradingPair";
 import { TimeFrame } from "../../values/TimeFrame";
 import { Period } from "../core/Period";
 import { Source } from "../core/Source";
+import { AtrAccessor, AtrIndicatorParameters } from "../indicators/AtrIndicator";
 import { DonchianChannelsAccessor, DonchianChannelsIndicatorParameters } from "../indicators/DonchianChannels";
 import { IndicatorOutput, IndicatorParameters, IndicatorRuntime } from "../indicators/Indicator";
 import { PctChangeAccessor, PctChangeIndicatorParameters } from "../indicators/PctChangeIndicator";
@@ -70,6 +71,12 @@ export abstract class BasePlugin implements IPluginContext {
         var params = new RsiIndicatorParameters(timeFrame, period, source);
         this.addIndicatorParams(params);
         return new RsiAccessor(this, params);
+    }
+
+    public useAtrIndicator(timeFrame: TimeFrame, period: Period): AtrAccessor {
+        var params = new AtrIndicatorParameters(timeFrame, period);
+        this.addIndicatorParams(params);
+        return new AtrAccessor(this, params);
     }
 
     public useRvaIndicator(timeFrame: TimeFrame, period: Period): RvaAccessor {

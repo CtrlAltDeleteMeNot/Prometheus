@@ -9,7 +9,7 @@ export class DailyRvaExtractor extends BaseSortableAttributeExtractor {
     private rva: RvaAccessor;
     public constructor() {
         super();
-        this.rva = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(14));
+        this.rva = this.useRvaIndicator(TimeFrame.ONE_DAY, new Period(50));
     }
 
     public next(tradingPair: TradingPair, updatedTimeFrames: Map<TimeFrame, boolean>, ts: number): void {

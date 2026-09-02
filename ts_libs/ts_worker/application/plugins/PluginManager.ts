@@ -7,16 +7,15 @@ import { BaseSortableAttributeExtractor } from "./BaseSortableAttributeExtractor
 import { RsiOverboughtFilter } from "./boolean_extractors/RsiOverboughtFilter";
 import { RsiOversoldFilter } from "./boolean_extractors/RsiOversoldFilter";
 import { SmaDowntrendFilter } from "./boolean_extractors/SmaDowntrendFilter";
+import { BullishReversalRegimeFilter  } from "./boolean_extractors/BullishReversalRegimeFilter ";
 import { SmaUptrendFilter } from "./boolean_extractors/SmaUptrendFilter";
 import { CurrentPriceExtractor } from "./numeric_extractors/CurrentPriceExtractor";
 import { DailyPendingRvaExtractor } from "./numeric_extractors/DailyPendingRvaExtractor";
 import { DailyPriceChangeExtractor } from "./numeric_extractors/DailyPriceChangeExtractor";
 import { DailyRvaExtractor } from "./numeric_extractors/DailyRvaExtractor";
 import { ThirtyDayPercentChangeExtractor } from "./numeric_extractors/ThirtyDayPercentChangeExtractor";
-import { DonchianRecoverySignalGenerator } from "./signal_generators/DonchianRecoverySignalGenerator";
-import { HighVolumeDonchianCompressionSignalGenerator } from "./signal_generators/HighVolumeDonchianCompressionSignalGenerator";
-import { HighVolumeInsideCompressedDonchian } from "./signal_generators/HighVolumeInsideCompressedDonchian";
-import { PotentialRecoverySignalGenerator } from "./signal_generators/PotentialRecoverySignalGenerator";
+import { DonchianStructureShiftSignalGenerator } from "./signal_generators/DonchianStructureShiftSignalGenerator";
+import { BullishRecoverySignalGenerator } from "./signal_generators/BullishRecoverySignalGenerator";
 
 export class PluginManager {
     private _plugins: readonly BasePlugin[];
@@ -71,7 +70,9 @@ export class PluginManager {
         new RsiOversoldFilter(Period.fromUnknown(14), TimeFrame.ONE_HOUR, 30),
         new RsiOverboughtFilter(Period.fromUnknown(14), TimeFrame.ONE_HOUR, 70),
 
-        new DonchianRecoverySignalGenerator()
+        new BullishReversalRegimeFilter(),
+        new BullishRecoverySignalGenerator(),
+        //new DonchianStructureShiftSignalGenerator()
         //new PotentialRecoverySignalGenerator(),
         //new HighVolumeInsideCompressedDonchian()
     ];
